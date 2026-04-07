@@ -277,13 +277,13 @@ function App() {
             or a researcher working on medication shortages, we'd love to hear from you.
           </p>
           <div className="contact-cards">
-            <a href="mailto:jack@insova.ie" className="contact-card">
+            <a href="mailto:contact@insova.ie" className="contact-card">
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
               <div className="contact-type">Email Us</div>
-              <div className="contact-value">jack@insova.ie</div>
+              <div className="contact-value">contact@insova.ie</div>
             </a>
             <a href="https://www.linkedin.com/company/insovaie/posts/?feedView=all" target="_blank" rel="noopener noreferrer" className="contact-card">
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
