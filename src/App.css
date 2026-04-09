@@ -574,6 +574,12 @@ body {
   text-align: center;
 }
 
+.section-contact .section-intro {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
 .contact-cards {
   display: flex;
   gap: 20px;
@@ -633,9 +639,9 @@ body {
    FOOTER
    ============================================ */
 .footer {
-  background: var(--dark);
+  background: var(--off-white);
   padding: 48px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .footer-container {
@@ -651,13 +657,13 @@ body {
   gap: 8px;
   font-size: 20px;
   font-weight: 700;
-  color: var(--white);
+  color: var(--dark);
   margin-bottom: 8px;
 }
 
 .footer-text {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--slate);
   margin-bottom: 28px;
 }
 
@@ -666,9 +672,9 @@ body {
   justify-content: center;
   gap: 24px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--slate-light);
   padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 /* ============================================

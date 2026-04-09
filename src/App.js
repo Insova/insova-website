@@ -9,7 +9,6 @@ function App() {
         <div className="nav-container">
           <div className="logo">
             <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="100" height="100" />
-            <span className="logo-text">Insova</span>
           </div>
           <a href="#contact" className="nav-cta">Get in Touch</a>
         </div>
@@ -267,13 +266,13 @@ function App() {
             or a researcher working on medication shortages, we'd love to hear from you.
           </p>
           <div className="contact-cards">
-            <a href="mailto:contact@insova.ie" className="contact-card">
+            <a href="mailto:Contact@insova.ie" className="contact-card">
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
               <div className="contact-type">Email Us</div>
-              <div className="contact-value">jack@insova.ie</div>
+              <div className="contact-value">Contact@insova.ie</div>
             </a>
             <a href="https://www.linkedin.com/company/insova" target="_blank" rel="noopener noreferrer" className="contact-card">
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
@@ -296,7 +295,6 @@ function App() {
         <div className="footer-container">
           <div className="footer-brand">
             <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="80" height="80" />
-            <span>Insova</span>
           </div>
           <div className="footer-text">
             AI-powered medication shortage prediction for Irish pharmacies.
