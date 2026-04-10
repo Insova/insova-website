@@ -107,6 +107,68 @@ body {
 }
 
 /* ============================================
+   SCROLL REVEAL
+   ============================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.6s ease var(--reveal-delay, 0s),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   HERO ENTRANCE ANIMATIONS
+   ============================================ */
+@keyframes heroWordIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-word {
+  display: inline-block;
+  opacity: 0;
+  animation: heroWordIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-badge {
+  opacity: 0;
+  animation: heroFadeUp 0.5s ease 0.1s forwards;
+}
+
+.hero-subtitle {
+  opacity: 0;
+  animation: heroFadeUp 0.6s ease 0.85s forwards;
+}
+
+.hero-actions {
+  opacity: 0;
+  animation: heroFadeUp 0.6s ease 1.05s forwards;
+}
+
+/* ============================================
    HERO
    ============================================ */
 .hero {
@@ -357,13 +419,17 @@ body {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 32px 28px;
-  transition: all 0.25s;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .feature-card:hover {
   border-color: var(--teal);
-  box-shadow: 0 8px 30px rgba(3, 191, 100, 0.10);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(3, 191, 100, 0.18), 0 0 0 1px rgba(3, 191, 100, 0.12);
+  transform: translateY(-5px) scale(1.015);
+}
+
+.feature-card:hover .feature-icon-wrap {
+  box-shadow: 0 4px 16px rgba(3, 191, 100, 0.4);
 }
 
 .feature-icon-wrap {
@@ -376,6 +442,7 @@ body {
   justify-content: center;
   margin-bottom: 20px;
   color: var(--white);
+  transition: box-shadow 0.3s ease;
 }
 
 .feature-card h3 {
@@ -688,6 +755,25 @@ body {
   }
   .section { padding: 72px 0; }
   .hero { padding: 130px 0 90px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-word,
+  .hero-badge,
+  .hero-subtitle,
+  .hero-actions {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .feature-card:hover {
+    transform: none;
+  }
 }
 
 @media (max-width: 600px) {

@@ -1,7 +1,73 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
+function CountUp({ target, suffix = '' }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const duration = 1800;
+          const startTime = performance.now();
+          const step = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setCount(Math.round(eased * target));
+            if (progress < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target]);
+
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
 function App() {
+  // Scroll reveal
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+    els.forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  // Parallax on hero glows
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const g1 = document.querySelector('.hero-glow-1');
+      const g2 = document.querySelector('.hero-glow-2');
+      const g3 = document.querySelector('.hero-glow-3');
+      if (g1) g1.style.transform = `translateY(${y * 0.15}px)`;
+      if (g2) g2.style.transform = `translateY(${y * -0.1}px)`;
+      if (g3) g3.style.transform = `translate(-50%, calc(-50% + ${y * 0.08}px))`;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <div className="app">
       {/* Navigation */}
@@ -23,11 +89,20 @@ function App() {
         <div className="hero-container">
           <div className="hero-badge">Coming 2026 &middot; Built in Ireland</div>
           <h1 className="hero-title">
-            Predicting medication shortages
-            <span className="hero-title-accent"> before they happen.</span>
+            {['Predicting', 'medication', 'shortages'].map((word, i) => (
+              <React.Fragment key={i}>
+                <span className="hero-word" style={{ animationDelay: `${0.2 + i * 0.13}s` }}>
+                  {word}
+                </span>
+                {' '}
+              </React.Fragment>
+            ))}
+            <span className="hero-title-accent hero-word" style={{ animationDelay: `${0.59 + 3 * 0.13}s` }}>
+              before they happen.
+            </span>
           </h1>
           <p className="hero-subtitle">
-            Insova is building an AI-powered shortage prediction platform for Irish community 
+            Insova is building an AI-powered shortage prediction platform for Irish community
             pharmacies. Turning weeks of foresight into action, where today there is none.
           </p>
           <div className="hero-actions">
@@ -43,38 +118,38 @@ function App() {
           <div className="section-label">The Problem</div>
           <h2 className="section-title">Ireland's pharmacies are in crisis.</h2>
           <p className="section-intro">
-            Medication shortages have increased 30% in two years. Every single pharmacy in Ireland is affected, 
+            Medication shortages have increased 30% in two years. Every single pharmacy in Ireland is affected,
             and the only system in place is reactive. Pharmacists discover shortages when it's already too late.
           </p>
           <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-number">361</div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0s' }}>
+              <div className="stat-number"><CountUp target={361} /></div>
               <div className="stat-desc">drugs currently on the HPRA shortage list</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-number">42%</div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.08s' }}>
+              <div className="stat-number"><CountUp target={42} suffix="%" /></div>
               <div className="stat-desc">of pharmacists encountered over 61 shortages in the previous 4 months</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-number">6+ hrs</div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.16s' }}>
+              <div className="stat-number"><CountUp target={6} suffix="+ hrs" /></div>
               <div className="stat-desc">per week spent by pharmacists manually managing shortages</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-number">71%</div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.24s' }}>
+              <div className="stat-number"><CountUp target={71} suffix="%" /></div>
               <div className="stat-desc">report negative patient outcomes directly from shortages</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-number">73%</div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.32s' }}>
+              <div className="stat-number"><CountUp target={73} suffix="%" /></div>
               <div className="stat-desc">of community pharmacists indicated they experienced burnout in their role</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-number">78%</div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.40s' }}>
+              <div className="stat-number"><CountUp target={78} suffix="%" /></div>
               <div className="stat-desc">of Irish pharmacists expect the medicine shortage crisis to worsen over the coming year</div>
             </div>
           </div>
-          <div className="problem-quote">
+          <div className="problem-quote reveal">
             <p>
-              "Whilst medicine shortages may be a feature of modern health systems, we need to ensure 
+              "Whilst medicine shortages may be a feature of modern health systems, we need to ensure
               that the impact of such shortages is minimised to the greatest extent possible."
             </p>
             <cite>&mdash; Clare Fitzell, Secretary General, Irish Pharmacy Union, 2025</cite>
@@ -88,11 +163,11 @@ function App() {
           <div className="section-label">The Solution</div>
           <h2 className="section-title">Intelligence, not guesswork.</h2>
           <p className="section-intro">
-            Insova combines real-time data, historical patterns, and machine learning to give 
+            Insova combines real-time data, historical patterns, and machine learning to give
             pharmacists the one thing they've never had: advance warning.
           </p>
           <div className="features-grid">
-            <div className="feature-card">
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -100,11 +175,11 @@ function App() {
               </div>
               <h3>Early Warning</h3>
               <p>
-                Predict shortages 6+ weeks before they impact your pharmacy, using 
+                Predict shortages 6+ weeks before they impact your pharmacy, using
                 demand-side analytics and historical patterns.
               </p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.1s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="23 4 23 10 17 10"/>
@@ -114,11 +189,11 @@ function App() {
               </div>
               <h3>Cascade Detection</h3>
               <p>
-                See how primary shortages create secondary shortages in alternative drugs &mdash; 
+                See how primary shortages create secondary shortages in alternative drugs &mdash;
                 before the domino effect reaches your shelves.
               </p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.2s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -128,11 +203,11 @@ function App() {
               </div>
               <h3>Alternatives Engine</h3>
               <p>
-                Clinically appropriate alternative suggestions with dosing equivalents, 
+                Clinically appropriate alternative suggestions with dosing equivalents,
                 always requiring pharmacist or GP sign-off.
               </p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.1s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -143,11 +218,11 @@ function App() {
               </div>
               <h3>Pharmacy Network</h3>
               <p>
-                Connect with other pharmacies to share stock visibility, replacing 
+                Connect with other pharmacies to share stock visibility, replacing
                 the current system of ringing around.
               </p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.2s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -156,7 +231,7 @@ function App() {
               </div>
               <h3>Human in the Loop</h3>
               <p>
-                Every clinical suggestion requires professional sign-off. 
+                Every clinical suggestion requires professional sign-off.
                 AI supports your decisions, it never replaces them.
               </p>
             </div>
@@ -170,36 +245,36 @@ function App() {
           <div className="section-label">Policy Alignment</div>
           <h2 className="section-title">Built for where Ireland is going.</h2>
           <p className="section-intro">
-            Insova is aligned with Ireland's national healthcare AI strategy and upcoming 
+            Insova is aligned with Ireland's national healthcare AI strategy and upcoming
             legislative changes that are transforming how pharmacies manage medication supply.
           </p>
           <div className="policy-grid">
-            <div className="policy-card">
+            <div className="policy-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="policy-tag">HSE AI for Care 2026&ndash;2030</div>
               <h3>Supply Chain AI Optimisation</h3>
               <p>
-                The HSE's AI Strategic Roadmap (ID 2.6) targets AI-powered supply chain 
-                and logistic optimisation for Horizon 2 (2028). Insova is building the solution now, 
+                The HSE's AI Strategic Roadmap (ID 2.6) targets AI-powered supply chain
+                and logistic optimisation for Horizon 2 (2028). Insova is building the solution now,
                 so it's proven and ready when the HSE is.
               </p>
               <a href="https://about.hse.ie/publications/ai-for-care-2026-2030/" target="_blank" rel="noopener noreferrer" className="policy-link">
                 Read the AI for Care Strategy &rarr;
               </a>
             </div>
-            <div className="policy-card">
+            <div className="policy-card reveal" style={{ '--reveal-delay': '0.12s' }}>
               <div className="policy-tag">Community Pharmacy Agreement 2025</div>
               <h3>Digital Health Priority</h3>
               <p>
-                &euro;75 million invested in community pharmacy, explicitly calling it a 
-                critical enabler for Ireland's digital health priorities, with AI highlighted 
+                &euro;75 million invested in community pharmacy, explicitly calling it a
+                critical enabler for Ireland's digital health priorities, with AI highlighted
                 for personalised medicine and predictive analytics.
               </p>
             </div>
-            <div className="policy-card">
+            <div className="policy-card reveal" style={{ '--reveal-delay': '0.24s' }}>
               <div className="policy-tag">Health (Miscellaneous Provisions) Act 2024</div>
               <h3>Serious Shortage Protocol</h3>
               <p>
-                New legislation enabling pharmacists to substitute medicines without reverting 
+                New legislation enabling pharmacists to substitute medicines without reverting
                 to the prescriber, creating a direct use case for Insova's alternatives engine.
               </p>
               <a href="https://www.oireachtas.ie/en/bills/bill/2024/5/" target="_blank" rel="noopener noreferrer" className="policy-link">
@@ -224,31 +299,31 @@ function App() {
           <div className="section-label">Our Team</div>
           <h2 className="section-title">Pharmacy meets technology.</h2>
           <p className="section-intro">
-            Insova is co-founded by a pharmacy and technology partnership from University College Cork, 
+            Insova is co-founded by a pharmacy and technology partnership from University College Cork,
             with deep clinical advisory support from leading shortage researchers.
           </p>
           <div className="team-grid-two">
-            <div className="team-card">
+            <div className="team-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="team-photo">
                 <img src={process.env.PUBLIC_URL + '/isobel.jpeg'} alt="Isobel Hynes" />
               </div>
               <h3>Isobel Hynes</h3>
               <div className="team-role">Co-Founder &middot; Pharmacy</div>
               <p>
-                Pharmacy student at UCC with deep domain expertise in medication management 
-                and shortage impact. Research focused on AI-driven shortage prediction 
+                Pharmacy student at UCC with deep domain expertise in medication management
+                and shortage impact. Research focused on AI-driven shortage prediction
                 under the supervision of leading UCC researchers.
               </p>
             </div>
-            <div className="team-card">
+            <div className="team-card reveal" style={{ '--reveal-delay': '0.12s' }}>
               <div className="team-photo">
                 <img src={process.env.PUBLIC_URL + '/jack.png'} alt="Jack Kennedy" />
               </div>
               <h3>Jack Kennedy</h3>
               <div className="team-role">Co-Founder &middot; Technology</div>
               <p>
-                Business Information Systems student at UCC. Building the technical 
-                platform, from data pipelines and prediction models to the pharmacist-facing 
+                Business Information Systems student at UCC. Building the technical
+                platform, from data pipelines and prediction models to the pharmacist-facing
                 dashboard and communication tools.
               </p>
             </div>
@@ -262,11 +337,11 @@ function App() {
           <div className="section-label">Get in Touch</div>
           <h2 className="section-title">Interested in Insova?</h2>
           <p className="section-intro">
-            Whether you're a pharmacist interested in early access, a potential partner, 
+            Whether you're a pharmacist interested in early access, a potential partner,
             or a researcher working on medication shortages, we'd love to hear from you.
           </p>
           <div className="contact-cards">
-            <a href="mailto:Contact@insova.ie" className="contact-card">
+            <a href="mailto:Contact@insova.ie" className="contact-card reveal" style={{ '--reveal-delay': '0s' }}>
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
@@ -274,7 +349,7 @@ function App() {
               <div className="contact-type">Email Us</div>
               <div className="contact-value">Contact@insova.ie</div>
             </a>
-            <a href="https://www.linkedin.com/company/insovaie/" target="_blank" rel="noopener noreferrer" className="contact-card">
+            <a href="https://www.linkedin.com/company/insovaie/" target="_blank" rel="noopener noreferrer" className="contact-card reveal" style={{ '--reveal-delay': '0.12s' }}>
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
               </svg>
@@ -283,8 +358,8 @@ function App() {
             </a>
           </div>
           <div className="contact-note">
-            We're currently in the research and development phase, working with 
-            UCC and pharmacy partners to build and validate our prediction model. 
+            We're currently in the research and development phase, working with
+            UCC and pharmacy partners to build and validate our prediction model.
             Early access trials beginning 2026.
           </div>
         </div>
