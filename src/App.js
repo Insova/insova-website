@@ -299,8 +299,7 @@ function App() {
           <div className="section-label">Our Team</div>
           <h2 className="section-title">Pharmacy meets technology.</h2>
           <p className="section-intro">
-            Insova is co-founded by a pharmacy and technology partnership from University College Cork,
-            with deep clinical advisory support from leading shortage researchers.
+            Insova is founded from University College Cork.
           </p>
           <div className="team-grid-two">
             <div className="team-card reveal" style={{ '--reveal-delay': '0s' }}>
