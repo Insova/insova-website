@@ -309,9 +309,8 @@ function App() {
               <h3>Isobel Hynes</h3>
               <div className="team-role">Co-Founder &middot; Pharmacy</div>
               <p>
-                Pharmacy student at UCC with deep domain expertise in medication management
-                and shortage impact. Research focused on AI-driven shortage prediction
-                under the supervision of leading UCC researchers.
+                Pharmacy student at UCC with great interest in medication management
+                and shortage impact. Research focused on AI-driven shortage prediction.
               </p>
             </div>
             <div className="team-card reveal" style={{ '--reveal-delay': '0.12s' }}>
