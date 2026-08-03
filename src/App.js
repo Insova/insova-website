@@ -320,7 +320,7 @@ function App() {
               <h3>Jack Kennedy</h3>
               <div className="team-role">Co-Founder &middot; Technology</div>
               <p>
-                Business Information Systems student at UCC. Building the technical
+                Building the technical
                 platform, from data pipelines and prediction models to the pharmacist-facing
                 dashboard and communication tools.
               </p>
@@ -356,8 +356,7 @@ function App() {
             </a>
           </div>
           <div className="contact-note">
-            We're currently in the research and development phase, working with
-            UCC and pharmacy partners to build and validate our prediction model.
+            We're currently in the research and development phase, working with pharmacy partners to build and validate our prediction model.
             Early access trials beginning 2026.
           </div>
         </div>
