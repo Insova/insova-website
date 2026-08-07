@@ -335,7 +335,7 @@ function App() {
       <section className="section section-problem" id="problem">
         <div className="container">
           <div className="section-label">The Problem</div>
-          <h2 className="section-title">Ireland's pharmacies are in crisis.</h2>
+          <h2 className="section-title">Ireland's pharmacies have a problem.</h2>
           <p className="section-intro">
             Every pharmacy in Ireland is affected by medication shortages, and the only system
             in place is reactive. Pharmacists discover shortages when it is already too late.
