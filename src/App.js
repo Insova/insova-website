@@ -1,5 +1,127 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import './App.css';
+
+/* ------------------------------------------------------------------
+   LIVE DATA
+   Reads /insova-stats.json from public/ so figures can be refreshed
+   without a rebuild. Values below are the fallback.
+   ------------------------------------------------------------------ */
+const FALLBACK_STATS = {
+  as_of_label: '7 August 2026',
+  notified: 369,
+  current: 368,
+  groups_last_product: 18,
+  no_interchangeable_pct: 55,
+  over_one_year: 91,
+  past_return_date: 35,
+  ic_groups: 507,
+};
+
+function useLiveStats() {
+  const [stats, setStats] = useState(FALLBACK_STATS);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(process.env.PUBLIC_URL + '/insova-stats.json', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d && d.notified) setStats({ ...FALLBACK_STATS, ...d });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  return stats;
+}
+
+/* ------------------------------------------------------------------
+   SOURCE BUTTON
+   Every figure on the page can show where it came from.
+   ------------------------------------------------------------------ */
+function Info({ label, children, dark = false }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+  const popRef = useRef(null);
+
+  const measure = () => {
+    const b = btnRef.current && btnRef.current.getBoundingClientRect();
+    if (!b) return null;
+    const width = Math.min(300, window.innerWidth - 24);
+    let left = b.left + b.width / 2 - width / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
+    const spaceBelow = window.innerHeight - b.bottom;
+    const above = spaceBelow < 200 && b.top > 220;
+    return {
+      left,
+      width,
+      top: above ? null : b.bottom + 10,
+      bottom: above ? window.innerHeight - b.top + 10 : null,
+    };
+  };
+
+  const toggle = () => {
+    if (open) { setOpen(false); return; }
+    setPos(measure());
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e) => {
+      const inBtn = btnRef.current && btnRef.current.contains(e.target);
+      const inPop = popRef.current && popRef.current.contains(e.target);
+      if (!inBtn && !inPop) setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    const reposition = () => setPos(measure());
+    document.addEventListener('mousedown', outside);
+    document.addEventListener('touchstart', outside);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', reposition, { passive: true });
+    window.addEventListener('resize', reposition);
+    return () => {
+      document.removeEventListener('mousedown', outside);
+      document.removeEventListener('touchstart', outside);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', reposition);
+      window.removeEventListener('resize', reposition);
+    };
+  }, [open]);
+
+  const popup = open && pos ? createPortal(
+    <div
+      ref={popRef}
+      className="info-pop"
+      role="tooltip"
+      style={{
+        left: pos.left + 'px',
+        width: pos.width + 'px',
+        top: pos.top !== null ? pos.top + 'px' : 'auto',
+        bottom: pos.bottom !== null ? pos.bottom + 'px' : 'auto',
+      }}
+    >
+      <span className="info-pop-label">Source</span>
+      {children}
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <span className={'info' + (dark ? ' info-dark' : '')}>
+      <button
+        ref={btnRef}
+        type="button"
+        className="info-btn"
+        aria-label={'Where this figure comes from: ' + label}
+        aria-expanded={open}
+        onClick={toggle}
+      >
+        i
+      </button>
+      {popup}
+    </span>
+  );
+}
 
 function CountUp({ target, suffix = '' }) {
   const [count, setCount] = useState(0);
@@ -9,6 +131,10 @@ function CountUp({ target, suffix = '' }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setCount(target);
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !started.current) {
@@ -16,8 +142,7 @@ function CountUp({ target, suffix = '' }) {
           const duration = 1800;
           const startTime = performance.now();
           const step = (now) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
+            const progress = Math.min((now - startTime) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             setCount(Math.round(eased * target));
             if (progress < 1) requestAnimationFrame(step);
@@ -34,13 +159,38 @@ function CountUp({ target, suffix = '' }) {
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+/* ---------------------------- PROGRESS ---------------------------- */
+const PROGRESS = [
+  {
+    date: 'August 2026',
+    title: 'National analysis',
+    body: 'First analysis of shortage patterns across the whole register, produced from data we collect ourselves.',
+  },
+  {
+    date: 'August 2026',
+    title: 'Daily data collection',
+    body: 'Insova began collecting the national medicine shortage register every morning, building a continuous record of how shortages develop over time.',
+  },
+  {
+    date: 'July 2026',
+    title: 'Prototype reviewed',
+    body: 'A working prototype of the pharmacist dashboard was built and reviewed by pharmacy professionals.',
+  },
+  {
+    date: 'July 2026',
+    title: 'Research and validation',
+    body: 'We spoke with hospital and community pharmacists about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.',
+  },
+];
+
 function App() {
-  // Scroll reveal
+  const stats = useLiveStats();
+
   useEffect(() => {
     const els = document.querySelectorAll('.reveal');
     const obs = new IntersectionObserver(
       (entries) => {
-        entries.forEach(e => {
+        entries.forEach((e) => {
           if (e.isIntersecting) {
             e.target.classList.add('visible');
             obs.unobserve(e.target);
@@ -49,12 +199,12 @@ function App() {
       },
       { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
     );
-    els.forEach(el => obs.observe(el));
+    els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
-  // Parallax on hero glows
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const onScroll = () => {
       const y = window.scrollY;
       const g1 = document.querySelector('.hero-glow-1');
@@ -76,7 +226,11 @@ function App() {
           <div className="logo">
             <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="100" height="100" />
           </div>
-          <a href="#contact" className="nav-cta">Get in Touch</a>
+          <div className="nav-links">
+            <a href="#live" className="nav-link">Live data</a>
+            <a href="#progress" className="nav-link">Progress</a>
+            <a href="#contact" className="nav-cta">Get in Touch</a>
+          </div>
         </div>
       </nav>
 
@@ -87,14 +241,10 @@ function App() {
         <div className="hero-glow hero-glow-3"></div>
         <div className="hero-grid-bg"></div>
         <div className="hero-container">
-          <div className="hero-badge">Coming 2026 &middot; Built in Ireland</div>
           <h1 className="hero-title">
             {['Predicting', 'medication', 'shortages'].map((word, i) => (
               <React.Fragment key={i}>
-                <span className="hero-word" style={{ animationDelay: `${0.2 + i * 0.13}s` }}>
-                  {word}
-                </span>
-                {' '}
+                <span className="hero-word" style={{ animationDelay: `${0.2 + i * 0.13}s` }}>{word}</span>{' '}
               </React.Fragment>
             ))}
             <span className="hero-title-accent hero-word" style={{ animationDelay: `${0.59 + 3 * 0.13}s` }}>
@@ -102,15 +252,84 @@ function App() {
             </span>
           </h1>
           <p className="hero-subtitle">
-            Insova is building an AI-powered shortage prediction platform for Irish community
-            pharmacies. Turning weeks of foresight into action, where today there is none.
+            Insova is building shortage intelligence for Irish community pharmacies.
+            We collect and analyse the national register every morning. The figures below
+            were gathered today.
           </p>
           <div className="hero-actions">
-            <a href="#solution" className="btn btn-primary">How It Works</a>
+            <a href="#live" className="btn btn-primary">See today's data</a>
             <a href="#contact" className="btn btn-secondary">Partner With Us</a>
           </div>
         </div>
       </header>
+
+      {/* LIVE REGISTER */}
+      <section className="section section-live" id="live">
+        <div className="container">
+          <div className="live-head">
+            <div className="live-status">
+              <span className="live-pulse" aria-hidden="true"></span>
+              <span className="live-status-text">Live from the HPRA national register</span>
+            </div>
+            <div className="live-timestamp">Collected {stats.as_of_label}</div>
+          </div>
+
+          <p className="live-lead reveal">
+            A snapshot of Ireland's medicine shortage register, collected this morning.
+          </p>
+
+          <div className="live-readout">
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0s' }}>
+              <div className="live-figure">
+                {stats.notified}
+                <Info dark label="medicines notified as in shortage">
+                  HPRA national medicine shortage register, collected {stats.as_of_label}.
+                  Of these, {stats.current} are currently in shortage and the remainder carry a
+                  recorded resolution date. This matches the total shown on the HPRA website.
+                </Info>
+              </div>
+              <div className="live-label">medicines notified as in shortage</div>
+            </div>
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0.06s' }}>
+              <div className="live-figure">
+                {stats.no_interchangeable_pct}%
+                <Info dark label="share with no substitutable alternative listed">
+                  Insova analysis. The share of shortages with no matching group on the HPRA
+                  List of Interchangeable Medicines, meaning no statutory route to substitute
+                  without contacting the prescriber.
+                </Info>
+              </div>
+              <div className="live-label">have no substitutable alternative listed</div>
+            </div>
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0.12s' }}>
+              <div className="live-figure">
+                {stats.over_one_year}
+                <Info dark label="shortages running over a year">
+                  Insova analysis, measured from the shortage start date recorded on each HPRA
+                  register entry.
+                </Info>
+              </div>
+              <div className="live-label">have run for more than a year</div>
+            </div>
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0.18s' }}>
+              <div className="live-figure">
+                {stats.past_return_date}
+                <Info dark label="shortages past their expected return date">
+                  Insova analysis. Register entries whose HPRA expected return date has already
+                  passed while the shortage remains listed.
+                </Info>
+              </div>
+              <div className="live-label">are past their expected return date</div>
+            </div>
+          </div>
+
+          <p className="live-note">
+            Figures are drawn from the HPRA medicine shortage register and the HPRA List of
+            Interchangeable Medicines ({stats.ic_groups} groups), both published by the Health
+            Products Regulatory Authority. The analysis is our own.
+          </p>
+        </div>
+      </section>
 
       {/* Problem */}
       <section className="section section-problem" id="problem">
@@ -118,41 +337,71 @@ function App() {
           <div className="section-label">The Problem</div>
           <h2 className="section-title">Ireland's pharmacies are in crisis.</h2>
           <p className="section-intro">
-            Medication shortages have increased 30% in two years. Every single pharmacy in Ireland is affected,
-            and the only system in place is reactive. Pharmacists discover shortages when it's already too late.
+            Every pharmacy in Ireland is affected by medication shortages, and the only system
+            in place is reactive. Pharmacists discover shortages when it is already too late.
           </p>
           <div className="stats-grid">
             <div className="stat-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="stat-number"><CountUp target={361} /></div>
-              <div className="stat-desc">drugs currently on the HPRA shortage list</div>
-            </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.08s' }}>
-              <div className="stat-number"><CountUp target={42} suffix="%" /></div>
+              <div className="stat-number">
+                <CountUp target={42} suffix="%" />
+                <Info label="pharmacists encountering over 61 shortages">
+                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
+                </Info>
+              </div>
               <div className="stat-desc">of pharmacists encountered over 61 shortages in the previous 4 months</div>
             </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.16s' }}>
-              <div className="stat-number"><CountUp target={6} suffix="+ hrs" /></div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.08s' }}>
+              <div className="stat-number">
+                <CountUp target={6} suffix="+ hrs" />
+                <Info label="hours per week managing shortages">
+                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
+                </Info>
+              </div>
               <div className="stat-desc">per week spent by pharmacists manually managing shortages</div>
             </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.24s' }}>
-              <div className="stat-number"><CountUp target={71} suffix="%" /></div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.16s' }}>
+              <div className="stat-number">
+                <CountUp target={71} suffix="%" />
+                <Info label="pharmacists reporting negative patient outcomes">
+                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
+                </Info>
+              </div>
               <div className="stat-desc">report negative patient outcomes directly from shortages</div>
             </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.32s' }}>
-              <div className="stat-number"><CountUp target={73} suffix="%" /></div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.24s' }}>
+              <div className="stat-number">
+                <CountUp target={73} suffix="%" />
+                <Info label="pharmacists reporting burnout">
+                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
+                </Info>
+              </div>
               <div className="stat-desc">of community pharmacists indicated they experienced burnout in their role</div>
             </div>
+            <div className="stat-card reveal" style={{ '--reveal-delay': '0.32s' }}>
+              <div className="stat-number">
+                <CountUp target={78} suffix="%" />
+                <Info label="pharmacists expecting shortages to worsen">
+                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
+                </Info>
+              </div>
+              <div className="stat-desc">expect the medicine shortage crisis to worsen over the coming year</div>
+            </div>
             <div className="stat-card reveal" style={{ '--reveal-delay': '0.40s' }}>
-              <div className="stat-number"><CountUp target={78} suffix="%" /></div>
-              <div className="stat-desc">of Irish pharmacists expect the medicine shortage crisis to worsen over the coming year</div>
+              <div className="stat-number">
+                <CountUp target={35} />
+                <Info label="shortages past their expected return date">
+                  Insova analysis of the HPRA register, {stats.as_of_label}.
+                </Info>
+              </div>
+              <div className="stat-desc">shortages today are already past the return date the register gives them</div>
             </div>
           </div>
           <div className="problem-quote reveal">
             <p>
-              "Whilst medicine shortages may be a feature of modern health systems, we need to ensure
-              that the impact of such shortages is minimised to the greatest extent possible."
+              "Whilst medicine shortages may be a feature of modern health systems, we need to
+              ensure that the impact of such shortages is minimised to the greatest extent possible."
             </p>
-            <cite>&mdash; Clare Fitzell, Secretary General, Irish Pharmacy Union, 2025</cite>
+            <cite>Clare Fitzell, Secretary General, Irish Pharmacy Union, 2025</cite>
           </div>
         </div>
       </section>
@@ -163,8 +412,9 @@ function App() {
           <div className="section-label">The Solution</div>
           <h2 className="section-title">Intelligence, not guesswork.</h2>
           <p className="section-intro">
-            Insova combines real-time data, historical patterns, and machine learning to give
-            pharmacists the one thing they've never had: advance warning.
+            Insova brings together the national register, the regulator's own interchangeability
+            data, and a growing historical archive to give pharmacists the one thing they have
+            never had: advance warning.
           </p>
           <div className="features-grid">
             <div className="feature-card reveal" style={{ '--reveal-delay': '0s' }}>
@@ -173,69 +423,88 @@ function App() {
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
               </div>
-              <h3>Early Warning</h3>
+              <h3>Early warning</h3>
               <p>
-                Predict shortages 6+ weeks before they impact your pharmacy, using
-                demand-side analytics and historical patterns.
+                Shortage risk flagged ahead of time using supply concentration, historical
+                patterns and cross-border signals, with every forecast scored against what
+                actually happened.
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.1s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 4 23 10 17 10"/>
-                  <polyline points="1 20 1 14 7 14"/>
+                  <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                 </svg>
               </div>
-              <h3>Cascade Detection</h3>
+              <h3>Cascade detection</h3>
               <p>
-                See how primary shortages create secondary shortages in alternative drugs &mdash;
-                before the domino effect reaches your shelves.
+                When one medicine goes short, demand moves to its alternatives and they follow.
+                Insova tracks whole interchangeable groups, so the second wave is visible early.
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.2s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
-              <h3>Alternatives Engine</h3>
+              <h3>Alternatives from the regulator</h3>
               <p>
-                Clinically appropriate alternative suggestions with dosing equivalents,
-                always requiring pharmacist or GP sign-off.
+                Substitutes are drawn only from the HPRA List of Interchangeable Medicines and
+                cited as such. Insova does not invent clinical recommendations.
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.1s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
               </div>
-              <h3>Pharmacy Network</h3>
+              <h3>Pharmacy network</h3>
               <p>
-                Connect with other pharmacies to share stock visibility, replacing
-                the current system of ringing around.
+                Share stock visibility with nearby pharmacies, replacing the current system of
+                ringing around one by one.
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.2s' }}>
               <div className="feature-icon-wrap">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
               </div>
-              <h3>Human in the Loop</h3>
+              <h3>Human in the loop</h3>
               <p>
-                Every clinical suggestion requires professional sign-off.
-                AI supports your decisions, it never replaces them.
+                Insova never substitutes, orders or dispenses. It informs; the pharmacist
+                decides. Every clinical document is shown with its publication date.
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* PROGRESS */}
+      <section className="section section-progress" id="progress">
+        <div className="container">
+          <div className="section-label">Progress</div>
+          <h2 className="section-title">Where we are.</h2>
+          <p className="section-intro">
+            Insova is early. This is what has been built so far, in the order it happened.
+          </p>
+          <ol className="log-list">
+            {PROGRESS.map((entry, i) => (
+              <li className="log-item reveal" key={i} style={{ '--reveal-delay': `${i * 0.07}s` }}>
+                <div className="log-rail" aria-hidden="true"><span className="log-dot"></span></div>
+                <div className="log-body">
+                  <div className="log-date">{entry.date}</div>
+                  <h3 className="log-title">{entry.title}</h3>
+                  <p className="log-text">{entry.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -245,17 +514,17 @@ function App() {
           <div className="section-label">Policy Alignment</div>
           <h2 className="section-title">Built for where Ireland is going.</h2>
           <p className="section-intro">
-            Insova is aligned with Ireland's national healthcare AI strategy and upcoming
-            legislative changes that are transforming how pharmacies manage medication supply.
+            Insova is aligned with Ireland's national healthcare AI strategy and the legislative
+            changes transforming how pharmacies manage medication supply.
           </p>
           <div className="policy-grid">
             <div className="policy-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="policy-tag">HSE AI for Care 2026&ndash;2030</div>
+              <div className="policy-tag">HSE AI for Care 2026-2030</div>
               <h3>Supply Chain AI Optimisation</h3>
               <p>
-                The HSE's AI Strategic Roadmap (ID 2.6) targets AI-powered supply chain
-                and logistic optimisation for Horizon 2 (2028). Insova is building the solution now,
-                so it's proven and ready when the HSE is.
+                The HSE's AI Strategic Roadmap (ID 2.6) targets AI-powered supply chain and
+                logistic optimisation for Horizon 2 (2028). Insova is building it now, so it is
+                proven and ready when the HSE is.
               </p>
               <a href="https://about.hse.ie/publications/ai-for-care-2026-2030/" target="_blank" rel="noopener noreferrer" className="policy-link">
                 Read the AI for Care Strategy &rarr;
@@ -265,17 +534,17 @@ function App() {
               <div className="policy-tag">Community Pharmacy Agreement 2025</div>
               <h3>Digital Health Priority</h3>
               <p>
-                &euro;75 million invested in community pharmacy, explicitly calling it a
-                critical enabler for Ireland's digital health priorities, with AI highlighted
-                for personalised medicine and predictive analytics.
+                &euro;75 million invested in community pharmacy, explicitly naming it a critical
+                enabler for Ireland's digital health priorities, with AI highlighted for
+                predictive analytics.
               </p>
             </div>
             <div className="policy-card reveal" style={{ '--reveal-delay': '0.24s' }}>
               <div className="policy-tag">Health (Miscellaneous Provisions) Act 2024</div>
               <h3>Serious Shortage Protocol</h3>
               <p>
-                New legislation enabling pharmacists to substitute medicines without reverting
-                to the prescriber, creating a direct use case for Insova's alternatives engine.
+                New legislation enabling pharmacists to substitute without reverting to the
+                prescriber, creating a direct use case for Insova's alternatives engine.
               </p>
               <a href="https://www.oireachtas.ie/en/bills/bill/2024/5/" target="_blank" rel="noopener noreferrer" className="policy-link">
                 View the Health Act &rarr;
@@ -298,9 +567,7 @@ function App() {
         <div className="container">
           <div className="section-label">Our Team</div>
           <h2 className="section-title">Pharmacy meets technology.</h2>
-          <p className="section-intro">
-            Insova is founded from University College Cork.
-          </p>
+          <p className="section-intro">Insova is founded from University College Cork.</p>
           <div className="team-grid-two">
             <div className="team-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="team-photo">
@@ -308,10 +575,7 @@ function App() {
               </div>
               <h3>Isobel Hynes</h3>
               <div className="team-role">Co-Founder &middot; Pharmacy</div>
-              <p>
-                Pharmacy student at UCC with great interest in medication management
-                and shortage impact. Research focused on AI-driven shortage prediction.
-              </p>
+              <p>Pharmacy student at University College Cork. Leads the clinical side of Insova.</p>
             </div>
             <div className="team-card reveal" style={{ '--reveal-delay': '0.12s' }}>
               <div className="team-photo">
@@ -319,11 +583,7 @@ function App() {
               </div>
               <h3>Jack Kennedy</h3>
               <div className="team-role">Co-Founder &middot; Technology</div>
-              <p>
-                Building the technical
-                platform, from data pipelines and prediction models to the pharmacist-facing
-                dashboard and communication tools.
-              </p>
+              <p>Business Information Systems graduate of University College Cork. Leads the technical side of Insova.</p>
             </div>
           </div>
         </div>
@@ -335,8 +595,8 @@ function App() {
           <div className="section-label">Get in Touch</div>
           <h2 className="section-title">Interested in Insova?</h2>
           <p className="section-intro">
-            Whether you're a pharmacist interested in early access, a potential partner,
-            or a researcher working on medication shortages, we'd love to hear from you.
+            Whether you are a pharmacist interested in early access, a potential partner, or a
+            researcher working on medication shortages, we would like to hear from you.
           </p>
           <div className="contact-cards">
             <a href="mailto:Contact@insova.ie" className="contact-card reveal" style={{ '--reveal-delay': '0s' }}>
@@ -355,10 +615,6 @@ function App() {
               <div className="contact-value">Connect with us</div>
             </a>
           </div>
-          <div className="contact-note">
-            We're currently in the research and development phase, working with pharmacy partners to build and validate our prediction model.
-            Early access trials beginning 2026.
-          </div>
         </div>
       </section>
 
@@ -369,7 +625,7 @@ function App() {
             <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="80" height="80" />
           </div>
           <div className="footer-text">
-            AI-powered medication shortage prediction for Irish pharmacies.
+            Medication shortage intelligence for Irish pharmacies.
           </div>
           <div className="footer-bottom">
             <span>&copy; 2026 Insova. All rights reserved.</span>
