@@ -174,12 +174,12 @@ const PROGRESS = [
   {
     date: 'July 2026',
     title: 'Prototype reviewed',
-    body: 'A working prototype of the pharmacist dashboard was built and reviewed by pharmacy professionals.',
+    body: 'A working prototype of the pharmacist dashboard was built.',
   },
   {
     date: 'July 2026',
     title: 'Research and validation',
-    body: 'We spoke with hospital and community pharmacists about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.',
+    body: 'We spoke with pharmacists and experts about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.',
   },
 ];
 
