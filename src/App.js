@@ -229,6 +229,7 @@ function App() {
           <div className="nav-links">
             <a href="#live" className="nav-link">Live data</a>
             <a href="#progress" className="nav-link">Progress</a>
+            <a href="/data.html" className="nav-link">The data</a>
             <a href="#contact" className="nav-cta">Get in Touch</a>
           </div>
         </div>
@@ -328,6 +329,9 @@ function App() {
             Interchangeable Medicines ({stats.ic_groups} groups), both published by the Health
             Products Regulatory Authority. The analysis is our own.
           </p>
+          <a href="/data.html" className="btn btn-primary" style={{ marginTop: '22px', display: 'inline-block' }}>
+            Check the data for yourself
+          </a>
         </div>
       </section>
 
