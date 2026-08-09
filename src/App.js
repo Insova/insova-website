@@ -16,6 +16,7 @@ const FALLBACK_STATS = {
   over_one_year: 91,
   past_return_date: 38,
   ic_groups: 507,
+  days_archived: 1,
 };
 
 function useLiveStats() {
@@ -228,8 +229,8 @@ function App() {
           </div>
           <div className="nav-links">
             <a href="#product" className="nav-link">Our product</a>
+            <a href="#live" className="nav-link">The data</a>
             <a href="#progress" className="nav-link">Progress</a>
-            <a href="#problem" className="nav-link">The data</a>
             <a href="#contact" className="nav-cta">Get in Touch</a>
           </div>
         </div>
@@ -263,77 +264,6 @@ function App() {
           </div>
         </div>
       </header>
-
-      {/* LIVE REGISTER */}
-      <section className="section section-live" id="live">
-        <div className="container">
-          <div className="live-head">
-            <div className="live-status">
-              <span className="live-pulse" aria-hidden="true"></span>
-              <span className="live-status-text">Live from the HPRA national register</span>
-            </div>
-            <div className="live-timestamp">Collected {stats.as_of_label}</div>
-          </div>
-
-          <p className="live-lead reveal">
-            A snapshot of Ireland's medicine shortage register, collected this morning.
-          </p>
-
-          <div className="live-readout">
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="live-figure">
-                {stats.current}
-                <Info dark label="medicines notified as in shortage">
-                  HPRA national medicine shortage register, collected {stats.as_of_label}.
-                  This is the count of medicines currently listed as in shortage, and should
-                  match the total shown on the HPRA website.
-                </Info>
-              </div>
-              <div className="live-label">medicines notified as in shortage</div>
-            </div>
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0.06s' }}>
-              <div className="live-figure">
-                {stats.no_interchangeable_pct}%
-                <Info dark label="share with no substitutable alternative listed">
-                  Insova analysis. The share of shortages with no matching group on the HPRA
-                  List of Interchangeable Medicines, meaning no statutory route to substitute
-                  without contacting the prescriber.
-                </Info>
-              </div>
-              <div className="live-label">have no substitutable alternative listed</div>
-            </div>
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0.12s' }}>
-              <div className="live-figure">
-                {stats.over_one_year}
-                <Info dark label="shortages running over a year">
-                  Insova analysis, measured from the shortage start date recorded on each HPRA
-                  register entry.
-                </Info>
-              </div>
-              <div className="live-label">have run for more than a year</div>
-            </div>
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0.18s' }}>
-              <div className="live-figure">
-                {stats.past_return_date}
-                <Info dark label="shortages past their expected return date">
-                  Insova analysis. Register entries whose HPRA expected return date has already
-                  passed while the shortage remains listed.
-                </Info>
-              </div>
-              <div className="live-label">are past their expected return date</div>
-            </div>
-          </div>
-
-          <p className="live-note">
-            Figures are drawn from the HPRA medicine shortage register and the HPRA List of
-            Interchangeable Medicines ({stats.ic_groups} groups), both published by the Health
-            Products Regulatory Authority. The analysis is our own.
-          </p>
-          <a href="/data.html" className="btn btn-primary" style={{ marginTop: '22px', display: 'inline-block' }}>
-            Check the data for yourself
-          </a>
-        </div>
-      </section>
 
       {/* Problem */}
       <section className="section section-problem" id="problem">
@@ -505,13 +435,14 @@ function App() {
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.24s' }}>
               <div className="feature-icon-wrap">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
                 </svg>
               </div>
-              <h3>Dated clinical documents</h3>
+              <h3>Straight to the source</h3>
               <p>
-                Every healthcare professional letter is shown with its publication date and
-                flagged once it is old enough to be out of date.
+                Where a manufacturer has issued a supply notice about a shortage, we link you
+                to the document itself rather than summarising it.
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.30s' }}>
@@ -527,9 +458,83 @@ function App() {
             </div>
           </div>
 
-          <p className="live-note" style={{ marginTop: '36px' }}>
+          <p className="live-note" style={{ marginTop: '36px', color: 'var(--slate-light)' }}>
             Insova is in development and is not yet available. Nothing here is clinical guidance.
           </p>
+        </div>
+      </section>
+
+      {/* LIVE REGISTER */}
+      <section className="section section-live" id="live">
+        <div className="container">
+          <div className="live-head">
+            <div className="live-status">
+              <span className="live-pulse" aria-hidden="true"></span>
+              <span className="live-status-text">Live from the HPRA national register</span>
+            </div>
+            <div className="live-timestamp">Collected {stats.as_of_label}</div>
+          </div>
+
+          <p className="live-lead reveal">
+            None of that works without history. Ireland's shortage register is overwritten every
+            morning and nobody keeps yesterday's copy, so there is no record of how a shortage
+            built before it arrived. A model cannot learn from something it never saw forming.
+            So every morning we take a dated copy and keep it. This is today's.
+          </p>
+
+          <div className="live-readout">
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0s' }}>
+              <div className="live-figure">
+                {stats.current}
+                <Info dark label="medicines notified as in shortage">
+                  HPRA national medicine shortage register, collected {stats.as_of_label}.
+                  This is the count of medicines currently listed as in shortage, and should
+                  match the total shown on the HPRA website.
+                </Info>
+              </div>
+              <div className="live-label">medicines notified as in shortage</div>
+            </div>
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0.06s' }}>
+              <div className="live-figure">
+                {stats.no_interchangeable_pct}%
+                <Info dark label="share with no substitutable alternative listed">
+                  Insova analysis. The share of shortages with no matching group on the HPRA
+                  List of Interchangeable Medicines, meaning no statutory route to substitute
+                  without contacting the prescriber.
+                </Info>
+              </div>
+              <div className="live-label">have no substitutable alternative listed</div>
+            </div>
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0.12s' }}>
+              <div className="live-figure">
+                {stats.groups_last_product}
+                <Info dark label="interchangeable groups down to one product">
+                  Insova analysis. Groups on the HPRA List of Interchangeable Medicines where
+                  every product except one is currently in shortage.
+                </Info>
+              </div>
+              <div className="live-label">interchangeable groups are down to one product</div>
+            </div>
+            <div className="live-cell reveal" style={{ '--reveal-delay': '0.18s' }}>
+              <div className="live-figure">
+                {stats.past_return_date}
+                <Info dark label="shortages past their expected return date">
+                  Insova analysis. Register entries whose HPRA expected return date has already
+                  passed while the shortage remains listed.
+                </Info>
+              </div>
+              <div className="live-label">are past their expected return date</div>
+            </div>
+          </div>
+
+          <p className="live-note">
+            Figures are drawn from the HPRA medicine shortage register and the HPRA List of
+            Interchangeable Medicines ({stats.ic_groups} groups), both published by the Health
+            Products Regulatory Authority. The analysis is our own.
+          </p>
+          <a href="/data.html" className="btn btn-primary" style={{ marginTop: '22px', display: 'inline-block' }}>
+            See today's reading in full
+          </a>
         </div>
       </section>
 
