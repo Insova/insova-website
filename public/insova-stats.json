@@ -1,10 +1,10 @@
 {
-  "as_of": "2026-08-08",
-  "as_of_label": "8 August 2026",
+  "as_of": "2026-08-09",
+  "as_of_label": "9 August 2026",
   "notified": 372,
   "current": 371,
   "over_one_year": 91,
-  "new_30d": 98,
+  "new_30d": 97,
   "past_return_date": 38,
   "no_return_date_pct": 36,
   "ic_groups": 505,
@@ -12,7 +12,7 @@
   "no_interchangeable": 204,
   "no_interchangeable_pct": 55,
   "groups_last_product": 18,
-  "letters_tracked": 19,
+  "letters_tracked": 20,
   "letters_stale": 5,
-  "days_archived": 6
+  "days_archived": 7
 }
