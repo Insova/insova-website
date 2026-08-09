@@ -1457,3 +1457,20 @@ body {
     padding-bottom: 52px;
   }
 }
+
+
+/* ---- Two-card team grid, centred ---- */
+.team-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 340px));
+  gap: 24px;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 720px) {
+  .team-grid-two {
+    grid-template-columns: minmax(0, 340px);
+  }
+}
