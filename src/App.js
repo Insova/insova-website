@@ -8,13 +8,13 @@ import './App.css';
    without a rebuild. Values below are the fallback.
    ------------------------------------------------------------------ */
 const FALLBACK_STATS = {
-  as_of_label: '7 August 2026',
-  notified: 369,
-  current: 368,
+  as_of_label: '9 August 2026',
+  notified: 371,
+  current: 371,
   groups_last_product: 18,
   no_interchangeable_pct: 55,
   over_one_year: 91,
-  past_return_date: 35,
+  past_return_date: 38,
   ic_groups: 507,
 };
 
@@ -227,9 +227,9 @@ function App() {
             <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="100" height="100" />
           </div>
           <div className="nav-links">
-            <a href="#live" className="nav-link">Live data</a>
+            <a href="#product" className="nav-link">Our product</a>
             <a href="#progress" className="nav-link">Progress</a>
-            <a href="/data.html" className="nav-link">The data</a>
+            <a href="#live" className="nav-link">The data</a>
             <a href="#contact" className="nav-cta">Get in Touch</a>
           </div>
         </div>
@@ -253,12 +253,12 @@ function App() {
             </span>
           </h1>
           <p className="hero-subtitle">
-            Insova is building shortage intelligence for Irish community pharmacies.
-            We collect and analyse the national register every morning. The figures below
-            were gathered today.
+            We are building shortage prediction intelligence for Irish community pharmacies.
+            Insova pairs AI-driven insight with pharmacist expertise to make managing
+            medication shortages smarter and more efficient.
           </p>
           <div className="hero-actions">
-            <a href="#live" className="btn btn-primary">See today's data</a>
+            <a href="#product" className="btn btn-primary">Our product</a>
             <a href="#contact" className="btn btn-secondary">Partner With Us</a>
           </div>
         </div>
@@ -282,11 +282,11 @@ function App() {
           <div className="live-readout">
             <div className="live-cell reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="live-figure">
-                {stats.notified}
+                {stats.current}
                 <Info dark label="medicines notified as in shortage">
                   HPRA national medicine shortage register, collected {stats.as_of_label}.
-                  Of these, {stats.current} are currently in shortage and the remainder carry a
-                  recorded resolution date. This matches the total shown on the HPRA website.
+                  This is the count of medicines currently listed as in shortage, and should
+                  match the total shown on the HPRA website.
                 </Info>
               </div>
               <div className="live-label">medicines notified as in shortage</div>
@@ -338,7 +338,6 @@ function App() {
       {/* Problem */}
       <section className="section section-problem" id="problem">
         <div className="container">
-          <div className="section-label">The Problem</div>
           <h2 className="section-title">Ireland's pharmacies have a problem.</h2>
           <p className="section-intro">
             Every pharmacy in Ireland is affected by medication shortages, and the only system
@@ -392,7 +391,7 @@ function App() {
             </div>
             <div className="stat-card reveal" style={{ '--reveal-delay': '0.40s' }}>
               <div className="stat-number">
-                <CountUp target={35} />
+                <CountUp target={stats.past_return_date} />
                 <Info label="shortages past their expected return date">
                   Insova analysis of the HPRA register, {stats.as_of_label}.
                 </Info>
@@ -410,82 +409,127 @@ function App() {
         </div>
       </section>
 
-      {/* Solution */}
-      <section className="section section-solution" id="solution">
+      {/* OUR PRODUCT */}
+      <section className="section section-product" id="product">
         <div className="container">
-          <div className="section-label">The Solution</div>
-          <h2 className="section-title">Intelligence, not guesswork.</h2>
+          <div className="section-label">Our Product</div>
+          <h2 className="section-title">What we are building.</h2>
           <p className="section-intro">
-            Insova brings together the national register, the regulator's own interchangeability
-            data, and a growing historical archive to give pharmacists the one thing they have
-            never had: advance warning.
+            A web application for the dispensary. It runs in the browser with nothing to set up,
+            and offers to install itself as an app whenever you want it standalone.
           </p>
-          <div className="features-grid">
+
+          {/* Platform strip */}
+          <div className="platform-strip reveal">
+            <div className="platform-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+              </svg>
+              <div>
+                <h4>Runs in the browser</h4>
+                <p>Open it on the dispensary computer. Nothing to install, no IT project, no new hardware.</p>
+              </div>
+            </div>
+            <div className="platform-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3v12"/><polyline points="8 11 12 15 16 11"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+              </svg>
+              <div>
+                <h4>Install it if you want it</h4>
+                <p>Insova offers to install itself as an app. Same tool, its own window.</p>
+              </div>
+            </div>
+            <div className="platform-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <div>
+                <h4>Arrives each morning</h4>
+                <p>A short brief by email, so nothing depends on remembering to open it.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* What it does */}
+          <div className="features-grid features-tight">
             <div className="feature-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="feature-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
               </div>
               <h3>Early warning</h3>
               <p>
-                Shortage risk flagged ahead of time using supply concentration, historical
-                patterns and cross-border signals, with every forecast scored against what
-                actually happened.
+                Shortage risk flagged ahead of time from supply concentration and historical
+                patterns. Forecasts are recorded before the fact and scored against what happened.
               </p>
             </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.1s' }}>
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.06s' }}>
               <div className="feature-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                 </svg>
               </div>
               <h3>Cascade detection</h3>
               <p>
-                When one medicine goes short, demand moves to its alternatives and they follow.
-                Insova tracks whole interchangeable groups, so the second wave is visible early.
+                When one medicine goes short, demand moves to its alternatives. Insova tracks
+                whole interchangeable groups, so the second wave is visible early.
               </p>
             </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.2s' }}>
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.12s' }}>
               <div className="feature-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                   <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
               <h3>Alternatives from the regulator</h3>
               <p>
-                Substitutes are drawn only from the HPRA List of Interchangeable Medicines and
-                cited as such. Insova does not invent clinical recommendations.
+                Substitutes come only from the HPRA List of Interchangeable Medicines, cited by
+                IC code, with how many products are left in the group.
               </p>
             </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.1s' }}>
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.18s' }}>
               <div className="feature-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
               </div>
               <h3>Pharmacy network</h3>
               <p>
-                Share stock visibility with nearby pharmacies, replacing the current system of
-                ringing around one by one.
+                See which nearby pharmacies are holding what, instead of ringing around one by one.
               </p>
             </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.2s' }}>
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.24s' }}>
               <div className="feature-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+                </svg>
+              </div>
+              <h3>Dated clinical documents</h3>
+              <p>
+                Every healthcare professional letter is shown with its publication date and
+                flagged once it is old enough to be out of date.
+              </p>
+            </div>
+            <div className="feature-card reveal" style={{ '--reveal-delay': '0.30s' }}>
+              <div className="feature-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                 </svg>
               </div>
               <h3>Human in the loop</h3>
               <p>
-                Insova never substitutes, orders or dispenses. It informs; the pharmacist
-                decides. Every clinical document is shown with its publication date.
+                Insova never substitutes, orders or dispenses. It informs; the pharmacist decides.
               </p>
             </div>
           </div>
+
+          <p className="live-note" style={{ marginTop: '36px' }}>
+            Insova is in development and is not yet available. Nothing here is clinical guidance.
+          </p>
         </div>
       </section>
 
@@ -495,7 +539,8 @@ function App() {
           <div className="section-label">Progress</div>
           <h2 className="section-title">Where we are.</h2>
           <p className="section-intro">
-            Insova is early. This is what has been built so far, in the order it happened.
+            We are in the early stages of development. This is what has been built so far, in the
+            order it happened.
           </p>
           <ol className="log-list">
             {PROGRESS.map((entry, i) => (
@@ -571,7 +616,7 @@ function App() {
         <div className="container">
           <div className="section-label">Our Team</div>
           <h2 className="section-title">Pharmacy meets technology.</h2>
-          <p className="section-intro">Insova is founded from University College Cork.</p>
+          <p className="section-intro">Insova is founded at University College Cork.</p>
           <div className="team-grid-two">
             <div className="team-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="team-photo">
@@ -603,13 +648,13 @@ function App() {
             researcher working on medication shortages, we would like to hear from you.
           </p>
           <div className="contact-cards">
-            <a href="mailto:Contact@insova.ie" className="contact-card reveal" style={{ '--reveal-delay': '0s' }}>
+            <a href="mailto:contact@insova.ie" className="contact-card reveal" style={{ '--reveal-delay': '0s' }}>
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
               <div className="contact-type">Email Us</div>
-              <div className="contact-value">Contact@insova.ie</div>
+              <div className="contact-value">contact@insova.ie</div>
             </a>
             <a href="https://www.linkedin.com/company/insovaie/" target="_blank" rel="noopener noreferrer" className="contact-card reveal" style={{ '--reveal-delay': '0.12s' }}>
               <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">

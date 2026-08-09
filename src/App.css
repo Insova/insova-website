@@ -1309,3 +1309,151 @@ body {
   .live-cell:first-child,
   .live-cell:last-child { border-radius: 0; }
 }
+
+
+
+/* ==================================================================
+   APPEND TO THE END OF App.css
+   Everything here is scoped to #product, so no other section changes.
+   ================================================================== */
+
+/* ---- Product section shell ---------------------------------------
+   Reuses whatever .section-solution looked like. If your old
+   .section-solution had a background you want kept, copy that rule's
+   background line into .section-product below.                       */
+.section-product {
+  position: relative;
+}
+
+/* ---- Platform strip ---------------------------------------------- */
+.platform-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 40px 0 56px;
+  background: rgba(9, 0, 64, 0.08);
+  border: 1px solid rgba(9, 0, 64, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.platform-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 24px;
+  background: #fff;
+}
+
+.platform-item svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  margin-top: 3px;
+  color: #03bf64;
+}
+
+.platform-item h4 {
+  font-size: 14.5px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #090040;
+  letter-spacing: -0.01em;
+}
+
+.platform-item p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+  color: #61606f;
+}
+
+@media (max-width: 860px) {
+  .platform-strip { grid-template-columns: 1fr; }
+}
+
+/* ---- Tighter feature cards ---------------------------------------
+   Only applies where .features-tight is on the grid, so the class is
+   opt-in and nothing else on the site moves.                         */
+.features-grid.features-tight {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.features-grid.features-tight .feature-card {
+  padding: 22px 22px 24px;
+  border-radius: 14px;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.features-grid.features-tight .feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(3, 191, 100, 0.35);
+  box-shadow: 0 10px 28px rgba(9, 0, 64, 0.07);
+}
+
+.features-grid.features-tight .feature-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.features-grid.features-tight .feature-card h3 {
+  font-size: 16px;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.features-grid.features-tight .feature-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 1000px) {
+  .features-grid.features-tight { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 620px) {
+  .features-grid.features-tight { grid-template-columns: 1fr; }
+}
+
+/* ---- Reduced motion ---------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .features-grid.features-tight .feature-card,
+  .features-grid.features-tight .feature-card:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+
+/* ---- Tighter vertical rhythm --------------------------------------
+   Sections were running long. Adjust the two padding values to taste;
+   everything else keys off them.                                     */
+.section {
+  padding-top: 76px;
+  padding-bottom: 76px;
+}
+
+.section-label { margin-bottom: 10px; }
+
+.section-title { margin-bottom: 12px; }
+
+.section-intro { margin-bottom: 32px; }
+
+.platform-strip { margin: 28px 0 36px; }
+
+.ucc-banner { margin: 0; }
+
+@media (max-width: 720px) {
+  .section {
+    padding-top: 52px;
+    padding-bottom: 52px;
+  }
+}
