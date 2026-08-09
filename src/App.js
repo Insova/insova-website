@@ -229,7 +229,7 @@ function App() {
           <div className="nav-links">
             <a href="#product" className="nav-link">Our product</a>
             <a href="#progress" className="nav-link">Progress</a>
-            <a href="#live" className="nav-link">The data</a>
+            <a href="#problem" className="nav-link">The data</a>
             <a href="#contact" className="nav-cta">Get in Touch</a>
           </div>
         </div>
