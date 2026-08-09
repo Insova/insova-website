@@ -390,8 +390,8 @@ function App() {
               </div>
               <h3>Early warning</h3>
               <p>
-                Shortage risk flagged ahead of time from supply concentration and historical
-                patterns. Forecasts are recorded before the fact and scored against what happened.
+                We believe our model could be capable of reaching predicitons one
+                month before the shortage hits 
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.06s' }}>
