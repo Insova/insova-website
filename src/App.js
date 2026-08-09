@@ -477,7 +477,7 @@ function App() {
 
           <p className="live-lead reveal">
             None of that works without history. Ireland's shortage register is overwritten every
-            morning and nobody keeps yesterday's copy, so there is no record of how a shortage
+            morning and nobody keeps/publishes yesterday's copy, so there is no record of how a shortage
             built before it arrived. A model cannot learn from something it never saw forming.
             So every morning we take a dated copy and keep it. This is today's.
           </p>
