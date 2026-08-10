@@ -381,6 +381,7 @@ function App() {
           </div>
 
           {/* What it does */}
+          <div className="section-label">What it does</div>
           <div className="features-grid features-tight">
             <div className="feature-card reveal" style={{ '--reveal-delay': '0s' }}>
               <div className="feature-icon-wrap">
@@ -390,8 +391,8 @@ function App() {
               </div>
               <h3>Early warning</h3>
               <p>
-                We believe our model could be capable of reaching predicitons one
-                month before the shortage hits 
+                We believe our model could be capable of predicitons one
+                month before the actual shortage hits 
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.06s' }}>
