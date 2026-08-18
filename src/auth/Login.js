@@ -53,11 +53,9 @@ export default function Login({ onDone, onHome }) {
       <div className="auth-grid">
         <div className="auth-brand">
           <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
-          <h2>Shortage intelligence for the dispensary</h2>
+          <h2>Shortage intelligence, and more, to save you time</h2>
           <p>
-            The national register, read every morning and joined to the regulator's own
-            interchangeable list, so you can see what is short, what is left in the group,
-            and what is about to become a problem.
+            
           </p>
           <ul>
             <li>Every current shortage, searchable and filterable</li>
