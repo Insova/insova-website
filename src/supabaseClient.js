@@ -12,7 +12,6 @@ import { createClient } from '@supabase/supabase-js';
 const url = process.env.REACT_APP_SUPABASE_URL;
 const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 export const configured = Boolean(url && anonKey);
-s
 export const supabase = configured
   ? createClient(url, anonKey, {
       auth: {
