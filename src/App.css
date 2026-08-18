@@ -1474,3 +1474,38 @@ body {
     grid-template-columns: minmax(0, 340px);
   }
 }
+
+/* =====================================================================
+   v0.5 additions
+   Boot screen while the auth session resolves, and the nav-cta needs to
+   work as a <button> now that Pharmacy sign in is not a link.
+   ===================================================================== */
+
+button.nav-cta {
+  font-family: inherit;
+  cursor: pointer;
+  background: none;
+}
+
+.hero-actions button.btn {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ia-boot {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--dark);
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+.ia-boot img {
+  height: 76px;
+  width: auto;
+  opacity: 0.9;
+}
