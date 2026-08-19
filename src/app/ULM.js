@@ -40,7 +40,7 @@ const EMPTY = {
 };
 
 export default function ULM({ app }) {
-  const { pharmacy, user, isAdmin } = useAuth();
+  const { pharmacy, user } = useAuth();
   const [tab, setTab] = useState('mine');
   const [mine, setMine] = useState([]);
   const [shared, setShared] = useState([]);
@@ -52,10 +52,15 @@ export default function ULM({ app }) {
   const [q, setQ] = useState('');
 
   const load = useCallback(async () => {
-    if (!supabase) return;
+    if (!supabase || !pharmacy?.id) return;
+    // Filtered explicitly by pharmacy as well as by row level security.
+    // RLS is the boundary; this is the second lock. A screen labelled
+    // "Our records" must never show another pharmacy's rows, even if a
+    // policy is wrong.
     const { data: rows, error } = await supabase
       .from('ulm_records')
       .select('*')
+      .eq('pharmacy_id', pharmacy.id)
       .order('created_at', { ascending: false });
     if (error) setErr(error.message);
     else setMine(rows || []);
@@ -66,7 +71,7 @@ export default function ULM({ app }) {
       .order('supplied_on', { ascending: false })
       .limit(400);
     setShared(sh || []);
-  }, []);
+  }, [pharmacy]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -95,7 +100,8 @@ export default function ULM({ app }) {
     };
     let error;
     if (editing) {
-      ({ error } = await supabase.from('ulm_records').update(payload).eq('id', editing));
+      ({ error } = await supabase.from('ulm_records')
+        .update(payload).eq('id', editing).eq('pharmacy_id', pharmacy.id));
     } else {
       ({ error } = await supabase.from('ulm_records').insert(payload));
     }
@@ -107,6 +113,10 @@ export default function ULM({ app }) {
   };
 
   const edit = (r) => {
+    if (r.pharmacy_id !== pharmacy?.id) {
+      setErr('That record belongs to another pharmacy.');
+      return;
+    }
     setEditing(r.id);
     setForm({
       short_product: r.short_product || '',
@@ -126,8 +136,14 @@ export default function ULM({ app }) {
   };
 
   const remove = async (id) => {
+    const row = mine.find((r) => r.id === id);
+    if (!row || row.pharmacy_id !== pharmacy?.id) {
+      setErr('That record belongs to another pharmacy.');
+      return;
+    }
     if (!window.confirm('Delete this record?')) return;
-    await supabase.from('ulm_records').delete().eq('id', id);
+    await supabase.from('ulm_records')
+      .delete().eq('id', id).eq('pharmacy_id', pharmacy.id);
     load();
   };
 
@@ -366,8 +382,10 @@ export default function ULM({ app }) {
       )}
 
       <p className="ia-source">
-        Records are stored against your pharmacy. The shared view carries no pharmacy names.
-        {isAdmin ? ' You are an admin, so you can see all records in Our records.' : ''}
+        Our records shows only {pharmacy?.name || 'your pharmacy'}. Everyone signed in under the
+        same pharmacy sees and can edit the same records, because this is a dispensary's record
+        rather than an individual's. What others recorded is de-identified and carries no pharmacy
+        names.
       </p>
     </>
   );

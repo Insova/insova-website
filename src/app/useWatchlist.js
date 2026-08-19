@@ -14,9 +14,17 @@ import { useAuth } from '../auth/AuthProvider';
   into. "Tell me when this is available again" needs a list of products
   to check, and this is that list.
 
+  SCOPE: the list belongs to the PHARMACY, not to the person. Everyone
+  signed in under the same pharmacy sees and edits the same list, which
+  is what a dispensary wants: a locum should see what the regular
+  pharmacist is waiting on. It also means two accounts in the same
+  pharmacy will appear to share a list, because they do.
+
   Rows live in public.watchlist, scoped by pharmacy under row level
   security, with a unique constraint on (pharmacy_id, shortage_id) so a
-  double click cannot create duplicates.
+  double click cannot create duplicates. Every query below also filters
+  on pharmacy_id explicitly: row level security is the boundary, this is
+  the second lock.
 */
 export function useWatchlist() {
   const { pharmacy, user } = useAuth();

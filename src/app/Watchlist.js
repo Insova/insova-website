@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useAuth } from '../auth/AuthProvider';
 import { fmtDate, durationText } from './useAppData';
 import { WatchStar } from './useWatchlist';
 import History from './History';
@@ -16,6 +17,7 @@ import History from './History';
 */
 export default function Watchlist({ app, watch, go }) {
   const { data } = app;
+  const { pharmacy } = useAuth();
   const [noteFor, setNoteFor] = useState(null);
   const [noteText, setNoteText] = useState('');
   const [open, setOpen] = useState(null);
@@ -63,6 +65,14 @@ export default function Watchlist({ app, watch, go }) {
           and it appears here, with whatever has changed on it since the register last moved.
         </p>
         <div className="ia-callout">
+          <strong>This list belongs to the pharmacy, not to you.</strong>
+          <p>
+            Everyone signed in under {pharmacy?.name || 'this pharmacy'} sees and edits the same
+            list, so a locum can see what you are waiting on. Other pharmacies cannot see it at all.
+          </p>
+        </div>
+
+        <div className="ia-callout">
           <strong>Why bother, when the whole register is already searchable?</strong>
           <p>
             Because 371 shortages is a national figure and only a handful of them are yours.
@@ -82,7 +92,8 @@ export default function Watchlist({ app, watch, go }) {
   return (
     <>
       <p className="ia-lead">
-        {stillShort.length} product{stillShort.length === 1 ? '' : 's'} on your list
+        {stillShort.length} product{stillShort.length === 1 ? '' : 's'} on{' '}
+        {pharmacy?.name ? `${pharmacy.name}'s` : 'your'} list
         {withChanges.length > 0 && `, ${withChanges.length} with something new`}
         {gone.length > 0 && `, ${gone.length} off the register`}.
       </p>
