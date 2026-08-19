@@ -482,8 +482,8 @@ function Marketing({ onLogin }) {
           </div>
 
           <p className="live-lead reveal">
-            To build our product, we need to use data from the HPRA's national register. On top of using their
-            Data to create shortage intelligence, we also analyse it every morning and publish it in the link below
+            To build shortage intelligence, we need to use data from the HPRA's national register. On top of using their
+            data to create this, we also analyse it every morning and publish our analysis below
           </p>
 
           <div className="live-readout">
