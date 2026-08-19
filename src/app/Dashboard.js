@@ -1,5 +1,6 @@
 import React from 'react';
 import { fmtDate, durationText } from './useAppData';
+import { NextStrip } from './Roadmap';
 
 export default function Dashboard({ app, watch, go }) {
   const { data, pressure } = app;
@@ -26,6 +27,8 @@ export default function Dashboard({ app, watch, go }) {
 
   return (
     <>
+      <NextStrip go={go} meta={m} />
+
       {/* ---- your pharmacy, before the national picture ---- */}
       {watch.enabled && watch.rows.length > 0 && (
         <section className={'ia-mine' + (myChanges.length || myGone.length ? ' live' : '')}>

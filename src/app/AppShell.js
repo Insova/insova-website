@@ -9,6 +9,7 @@ import Groups from './Groups';
 import Notices from './Notices';
 import ULM from './ULM';
 import Digest from './Digest';
+import Roadmap from './Roadmap';
 import Admin from './Admin';
 import './app.css';
 
@@ -20,6 +21,7 @@ const NAV = [
   { id: 'notices',   label: 'Notices',      icon: '✉' },
   { id: 'ulm',       label: 'Unlicensed',   icon: '⊕' },
   { id: 'digest',    label: 'Daily brief',  icon: '⏱' },
+  { id: 'roadmap',   label: "What's next", icon: '◇' },
 ];
 
 export default function AppShell({ onHome }) {
@@ -161,6 +163,7 @@ export default function AppShell({ onHome }) {
           {app.ready && view === 'notices' && <Notices app={app} />}
           {view === 'ulm' && <ULM app={app} />}
           {app.ready && view === 'digest' && <Digest app={app} watch={watch} />}
+          {view === 'roadmap' && <Roadmap app={app} />}
           {view === 'admin' && isAdmin && <Admin app={app} />}
         </main>
       </div>
