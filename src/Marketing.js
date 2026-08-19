@@ -482,10 +482,8 @@ function Marketing({ onLogin }) {
           </div>
 
           <p className="live-lead reveal">
-            None of that works without history. Ireland's shortage register is overwritten every
-            morning and nobody keeps/publishes yesterday's copy, so there is no record of how a shortage
-            built before it arrived. A model cannot learn from something it never saw forming.
-            So every morning we take a dated copy and keep it. This is today's.
+            To build our product, we need to use data from the HPRA's national register. On top of using their
+            Data to create shortage intelligence, we also analyse it every morning and publish it in the link below
           </p>
 
           <div className="live-readout">
