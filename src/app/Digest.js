@@ -14,7 +14,7 @@ import { fmtDate, durationText } from './useAppData';
   Sending is not wired up yet, which the screen says plainly rather than
   implying a service that does not exist.
 */
-export default function Digest({ app }) {
+export default function Digest({ app, watch }) {
   const { data, pressure } = app;
   const { pharmacy, profile } = useAuth();
   const c = data.counts;
@@ -24,6 +24,11 @@ export default function Digest({ app }) {
   const left = changes.filter((x) => x.kind === 'left');
   const moved = changes.filter((x) => x.kind === 'date_moved');
   const high = data.items.filter((i) => i.risk_band === 'high').slice(0, 5);
+
+  // The pharmacy's own products lead the brief when they have moved.
+  const watched = watch && watch.ids ? watch.ids : new Set();
+  const mine = changes.filter((ch) => watched.has(ch.id));
+  const mineGone = (data.recently_left || []).filter((r) => watched.has(r.id));
   const starting = data.items.filter((i) => i.not_started).slice(0, 5);
 
   return (
@@ -50,7 +55,11 @@ export default function Digest({ app }) {
           <div>
             <span className="k">Subject</span>
             <span className="v">
-              Insova brief, {data.meta.as_of_label}: {c.current} short
+              Insova brief, {data.meta.as_of_label}:{' '}
+              {mine.length + mineGone.length > 0
+                ? `${mine.length + mineGone.length} on your list moved, `
+                : ''}
+              {c.current} short
               {appeared.length ? `, ${appeared.length} new` : ''}
               {c.groups_last_product ? `, ${c.groups_last_product} group${c.groups_last_product > 1 ? 's' : ''} down to one` : ''}
             </span>
@@ -69,6 +78,19 @@ export default function Digest({ app }) {
             <span><b>{left.length}</b> off the register</span>
             <span><b>{c.groups_last_product}</b> groups down to one</span>
           </div>
+
+          {(mine.length > 0 || mineGone.length > 0) && (
+            <Block title="On your list">
+              {mineGone.map((g) => (
+                <li key={'g' + g.id}><b>{g.product}</b> — off the register. Worth checking your wholesaler.</li>
+              ))}
+              {mine.map((ch) => (
+                <li key={ch.id}>
+                  <b>{ch.product}</b> — {ch.kind === 'date_moved' ? `return date moved ${ch.detail}` : ch.kind === 'appeared' ? 'newly short' : ch.detail || ch.kind}
+                </li>
+              ))}
+            </Block>
+          )}
 
           {appeared.length > 0 && (
             <Block title="New on the register">

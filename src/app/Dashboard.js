@@ -1,7 +1,7 @@
 import React from 'react';
 import { fmtDate, durationText } from './useAppData';
 
-export default function Dashboard({ app, go }) {
+export default function Dashboard({ app, watch, go }) {
   const { data, pressure } = app;
   const c = data.counts;
   const m = data.meta;
@@ -17,8 +17,77 @@ export default function Dashboard({ app, go }) {
     .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
     .slice(0, 6);
 
+  // ---- the pharmacy's own products come first ----
+  const byId = new Map(data.items.map((i) => [i.id, i]));
+  const myChanges = changes.filter((ch) => watch.ids.has(ch.id));
+  const myGone = (data.recently_left || []).filter((r) => watch.ids.has(r.id));
+  const myWatched = watch.rows.map((r) => byId.get(r.shortage_id)).filter(Boolean);
+  const myPushed = myWatched.filter((i) => i.history && i.history.pushed_out >= 2);
+
   return (
     <>
+      {/* ---- your pharmacy, before the national picture ---- */}
+      {watch.enabled && watch.rows.length > 0 && (
+        <section className={'ia-mine' + (myChanges.length || myGone.length ? ' live' : '')}>
+          <div className="ia-mine-head">
+            <h3>Your list</h3>
+            <button className="ia-linkbtn" onClick={() => go('watchlist')}>
+              See all {watch.rows.length} →
+            </button>
+          </div>
+
+          {myChanges.length === 0 && myGone.length === 0 ? (
+            <p className="ia-mine-quiet">
+              Nothing has changed on your {watch.rows.length} watched product
+              {watch.rows.length === 1 ? '' : 's'} since {m.compare_label || 'the last collection'}.
+              {myPushed.length > 0 && (
+                <>
+                  {' '}
+                  {myPushed.length} of them {myPushed.length === 1 ? 'has' : 'have'} had a return
+                  date pushed back more than once, though.
+                </>
+              )}
+            </p>
+          ) : (
+            <div className="ia-mine-rows">
+              {myGone.map((g) => (
+                <button key={'g' + g.id} className="ia-mine-row" onClick={() => go('watchlist')}>
+                  <span className="ia-tag green">off the register</span>
+                  <span className="ia-mine-main">
+                    <strong>{g.product}</strong>
+                    <span>Left {fmtDate(g.day)}. Worth ringing your wholesaler.</span>
+                  </span>
+                </button>
+              ))}
+              {myChanges.map((ch) => (
+                <button key={ch.id} className="ia-mine-row" onClick={() => go('shortages', ch.id)}>
+                  <span className={'ia-tag ' + (ch.kind === 'appeared' ? 'red' : ch.kind === 'left' ? 'green' : 'amber')}>
+                    {ch.kind === 'date_moved' ? 'date moved' : ch.kind === 'appeared' ? 'newly short' : ch.kind}
+                  </span>
+                  <span className="ia-mine-main">
+                    <strong>{ch.product}</strong>
+                    {ch.detail && <span>{ch.detail}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {watch.enabled && watch.rows.length === 0 && (
+        <div className="ia-callout ia-nudge">
+          <strong>Everything below is the national picture.</strong>
+          <p>
+            Star the products you actually dispense, or are waiting on, and they will appear at
+            the top of this screen with whatever has changed on them.{' '}
+            <button className="ia-linkbtn inline" onClick={() => go('shortages')}>
+              Start with Shortages
+            </button>
+          </p>
+        </div>
+      )}
+
       {/* ---- headline: the two numbers Isobel asked to separate ---- */}
       <section className="ia-headline">
         <div className="ia-headline-main">
@@ -73,9 +142,9 @@ export default function Dashboard({ app, go }) {
           </p>
         ) : (
           <div className="ia-change-cols">
-            <ChangeCol title="Appeared" tone="bad" rows={appeared} go={go} />
-            <ChangeCol title="Left the register" tone="good" rows={left} go={go} />
-            <ChangeCol title="Return date moved" tone="warn" rows={moved} go={go} />
+            <ChangeCol title="Appeared" tone="bad" rows={appeared} go={go} watch={watch} />
+            <ChangeCol title="Left the register" tone="good" rows={left} go={go} watch={watch} />
+            <ChangeCol title="Return date moved" tone="warn" rows={moved} go={go} watch={watch} />
           </div>
         )}
 
@@ -88,7 +157,50 @@ export default function Dashboard({ app, go }) {
         )}
       </section>
 
-      {/* ---- pressure points: real cascade signal, no invented confidence ---- */}
+      {/* ---- what the archive shows that the register cannot ---- */}
+      {c.date_moved_since_watching > 0 && (
+        <section className="ia-panel">
+          <div className="ia-panel-head">
+            <h3>Return dates that have moved</h3>
+            <span className="ia-panel-note">
+              Across {m.days_archived} day{m.days_archived === 1 ? '' : 's'} of our archive
+            </span>
+          </div>
+          <p className="ia-panel-lead">
+            The register shows the current expected return date and nothing else. Because we keep
+            a dated copy each morning, we can see which dates have been revised, and which keep
+            slipping. A product on its third promised date is a different proposition from one on
+            its first.
+          </p>
+          <div className="ia-list">
+            {data.items
+              .filter((i) => i.history && i.history.date_moves > 0)
+              .sort((a, b) => b.history.pushed_out - a.history.pushed_out || b.history.date_moves - a.history.date_moves)
+              .slice(0, 6)
+              .map((i) => {
+                const last = [...i.history.events].reverse().find((e) => e.kind === 'date_moved');
+                return (
+                  <button key={i.id} className="ia-list-row" onClick={() => go('shortages', i.id)}>
+                    <span className={'ia-moves ' + (i.history.pushed_out >= 2 ? 'bad' : 'warn')}>
+                      {i.history.date_moves}×
+                    </span>
+                    <span className="ia-list-main">
+                      <strong>{i.product}</strong>
+                      <span className="ia-list-sub">
+                        {last
+                          ? `${last.from ? fmtDate(last.from) : 'no date'} → ${last.to ? fmtDate(last.to) : 'no date'}`
+                          : 'date revised'}
+                        {i.history.pushed_out > 0 && ` · pushed back ${i.history.pushed_out} time${i.history.pushed_out === 1 ? '' : 's'}`}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
+      {/* ---- pressure points ---- */}
       <section className="ia-panel">
         <div className="ia-panel-head">
           <h3>Where pressure is concentrating</h3>
@@ -137,9 +249,9 @@ export default function Dashboard({ app, go }) {
         </div>
         <p className="ia-panel-lead">
           Supply risk measures how difficult a shortage is to substitute around: what is left
-          in the interchangeable group, how long it has run, and whether the return date has
-          passed. It says nothing about how clinically important the medicine is. That call
-          is yours.
+          in the interchangeable group, how long it has run, whether the return date has
+          passed, and whether that date keeps slipping. It says nothing about how clinically
+          important the medicine is. That call is yours.
         </p>
         <div className="ia-list">
           {topRisk.map((i) => (
@@ -188,7 +300,7 @@ export default function Dashboard({ app, go }) {
   );
 }
 
-function ChangeCol({ title, tone, rows, go }) {
+function ChangeCol({ title, tone, rows, go, watch }) {
   return (
     <div className="ia-change-col">
       <h4 className={'ia-change-title ' + tone}>
@@ -199,7 +311,10 @@ function ChangeCol({ title, tone, rows, go }) {
       ) : (
         rows.slice(0, 8).map((r) => (
           <button key={r.kind + r.id} className="ia-change-row" onClick={() => go('shortages', r.id)}>
-            <strong>{r.product}</strong>
+            <strong>
+              {watch.ids.has(r.id) && <span className="ia-mini-star" title="On your list">★</span>}
+              {r.product}
+            </strong>
             {r.detail && <span>{r.detail}</span>}
           </button>
         ))

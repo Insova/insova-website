@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useAppData, daysSince } from './useAppData';
+import { useWatchlist } from './useWatchlist';
 import Dashboard from './Dashboard';
+import Watchlist from './Watchlist';
 import Shortages from './Shortages';
 import Groups from './Groups';
 import Notices from './Notices';
@@ -12,6 +14,7 @@ import './app.css';
 
 const NAV = [
   { id: 'dashboard', label: 'Today',        icon: '▦' },
+  { id: 'watchlist', label: 'Your list',    icon: '★' },
   { id: 'shortages', label: 'Shortages',    icon: '☰' },
   { id: 'groups',    label: 'Running low',  icon: '◨' },
   { id: 'notices',   label: 'Notices',      icon: '✉' },
@@ -22,13 +25,12 @@ const NAV = [
 export default function AppShell({ onHome }) {
   const { profile, pharmacy, isAdmin, hasPharmacy, signOut } = useAuth();
   const app = useAppData();
+  const watch = useWatchlist();
   const [view, setView] = useState('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
   const [focusId, setFocusId] = useState(null);
 
-  const nav = isAdmin
-    ? [...NAV, { id: 'admin', label: 'Admin', icon: '⚙' }]
-    : NAV;
+  const nav = isAdmin ? [...NAV, { id: 'admin', label: 'Admin', icon: '⚙' }] : NAV;
 
   const go = (id, id2) => {
     setView(id);
@@ -57,6 +59,12 @@ export default function AppShell({ onHome }) {
 
   const stale = app.data ? daysSince(app.data.meta.as_of) : null;
 
+  // how many watched products have something new on them today
+  const watchAlerts = app.ready
+    ? (app.data.changes || []).filter((c) => watch.ids.has(c.id)).length
+      + (app.data.recently_left || []).filter((r) => watch.ids.has(r.id)).length
+    : 0;
+
   return (
     <div className={'ia' + (menuOpen ? ' ia-menu-open' : '')}>
       <aside className="ia-side">
@@ -81,6 +89,11 @@ export default function AppShell({ onHome }) {
             >
               <span className="ia-nav-icon" aria-hidden="true">{n.icon}</span>
               <span>{n.label}</span>
+              {n.id === 'watchlist' && watch.rows.length > 0 && (
+                <span className={'ia-nav-badge' + (watchAlerts ? ' alert' : '')}>
+                  {watchAlerts || watch.rows.length}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -96,16 +109,10 @@ export default function AppShell({ onHome }) {
 
       <div className="ia-main">
         <header className="ia-top">
-          <button
-            className="ia-burger"
-            aria-label="Menu"
-            onClick={() => setMenuOpen((v) => !v)}
-          >
+          <button className="ia-burger" aria-label="Menu" onClick={() => setMenuOpen((v) => !v)}>
             ☰
           </button>
-          <div className="ia-top-title">
-            {nav.find((n) => n.id === view)?.label}
-          </div>
+          <div className="ia-top-title">{nav.find((n) => n.id === view)?.label}</div>
           <div className="ia-top-right">
             {app.data && (
               <span className={'ia-freshness' + (stale > 1 ? ' warn' : '')}>
@@ -138,14 +145,22 @@ export default function AppShell({ onHome }) {
             </div>
           )}
 
+          {watch.error && (
+            <div className="ia-alert warn">
+              <strong>Your list could not be loaded.</strong>
+              <span>{watch.error}</span>
+            </div>
+          )}
+
           {app.loading && <div className="ia-loading">Loading the register…</div>}
 
-          {app.ready && view === 'dashboard' && <Dashboard app={app} go={go} />}
-          {app.ready && view === 'shortages' && <Shortages app={app} focusId={focusId} />}
+          {app.ready && view === 'dashboard' && <Dashboard app={app} watch={watch} go={go} />}
+          {app.ready && view === 'watchlist' && <Watchlist app={app} watch={watch} go={go} />}
+          {app.ready && view === 'shortages' && <Shortages app={app} watch={watch} focusId={focusId} />}
           {app.ready && view === 'groups' && <Groups app={app} go={go} />}
           {app.ready && view === 'notices' && <Notices app={app} />}
           {view === 'ulm' && <ULM app={app} />}
-          {app.ready && view === 'digest' && <Digest app={app} />}
+          {app.ready && view === 'digest' && <Digest app={app} watch={watch} />}
           {view === 'admin' && isAdmin && <Admin app={app} />}
         </main>
       </div>
