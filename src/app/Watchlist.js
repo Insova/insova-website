@@ -65,10 +65,10 @@ export default function Watchlist({ app, watch, go }) {
           and it appears here, with whatever has changed on it since the register last moved.
         </p>
         <div className="ia-callout">
-          <strong>This list belongs to the pharmacy, not to you.</strong>
+          <strong>This list is yours alone.</strong>
           <p>
-            Everyone signed in under {pharmacy?.name || 'this pharmacy'} sees and edits the same
-            list, so a locum can see what you are waiting on. Other pharmacies cannot see it at all.
+            Nobody else sees it, including colleagues at {pharmacy?.name || 'this pharmacy'} and
+            including us. It is a working note about what you are chasing, not a shared record.
           </p>
         </div>
 
@@ -92,8 +92,7 @@ export default function Watchlist({ app, watch, go }) {
   return (
     <>
       <p className="ia-lead">
-        {stillShort.length} product{stillShort.length === 1 ? '' : 's'} on{' '}
-        {pharmacy?.name ? `${pharmacy.name}'s` : 'your'} list
+        {stillShort.length} product{stillShort.length === 1 ? '' : 's'} on your list
         {withChanges.length > 0 && `, ${withChanges.length} with something new`}
         {gone.length > 0 && `, ${gone.length} off the register`}.
       </p>

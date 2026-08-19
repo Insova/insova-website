@@ -40,7 +40,7 @@ const EMPTY = {
 };
 
 export default function ULM({ app }) {
-  const { pharmacy, user } = useAuth();
+  const { pharmacy, user, isAdmin } = useAuth();
   const [tab, setTab] = useState('mine');
   const [mine, setMine] = useState([]);
   const [shared, setShared] = useState([]);
@@ -53,10 +53,13 @@ export default function ULM({ app }) {
 
   const load = useCallback(async () => {
     if (!supabase || !pharmacy?.id) return;
-    // Filtered explicitly by pharmacy as well as by row level security.
-    // RLS is the boundary; this is the second lock. A screen labelled
-    // "Our records" must never show another pharmacy's rows, even if a
-    // policy is wrong.
+    // Read across the pharmacy: a colleague's record of what was
+    // supplied is exactly what the next person facing the same gap
+    // needs. Writing is restricted to the author, enforced in the
+    // database and mirrored in the buttons below.
+    //
+    // The pharmacy filter is explicit as well as enforced by row level
+    // security. RLS is the boundary; this is the second lock.
     const { data: rows, error } = await supabase
       .from('ulm_records')
       .select('*')
@@ -93,7 +96,7 @@ export default function ULM({ app }) {
     const payload = {
       ...form,
       pharmacy_id: pharmacy.id,
-      created_by: user?.id || null,
+      created_by: user.id,
       price_paid: form.price_paid === '' ? null : Number(form.price_paid),
       supplied_on: form.supplied_on || null,
       updated_at: new Date().toISOString(),
@@ -101,7 +104,7 @@ export default function ULM({ app }) {
     let error;
     if (editing) {
       ({ error } = await supabase.from('ulm_records')
-        .update(payload).eq('id', editing).eq('pharmacy_id', pharmacy.id));
+        .update(payload).eq('id', editing).eq('created_by', user.id));
     } else {
       ({ error } = await supabase.from('ulm_records').insert(payload));
     }
@@ -113,8 +116,8 @@ export default function ULM({ app }) {
   };
 
   const edit = (r) => {
-    if (r.pharmacy_id !== pharmacy?.id) {
-      setErr('That record belongs to another pharmacy.');
+    if (r.created_by !== user?.id) {
+      setErr('That record was made by a colleague. Only its author can edit it.');
       return;
     }
     setEditing(r.id);
@@ -137,13 +140,17 @@ export default function ULM({ app }) {
 
   const remove = async (id) => {
     const row = mine.find((r) => r.id === id);
-    if (!row || row.pharmacy_id !== pharmacy?.id) {
-      setErr('That record belongs to another pharmacy.');
+    if (!row) return;
+    const ownIt = row.created_by === user?.id;
+    if (!ownIt && !isAdmin) {
+      setErr('That record was made by a colleague. Only its author or an admin can delete it.');
       return;
     }
-    if (!window.confirm('Delete this record?')) return;
-    await supabase.from('ulm_records')
-      .delete().eq('id', id).eq('pharmacy_id', pharmacy.id);
+    if (!window.confirm(ownIt
+      ? 'Delete this record?'
+      : 'This record was made by a colleague. Delete it as an administrator?')) return;
+    const { error } = await supabase.from('ulm_records').delete().eq('id', id);
+    if (error) { setErr(error.message); return; }
     load();
   };
 
@@ -174,7 +181,7 @@ export default function ULM({ app }) {
 
       <div className="ia-tabs">
         <button className={tab === 'mine' ? 'on' : ''} onClick={() => setTab('mine')}>
-          Our records <span>{mine.length}</span>
+          {pharmacy?.name || 'This pharmacy'} <span>{mine.length}</span>
         </button>
         <button className={tab === 'shared' ? 'on' : ''} onClick={() => setTab('shared')}>
           What others recorded <span>{shared.length}</span>
@@ -335,8 +342,21 @@ export default function ULM({ app }) {
                   {r.note && <p className="ia-ulm-note">{r.note}</p>}
                 </div>
                 <div className="ia-ulm-actions">
-                  <button className="ia-linkbtn" onClick={() => edit(r)}>Edit</button>
-                  <button className="ia-linkbtn danger" onClick={() => remove(r.id)}>Delete</button>
+                  {r.created_by === user?.id ? (
+                    <>
+                      <button className="ia-linkbtn" onClick={() => edit(r)}>Edit</button>
+                      <button className="ia-linkbtn danger" onClick={() => remove(r.id)}>Delete</button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="ia-ulm-owner">Recorded by a colleague</span>
+                      {isAdmin && (
+                        <button className="ia-linkbtn danger" onClick={() => remove(r.id)}>
+                          Delete as admin
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
               </article>
             ))}
@@ -382,10 +402,10 @@ export default function ULM({ app }) {
       )}
 
       <p className="ia-source">
-        Our records shows only {pharmacy?.name || 'your pharmacy'}. Everyone signed in under the
-        same pharmacy sees and can edit the same records, because this is a dispensary's record
-        rather than an individual's. What others recorded is de-identified and carries no pharmacy
-        names.
+        Records are visible to everyone at {pharmacy?.name || 'your pharmacy'}, because the next
+        colleague to face the same gap needs to see what you found. Only the person who made a
+        record can edit it. What others recorded is de-identified across all pharmacies and
+        carries no names.
       </p>
     </>
   );

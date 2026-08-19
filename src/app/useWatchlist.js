@@ -14,17 +14,16 @@ import { useAuth } from '../auth/AuthProvider';
   into. "Tell me when this is available again" needs a list of products
   to check, and this is that list.
 
-  SCOPE: the list belongs to the PHARMACY, not to the person. Everyone
-  signed in under the same pharmacy sees and edits the same list, which
-  is what a dispensary wants: a locum should see what the regular
-  pharmacist is waiting on. It also means two accounts in the same
-  pharmacy will appear to share a list, because they do.
+  SCOPE: the list is PRIVATE TO THE PERSON who made it. A colleague in
+  the same pharmacy does not see it, and neither does an admin. It is a
+  working note about what you are chasing, not a shared record, and it
+  should not be readable by anyone who happens to have a login.
 
-  Rows live in public.watchlist, scoped by pharmacy under row level
-  security, with a unique constraint on (pharmacy_id, shortage_id) so a
-  double click cannot create duplicates. Every query below also filters
-  on pharmacy_id explicitly: row level security is the boundary, this is
-  the second lock.
+  Rows live in public.watchlist with a unique index on
+  (created_by, shortage_id), so two people can each watch the same
+  product but one person cannot watch it twice. Every query below also
+  filters on created_by explicitly: row level security is the boundary,
+  this is the second lock.
 */
 export function useWatchlist() {
   const { pharmacy, user } = useAuth();
@@ -34,7 +33,7 @@ export function useWatchlist() {
   const [busyIds, setBusyIds] = useState(() => new Set());
 
   const load = useCallback(async () => {
-    if (!supabase || !pharmacy?.id) {
+    if (!supabase || !pharmacy?.id || !user?.id) {
       setRows([]);
       setLoading(false);
       return;
@@ -43,7 +42,7 @@ export function useWatchlist() {
     const { data, error: e } = await supabase
       .from('watchlist')
       .select('*')
-      .eq('pharmacy_id', pharmacy.id)
+      .eq('created_by', user.id)
       .order('created_at', { ascending: false });
     if (e) setError(e.message);
     else {
@@ -51,7 +50,7 @@ export function useWatchlist() {
       setError(null);
     }
     setLoading(false);
-  }, [pharmacy]);
+  }, [pharmacy, user]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -66,16 +65,18 @@ export function useWatchlist() {
 
   const add = useCallback(async (item, note) => {
     if (!pharmacy?.id) return 'Your account is not linked to a pharmacy.';
+    if (!user?.id) return 'Not signed in.';
     mark(item.id, true);
     // optimistic, so the star responds immediately
     setRows((r) => [{ id: 'tmp-' + item.id, shortage_id: item.id, product: item.product,
-                      note: note || null, pharmacy_id: pharmacy.id }, ...r]);
+                      note: note || null, pharmacy_id: pharmacy.id,
+                      created_by: user.id }, ...r]);
     const { error: e } = await supabase.from('watchlist').insert({
       pharmacy_id: pharmacy.id,
       shortage_id: item.id,
       product: item.product,
       note: note || null,
-      created_by: user?.id || null,
+      created_by: user.id,
     });
     mark(item.id, false);
     if (e) {
@@ -87,34 +88,34 @@ export function useWatchlist() {
   }, [pharmacy, user, load]);
 
   const remove = useCallback(async (shortageId) => {
-    if (!pharmacy?.id) return;
+    if (!user?.id) return;
     mark(shortageId, true);
     const before = rows;
     setRows((r) => r.filter((x) => x.shortage_id !== shortageId));
     const { error: e } = await supabase
       .from('watchlist')
       .delete()
-      .eq('pharmacy_id', pharmacy.id)
+      .eq('created_by', user.id)
       .eq('shortage_id', shortageId);
     mark(shortageId, false);
     if (e) setRows(before);
-  }, [pharmacy, rows]);
+  }, [user, rows]);
 
   const toggle = useCallback((item) =>
     (ids.has(item.id) ? remove(item.id) : add(item)), [ids, add, remove]);
 
   const setNote = useCallback(async (shortageId, note) => {
-    if (!pharmacy?.id) return;
+    if (!user?.id) return;
     await supabase.from('watchlist').update({ note: note || null })
-      .eq('pharmacy_id', pharmacy.id).eq('shortage_id', shortageId);
+      .eq('created_by', user.id).eq('shortage_id', shortageId);
     load();
-  }, [pharmacy, load]);
+  }, [user, load]);
 
   return {
     rows, ids, loading, error, busyIds,
     add, remove, toggle, setNote, reload: load,
     has: (id) => ids.has(id),
-    enabled: Boolean(pharmacy?.id),
+    enabled: Boolean(pharmacy?.id && user?.id),
   };
 }
 

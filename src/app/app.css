@@ -922,3 +922,11 @@
   .ia-early-body li { flex-direction: column; gap: 6px; }
   .ia-early-body li > .ia-tag { min-width: 0; }
 }
+
+
+/* v0.8: record authorship */
+.ia-ulm-owner {
+  font-size: 13px;
+  color: var(--slate-light, #7A94AA);
+  font-style: italic;
+}
