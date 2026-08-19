@@ -164,8 +164,8 @@ function CountUp({ target, suffix = '' }) {
 const PROGRESS = [
   {
     date: 'August 2026',
-    title: 'National analysis',
-    body: 'First analysis of shortage patterns across the whole register, produced from data we collect ourselves.',
+    title: 'National analysis + Prototypes distributed',
+    body: 'First analysis of shortage patterns produced from data we collect ourselves.',
   },
   {
     date: 'August 2026',
@@ -175,7 +175,7 @@ const PROGRESS = [
   {
     date: 'July 2026',
     title: 'Prototype reviewed',
-    body: 'A working prototype of the pharmacist dashboard was built.',
+    body: 'A working prototype of the pharmacist dashboard was built, including extra features we found in our research to be useful.',
   },
   {
     date: 'June 2026',
