@@ -57,12 +57,7 @@ export default function Login({ onDone, onHome }) {
           <p>
             
           </p>
-          <ul>
-            <li>Every current shortage, searchable and filterable</li>
-            <li>Interchangeable groups running low, with the products still standing</li>
-            <li>Manufacturer supply notices, linked at source</li>
-            <li>A shared record of unlicensed medicines and what the PCRS paid</li>
-          </ul>
+          
           <p className="auth-fine">
             Insova is an information tool. It never substitutes, orders or dispenses.
             Nothing in it is clinical guidance.
