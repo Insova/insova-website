@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useAppData, daysSince } from './useAppData';
 import { useWatchlist } from './useWatchlist';
-import { usePresence } from './usePresence';
 import Dashboard from './Dashboard';
 import Watchlist from './Watchlist';
 import Shortages from './Shortages';
@@ -29,7 +28,6 @@ export default function AppShell({ onHome }) {
   const { profile, pharmacy, isAdmin, hasPharmacy, signOut } = useAuth();
   const app = useAppData();
   const watch = useWatchlist();
-  usePresence();
   const [view, setView] = useState('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
   const [focusId, setFocusId] = useState(null);

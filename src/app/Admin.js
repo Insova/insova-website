@@ -47,12 +47,6 @@ export default function Admin({ app }) {
 
   useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    if (tab !== 'activity') return;
-    const id = setInterval(load, 10 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [tab, load]);
-
   const addPharmacy = async (e) => {
     e.preventDefault(); setErr(''); setMsg(''); setBusy(true);
     const { error } = await supabase.from('pharmacies').insert(ph);
@@ -102,9 +96,6 @@ export default function Admin({ app }) {
         </button>
         <button className={tab === 'pharmacies' ? 'on' : ''} onClick={() => setTab('pharmacies')}>
           Pharmacies <span>{pharmacies.length}</span>
-        </button>
-        <button className={tab === 'activity' ? 'on' : ''} onClick={() => setTab('activity')}>
-          Activity
         </button>
       </div>
 
@@ -241,90 +232,11 @@ export default function Admin({ app }) {
           </table>
         </section>
       )}
-
-      {/* ---------------- activity ---------------- */}
-      {tab === 'activity' && (
-        <Activity profiles={profiles} pharmacies={pharmacies} onRefresh={load} />
-      )}
     </>
   );
 }
 
 /* ---------------------------------------------------------------- */
-
-function minutesSince(iso) {
-  if (!iso) return null;
-  return (Date.now() - new Date(iso).getTime()) / 60000;
-}
-
-function relativeTime(mins) {
-  if (mins < 60 * 24) {
-    const hours = Math.round(mins / 60);
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  }
-  const days = Math.round(mins / (60 * 24));
-  if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
-  const months = Math.round(days / 30);
-  if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`;
-  const years = Math.round(days / 365);
-  return `${years} year${years === 1 ? '' : 's'} ago`;
-}
-
-function presenceStatus(lastSeenAt) {
-  if (!lastSeenAt) return { tag: 'grey', label: 'never signed in' };
-  const mins = minutesSince(lastSeenAt);
-  if (mins < 5) return { tag: 'green', label: 'active now' };
-  if (mins < 60) return { tag: 'amber', label: 'recently' };
-  return { tag: 'grey', label: relativeTime(mins) };
-}
-
-function Activity({ profiles, pharmacies, onRefresh }) {
-  const activeNow = profiles.filter((p) => p.last_seen_at && minutesSince(p.last_seen_at) < 5).length;
-  const last24h = profiles.filter((p) => p.last_seen_at && minutesSince(p.last_seen_at) < 60 * 24).length;
-  const neverSignedIn = profiles.filter((p) => !p.last_seen_at).length;
-
-  const sorted = [...profiles].sort((a, b) => {
-    if (!a.last_seen_at && !b.last_seen_at) return 0;
-    if (!a.last_seen_at) return 1;
-    if (!b.last_seen_at) return -1;
-    return new Date(b.last_seen_at) - new Date(a.last_seen_at);
-  });
-
-  return (
-    <section className="ia-panel">
-      <div className="ia-panel-head">
-        <h3>Activity</h3>
-        <button className="ia-btn small" onClick={onRefresh}>Refresh</button>
-      </div>
-      <p className="ia-panel-lead">
-        This shows who has had the app open recently, not who is working right now — a
-        pharmacist with the tab closed is still on shift. It is not a measure of who is
-        "online".
-      </p>
-      <p className="ia-panel-lead">
-        {activeNow} active now &middot; {last24h} in the last 24 hours &middot; {neverSignedIn} never signed in.
-      </p>
-
-      <table className="ia-table">
-        <thead><tr><th>Person</th><th>Email</th><th>Role</th><th>Pharmacy</th><th>Last active</th></tr></thead>
-        <tbody>
-          {sorted.map((p) => {
-            const status = presenceStatus(p.last_seen_at);
-            return (
-              <tr key={p.id}>
-                <td className="name">{p.full_name || '—'}</td>
-                <td>{p.email}</td>
-                <td>{p.role}</td>
-                <td>{pharmacies.find((x) => x.id === p.pharmacy_id)?.name || '—'}</td>
-                <td><span className={'ia-tag ' + status.tag}>{status.label}</span></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </section>
-  );
-}
 
 function Health({ app }) {
   if (!app.ready) {
