@@ -1,13 +1,13 @@
 {
-  "as_of": "2026-08-23",
-  "as_of_label": "23 August 2026",
+  "as_of": "2026-08-24",
+  "as_of_label": "24 August 2026",
   "notified": 359,
   "current": 359,
   "hpra_total": 360,
   "resolved_still_listed": 1,
   "over_one_year": 80,
   "new_30d": 80,
-  "not_yet_impacting": 17,
+  "not_yet_impacting": 12,
   "past_return_date": 34,
   "no_return_date_pct": 38,
   "resolved_still_listed_product": "Co-Amoxiclav TEVA 500 mg / 100 mg Powder for Solution for Injection / Infusion",
@@ -18,5 +18,5 @@
   "no_interchangeable_pct": 53,
   "groups_last_product": 21,
   "letters_tracked": 14,
-  "days_archived": 21
+  "days_archived": 22
 }
