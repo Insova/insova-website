@@ -25,7 +25,10 @@ export default function Login({ onDone, onHome }) {
       } else {
         const err = await signUp(email.trim(), password, fullName.trim());
         if (err) setError(friendly(err.message));
-        else setNotice('Account created. Check your email if confirmation is required, then sign in.');
+        else setNotice(
+          'Account created. Check your email and click the confirmation link, then sign in. ' +
+          'Your pharmacy is attached once the address is confirmed.'
+        );
       }
     } finally {
       setBusy(false);
@@ -54,13 +57,10 @@ export default function Login({ onDone, onHome }) {
         <div className="auth-brand">
           <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
           <h2>Shortage intelligence, and more, to save you time</h2>
-          <p>
-            
-          </p>
-          
+
           <p className="auth-fine">
             Insova is an information tool. It never substitutes, orders or dispenses.
-            Nothing in it is clinical guidance.
+            Nothing in it is clinical guidance, and it is not a patient record system.
           </p>
         </div>
 
@@ -109,6 +109,23 @@ export default function Login({ onDone, onHome }) {
               />
             </label>
 
+            {/*
+              Article 13 of the GDPR requires that people are told what is
+              being collected and why BEFORE they hand it over, not after.
+              This has to sit above the button that creates the account.
+            */}
+            {mode === 'signup' && (
+              <p className="auth-consent">
+                We will hold your name, your email and which pharmacy you belong to, so that we
+                can give you access and keep other pharmacies' records away from you. We do not
+                sell anything to anybody and there is no tracking on this site.{' '}
+                <a href="/privacy.html" target="_blank" rel="noreferrer">
+                  Read the privacy notice
+                </a>
+                .
+              </p>
+            )}
+
             {error && <div className="auth-error">{error}</div>}
             {notice && <div className="auth-notice">{notice}</div>}
 
@@ -135,9 +152,14 @@ export default function Login({ onDone, onHome }) {
             )}
           </div>
 
-          <button className="auth-back" type="button" onClick={onHome}>
-            ← Back to insova.ie
-          </button>
+          <div className="auth-foot">
+            <button className="auth-back" type="button" onClick={onHome}>
+              ← Back to insova.ie
+            </button>
+            <a className="auth-privacy" href="/privacy.html" target="_blank" rel="noreferrer">
+              Privacy
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -148,6 +170,7 @@ function friendly(msg) {
   const m = (msg || '').toLowerCase();
   if (m.includes('invalid login')) return 'That email and password combination was not recognised.';
   if (m.includes('already registered')) return 'An account already exists for that email. Try signing in.';
+  if (m.includes('not confirmed')) return 'Confirm your email address first. Check your inbox for the link.';
   if (m.includes('password')) return 'Password must be at least 8 characters.';
   if (m.includes('email')) return 'That email address was not accepted.';
   return msg || 'Something went wrong. Try again.';

@@ -396,8 +396,9 @@ function Marketing({ onLogin }) {
               </div>
               <h3>Early warning</h3>
               <p>
-                We believe our model could be capable of predicitons one
-                month before the actual shortage hits 
+                We are building towards flagging a shortage roughly a month before it
+                reaches the counter. The archive that makes that possible is being
+                collected now.
               </p>
             </div>
             <div className="feature-card reveal" style={{ '--reveal-delay': '0.06s' }}>
@@ -684,6 +685,11 @@ function Marketing({ onLogin }) {
           </div>
           <div className="footer-text">
             Medication shortage intelligence for Irish pharmacies.
+          </div>
+          <div className="footer-links">
+            <a href="/privacy.html">Privacy</a>
+            <a href="/data.html">The data</a>
+            <a href="mailto:contact@insova.ie">contact@insova.ie</a>
           </div>
           <div className="footer-bottom">
             <span>&copy; 2026 Insova. All rights reserved.</span>

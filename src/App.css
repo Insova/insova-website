@@ -1509,3 +1509,27 @@ button.nav-cta {
   width: auto;
   opacity: 0.9;
 }
+
+/* ---------------------------------------------------------------------
+   APPEND TO THE END OF src/App.css
+   --------------------------------------------------------------------- */
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.footer-links a {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--slate);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--teal-bright); }
+
+@media (max-width: 600px) {
+  .footer-links { gap: 16px; }
+}

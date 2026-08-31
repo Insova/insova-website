@@ -204,3 +204,49 @@
   .auth-brand h2 { font-size: 26px; }
   .auth-brand img { height: 64px; }
 }
+
+/* ---------------------------------------------------------------------
+   APPEND TO THE END OF src/auth/auth.css
+   --------------------------------------------------------------------- */
+
+/* The GDPR Article 13 notice on the signup form. It sits above the
+   button that creates the account, because that is the point at which
+   the data is handed over. */
+.auth-consent {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--slate, #4A6080);
+  background: #F8FAFC;
+  border: 1px solid var(--border, #D8E4F0);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 4px 0 16px;
+}
+.auth-consent a {
+  color: #00a854;
+  font-weight: 600;
+}
+
+.auth-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border, #D8E4F0);
+}
+.auth-foot .auth-back {
+  width: auto;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  text-align: left;
+}
+.auth-privacy {
+  font-size: 13.5px;
+  color: var(--slate-light, #7A94AA);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.auth-privacy:hover { color: #00a854; }

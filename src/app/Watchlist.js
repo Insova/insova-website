@@ -91,6 +91,11 @@ export default function Watchlist({ app, watch, go }) {
 
   return (
     <>
+      <p className="ia-note-rule">
+        Notes are for supply information: what the wholesaler said, what you have ordered.
+        Insova is not a patient record system, so please keep patient details out of it.
+      </p>
+
       <p className="ia-lead">
         {stillShort.length} product{stillShort.length === 1 ? '' : 's'} on your list
         {withChanges.length > 0 && `, ${withChanges.length} with something new`}
@@ -195,12 +200,16 @@ export default function Watchlist({ app, watch, go }) {
                     <div className="ia-watch-noteedit">
                       <input
                         value={noteText}
-                        placeholder="e.g. two patients on this, Mrs K due 14th"
+                        maxLength={200}
+                        placeholder="e.g. wholesaler said mid-September, ordering from the other supplier"
                         onChange={(e) => setNoteText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && saveNote(row.shortage_id)}
                       />
                       <button className="ia-btn small" onClick={() => saveNote(row.shortage_id)}>Save</button>
                       <button className="ia-linkbtn" onClick={() => setNoteFor(null)}>Cancel</button>
+                      <span className="ia-note-warn">
+                        Supply notes only. No patient names, initials or prescription details.
+                      </span>
                     </div>
                   )}
 

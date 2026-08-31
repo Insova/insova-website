@@ -102,9 +102,13 @@ export default function AppShell({ onHome }) {
 
         <div className="ia-side-foot">
           <button className="ia-linkbtn" onClick={onHome}>insova.ie</button>
+          <a className="ia-linkbtn" href="/privacy.html" target="_blank" rel="noreferrer">
+            Privacy
+          </a>
           <button className="ia-linkbtn" onClick={signOut}>Sign out</button>
           <p className="ia-side-fine">
             Information only. Insova never substitutes, orders or dispenses.
+            Not a patient record system.
           </p>
         </div>
       </aside>

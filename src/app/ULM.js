@@ -171,6 +171,11 @@ export default function ULM({ app }) {
         This is the shared record of what actually happened.
       </p>
 
+      <p className="ia-note-rule">
+        These records are shared with colleagues at your pharmacy and, de-identified, across
+        other pharmacies. Keep patient details out of them.
+      </p>
+
       <div className="ia-callout">
         <strong>This is a reimbursement record, not a recommendation.</strong>
         <p>
@@ -289,8 +294,12 @@ export default function ULM({ app }) {
             </div>
             <label className="wide">
               Notes
-              <textarea rows={3} value={form.note}
+              <textarea rows={3} maxLength={500} value={form.note}
                 onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} />
+              <span className="hint">
+                Supply and reimbursement detail only. No patient names, initials, dates of
+                birth or prescription numbers: Insova is not a patient record system.
+              </span>
             </label>
           </fieldset>
 
