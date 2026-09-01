@@ -2,6 +2,8 @@ import React from 'react';
 import { fmtDate, durationText } from './useAppData';
 import { NextStrip } from './Roadmap';
 
+const CHANGE_SHOW = 8;
+
 export default function Dashboard({ app, watch, go }) {
   const { data, pressure } = app;
   const c = data.counts;
@@ -12,11 +14,23 @@ export default function Dashboard({ app, watch, go }) {
   const left = changes.filter((x) => x.kind === 'left');
   const moved = changes.filter((x) => x.kind === 'date_moved');
 
-  const topRisk = data.items.filter((i) => i.risk_band === 'high').slice(0, 6);
-  const starting = data.items
+  // Lists on this screen are capped for length, but the heading beside
+  // each one shows the true total. Showing "31 high risk" next to six
+  // rows and saying nothing reads as a bug, so every capped list now
+  // states what it is showing.
+  const SHOW = 6;
+  const highRisk = data.items.filter((i) => i.risk_band === 'high');
+  const topRisk = highRisk.slice(0, SHOW);
+  const startingAll = data.items
     .filter((i) => i.not_started)
-    .sort((a, b) => (a.start || '').localeCompare(b.start || ''))
-    .slice(0, 6);
+    .sort((a, b) => (a.start || '').localeCompare(b.start || ''));
+  const starting = startingAll.slice(0, SHOW);
+
+  const movedAll = data.items
+    .filter((i) => i.history && i.history.date_moves > 0)
+    .sort((a, b) => b.history.pushed_out - a.history.pushed_out
+      || b.history.date_moves - a.history.date_moves);
+  const moved6 = movedAll.slice(0, SHOW);
 
   // ---- the pharmacy's own products come first ----
   const byId = new Map(data.items.map((i) => [i.id, i]));
@@ -163,7 +177,8 @@ export default function Dashboard({ app, watch, go }) {
           <div className="ia-panel-head">
             <h3>Return dates that have moved</h3>
             <span className="ia-panel-note">
-              Across {m.days_archived} day{m.days_archived === 1 ? '' : 's'} of our archive
+              {movedAll.length} in {m.days_archived} day
+              {m.days_archived === 1 ? '' : 's'} of our archive
             </span>
           </div>
           <p className="ia-panel-lead">
@@ -172,10 +187,7 @@ export default function Dashboard({ app, watch, go }) {
             slipping.
           </p>
           <div className="ia-list">
-            {data.items
-              .filter((i) => i.history && i.history.date_moves > 0)
-              .sort((a, b) => b.history.pushed_out - a.history.pushed_out || b.history.date_moves - a.history.date_moves)
-              .slice(0, 6)
+            {moved6
               .map((i) => {
                 const last = [...i.history.events].reverse().find((e) => e.kind === 'date_moved');
                 return (
@@ -195,6 +207,7 @@ export default function Dashboard({ app, watch, go }) {
                 );
               })}
           </div>
+          <More shown={moved6.length} total={movedAll.length} noun="product" go={go} />
         </section>
       )}
 
@@ -213,7 +226,7 @@ export default function Dashboard({ app, watch, go }) {
           shows, not a forecast.
         </p>
         <div className="ia-press">
-          {pressure.slice(0, 8).map((p) => (
+          {pressure.slice(0, SHOW + 2).map((p) => (
             <button
               key={p.substance}
               className="ia-press-row"
@@ -245,6 +258,12 @@ export default function Dashboard({ app, watch, go }) {
             <p className="ia-empty">No substance currently has more than one product short.</p>
           )}
         </div>
+        <More
+          shown={Math.min(SHOW + 2, pressure.length)}
+          total={pressure.length}
+          noun="substance"
+          go={go}
+        />
       </section>
 
       {/* ---- highest supply risk ---- */}
@@ -276,6 +295,7 @@ export default function Dashboard({ app, watch, go }) {
             </button>
           ))}
         </div>
+        <More shown={topRisk.length} total={highRisk.length} noun="product" go={go} />
       </section>
 
       {/* ---- announced ahead ---- */}
@@ -296,6 +316,7 @@ export default function Dashboard({ app, watch, go }) {
               </button>
             ))}
           </div>
+          <More shown={starting.length} total={startingAll.length} noun="product" go={go} />
         </section>
       )}
 
@@ -308,6 +329,19 @@ export default function Dashboard({ app, watch, go }) {
   );
 }
 
+/* A capped list next to a real total reads as a bug unless it says so. */
+function More({ shown, total, noun, go }) {
+  if (total <= shown) return null;
+  return (
+    <p className="ia-more-note">
+      Showing {shown} of {total} {noun}{total === 1 ? '' : 's'}.{' '}
+      <button className="ia-linkbtn inline" onClick={() => go('shortages')}>
+        See all in Shortages
+      </button>
+    </p>
+  );
+}
+
 function ChangeCol({ title, tone, rows, go, watch }) {
   return (
     <div className="ia-change-col">
@@ -317,7 +351,8 @@ function ChangeCol({ title, tone, rows, go, watch }) {
       {rows.length === 0 ? (
         <p className="ia-empty small">None</p>
       ) : (
-        rows.slice(0, 8).map((r) => (
+        <>
+        {rows.slice(0, CHANGE_SHOW).map((r) => (
           <button key={r.kind + r.id} className="ia-change-row" onClick={() => go('shortages', r.id)}>
             <strong>
               {watch.ids.has(r.id) && <span className="ia-mini-star" title="On your list">★</span>}
@@ -325,7 +360,13 @@ function ChangeCol({ title, tone, rows, go, watch }) {
             </strong>
             {r.detail && <span>{r.detail}</span>}
           </button>
-        ))
+        ))}
+        {rows.length > CHANGE_SHOW && (
+          <p className="ia-more-note small">
+            and {rows.length - CHANGE_SHOW} more
+          </p>
+        )}
+        </>
       )}
     </div>
   );

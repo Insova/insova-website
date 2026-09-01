@@ -999,3 +999,18 @@
 .ia-callout p + p {
   margin-top: 10px;
 }
+
+/* "Showing 6 of 31" under a capped list. Without it the heading and the
+   list disagree and it looks like data is missing. */
+.ia-more-note {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #eef2f7;
+  font-size: 13px;
+  color: var(--slate-light, #7A94AA);
+}
+.ia-more-note.small {
+  margin-top: 8px;
+  padding-top: 8px;
+  font-size: 12px;
+}
