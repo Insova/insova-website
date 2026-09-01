@@ -11,14 +11,6 @@ export default function Groups({ app }) {
 
   return (
     <>
-      <p className="ia-lead">
-        An interchangeable group is a set of products the HPRA considers substitutable for one
-        another. Substitution at the counter is only possible inside a group. When a group runs
-        down, every patient on that medicine is depending on fewer and fewer suppliers, and a
-        brand name on the register gives no clue which group it belongs to or how much of it is
-        already gone.
-      </p>
-
       <div className="ia-gstats">
         <Stat n={data.counts.groups_affected} l="groups touched by a current shortage" />
         <Stat n={one.length} l="down to a single product" tone="warn" />

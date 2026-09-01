@@ -19,7 +19,7 @@ const NAV = [
   { id: 'shortages', label: 'Shortages',    icon: '☰' },
   { id: 'groups',    label: 'Running low',  icon: '◨' },
   { id: 'notices',   label: 'Notices',      icon: '✉' },
-  { id: 'ulm',       label: 'Unlicensed',   icon: '⊕' },
+  { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
   { id: 'digest',    label: 'Daily brief',  icon: '⏱' },
   { id: 'roadmap',   label: "What's next", icon: '◇' },
 ];

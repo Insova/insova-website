@@ -48,20 +48,39 @@ export function useAppData() {
     const pressure = Object.entries(data.by_substance || {})
       .map(([substance, ids]) => {
         const products = ids.map((id) => byId.get(id)).filter(Boolean);
+
+        // Deduplicate by interchangeable group: two short products of the
+        // same substance often sit in the same group, and counting that
+        // group twice would overstate the pressure.
         const groups = new Map();
         products.forEach((p) => {
           if (p.group) groups.set(p.group.code, p.group);
         });
-        const left = [...groups.values()].reduce((a, g) => a + g.left, 0);
+        const g = [...groups.values()];
+        const total = g.reduce((a, x) => a + x.total, 0);
+        const short = g.reduce((a, x) => a + x.short, 0);
+        const left = g.reduce((a, x) => a + x.left, 0);
+
         return {
           substance,
           products,
           count: products.length,
-          groupsLeft: groups.size ? left : null,
+          groupsLeft: g.length ? left : null,
+          // Share of this substance's interchangeable products that are
+          // short. A full bar means nothing in those groups is available.
+          // Substances with no group listing get null and no bar rather
+          // than a bar that means nothing.
+          shortShare: total ? short / total : null,
+          groupTotal: total || null,
+          groupShort: short || null,
           worstRisk: Math.max(...products.map((p) => p.risk)),
         };
       })
-      .sort((a, b) => b.worstRisk - a.worstRisk || b.count - a.count);
+      .sort((a, b) => {
+        const as = a.shortShare === null ? -1 : a.shortShare;
+        const bs = b.shortShare === null ? -1 : b.shortShare;
+        return bs - as || b.count - a.count;
+      });
 
     const staleDays = daysSince(data.meta.as_of);
 

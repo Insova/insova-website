@@ -15,24 +15,11 @@ import React, { useState } from 'react';
     partial   in the app but not finished, and the app says how
     built     finished but not switched on
     blocked   waiting on someone outside Insova, with the reason named
-    later     genuinely not started
+    later     not started at all
 
   No dates. A date we miss costs more trust than a date we never gave.
 */
 const ROADMAP = [
-  {
-    status: 'blocked',
-    title: 'Wholesaler back-in-stock alerts',
-    body:
-      'Tell Insova which products you are waiting on and get told when your wholesaler has them, ' +
-      'instead of checking the portal several times a day.',
-    detail:
-      'Asked for by a community pharmacist in Cork, who described checking United Drug and Uniphar ' +
-      'repeatedly every day for the same product. Your list is already the input for this. What is ' +
-      'missing is a supported way in: we will not log into a wholesaler portal using a pharmacy\u2019s ' +
-      'own credentials, so we are asking whether an API or data feed exists.',
-    waiting: 'An answer from Uniphar or United Drug about API access',
-  },
   {
     status: 'built',
     title: 'The morning brief, by email',
@@ -112,8 +99,7 @@ export function NextStrip({ go, meta }) {
       <div className="ia-early-head">
         <span className="ia-early-badge">Early access</span>
         <p>
-          This is an early build. It reads the national register well; the parts that make it
-          your pharmacy&apos;s own tool are still being made.
+          This is an early build. There is a lot more to be developed.
         </p>
         <button className="ia-linkbtn" onClick={() => setOpen((v) => !v)}>
           {open ? 'Hide' : 'What\u2019s coming'}
@@ -159,18 +145,12 @@ export default function Roadmap({ app }) {
 
   return (
     <>
-      <p className="ia-lead">
-        Insova is early, and this page is the honest version of where it is. What is working, what
-        is half-built, what is waiting on somebody else, and what has not been started. No dates:
-        a date we miss would cost more than a date we never gave.
-      </p>
-
       <div className="ia-callout">
         <strong>What you are looking at today is mostly the national register, read closely.</strong>
         <p>
           Every current shortage, joined to the regulator&apos;s interchangeable list so you can see
-          what is left in each group, with manufacturer notices linked at source. That is genuinely
-          useful and it is also the same for every pharmacy in Ireland. The parts that are about
+          what is left in each group, with manufacturer notices linked at source. That is useful,
+          and it is also the same for every pharmacy in Ireland. The parts that are about
           <em> your </em>pharmacy, your list, your unlicensed records, your wholesaler, are the ones
           still being built.
         </p>

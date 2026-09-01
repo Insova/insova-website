@@ -30,8 +30,8 @@ export default function Notices({ app }) {
         <strong>We do not date, summarise or interpret these.</strong>
         <p>
           Some carry no date of their own and others carry several, including batch release
-          dates that are not the date of the letter. Rather than show you a date we cannot
-          stand over, we show none. Open each one at source and read it yourself.
+          dates that are not the date of the letter. We link to the original rather than show
+          a date we cannot stand over.
         </p>
       </div>
 

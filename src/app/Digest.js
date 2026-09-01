@@ -101,7 +101,7 @@ export default function Digest({ app, watch }) {
           )}
 
           {starting.length > 0 && (
-            <Block title="Announced, not yet biting">
+            <Block title="Announced, not started yet">
               {starting.map((i) => (
                 <li key={i.id}><b>{i.product}</b> — supply expected to be affected from {fmtDate(i.start)}</li>
               ))}

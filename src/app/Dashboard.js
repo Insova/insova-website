@@ -29,6 +29,42 @@ export default function Dashboard({ app, watch, go }) {
     <>
       <NextStrip go={go} meta={m} />
 
+      {/* ---- what changed, first: it is what a pharmacist opens this for ---- */}
+      <section className="ia-panel">
+        <div className="ia-panel-head">
+          <h3>What changed</h3>
+          <span className="ia-panel-note">
+            {m.compare_day
+              ? `Compared with ${m.compare_label}, the last day the register moved`
+              : 'No earlier snapshot to compare against yet'}
+            {m.quiet_mornings
+              ? `. Stood still for ${m.quiet_mornings} morning${m.quiet_mornings > 1 ? 's' : ''} in between.`
+              : ''}
+          </span>
+        </div>
+
+        {changes.length === 0 ? (
+          <p className="ia-empty">
+            Nothing has appeared, left, or had its return date moved. The register does not
+            change every day; it is generally still at weekends.
+          </p>
+        ) : (
+          <div className="ia-change-cols">
+            <ChangeCol title="Appeared" tone="bad" rows={appeared} go={go} watch={watch} />
+            <ChangeCol title="Left the register" tone="good" rows={left} go={go} watch={watch} />
+            <ChangeCol title="Return date moved" tone="warn" rows={moved} go={go} watch={watch} />
+          </div>
+        )}
+
+        {left.length > 0 && (
+          <p className="ia-footnote">
+            <strong>"Left the register" is not the same as "back in stock."</strong> It means
+            the HPRA no longer lists it. Supply usually recovers before that happens, but the
+            only way to know your wholesaler has it is to check.
+          </p>
+        )}
+      </section>
+
       {/* ---- your pharmacy, before the national picture ---- */}
       {watch.enabled && watch.rows.length > 0 && (
         <section className={'ia-mine' + (myChanges.length || myGone.length ? ' live' : '')}>
@@ -91,15 +127,14 @@ export default function Dashboard({ app, watch, go }) {
         </div>
       )}
 
-      {/* ---- headline: the two numbers Isobel asked to separate ---- */}
+      {/* ---- the national picture, after what changed ---- */}
       <section className="ia-headline">
         <div className="ia-headline-main">
           <div className="ia-hl-fig">{c.current}</div>
           <div className="ia-hl-txt">
             <h2>medicines are in shortage right now</h2>
             <p>
-              Products currently listed on the HPRA register as unavailable or in short
-              supply. This is the number that matters at the counter today.
+              Products currently listed on the HPRA register as unavailable or in short supply.
             </p>
           </div>
         </div>
@@ -108,56 +143,18 @@ export default function Dashboard({ app, watch, go }) {
             <span className="n">{c.hpra_total}</span>
             <span className="l">notified in total on the HPRA page</span>
             <span className="d">
-              {c.resolved_still_listed
-                ? `${c.resolved_still_listed} of these carries a resolution date but is still returned by the register.`
-                : 'Matches our current count.'}
+              The total shown on the HPRA website.
             </span>
           </div>
           <div className="ia-hl-small">
             <span className="n">{c.not_started}</span>
-            <span className="l">announced, not yet biting</span>
+            <span className="l">announced, not started yet</span>
             <span className="d">
-              Notified with a shortage date that has not arrived. There is still time to
-              order ahead on these.
+              The shortage date on the register has not arrived. There is still time to order
+              ahead on these.
             </span>
           </div>
         </div>
-      </section>
-
-      {/* ---- what changed ---- */}
-      <section className="ia-panel">
-        <div className="ia-panel-head">
-          <h3>What changed</h3>
-          <span className="ia-panel-note">
-            {m.compare_day
-              ? `Compared with ${m.compare_label}, the last day the register moved`
-              : 'No earlier snapshot to compare against yet'}
-            {m.quiet_mornings
-              ? ` · stood still for ${m.quiet_mornings} morning${m.quiet_mornings > 1 ? 's' : ''} in between`
-              : ''}
-          </span>
-        </div>
-
-        {changes.length === 0 ? (
-          <p className="ia-empty">
-            Nothing has appeared, left, or had its return date moved. The register does not
-            change every day; it is generally still at weekends.
-          </p>
-        ) : (
-          <div className="ia-change-cols">
-            <ChangeCol title="Appeared" tone="bad" rows={appeared} go={go} watch={watch} />
-            <ChangeCol title="Left the register" tone="good" rows={left} go={go} watch={watch} />
-            <ChangeCol title="Return date moved" tone="warn" rows={moved} go={go} watch={watch} />
-          </div>
-        )}
-
-        {left.length > 0 && (
-          <p className="ia-footnote">
-            <strong>"Left the register" is not the same as "back in stock."</strong> It means
-            the HPRA no longer lists it. Supply usually recovers before that happens, but the
-            only way to know your wholesaler has it is to check.
-          </p>
-        )}
       </section>
 
       {/* ---- what the archive shows that the register cannot ---- */}
@@ -171,9 +168,8 @@ export default function Dashboard({ app, watch, go }) {
           </div>
           <p className="ia-panel-lead">
             The register shows the current expected return date and nothing else. Because we keep
-            a dated copy each morning, we can see which dates have been revised, and which keep
-            slipping. A product on its third promised date is a different proposition from one on
-            its first.
+            a dated copy each morning, we can see which dates have been revised and which keep
+            slipping.
           </p>
           <div className="ia-list">
             {data.items
@@ -184,16 +180,15 @@ export default function Dashboard({ app, watch, go }) {
                 const last = [...i.history.events].reverse().find((e) => e.kind === 'date_moved');
                 return (
                   <button key={i.id} className="ia-list-row" onClick={() => go('shortages', i.id)}>
-                    <span className={'ia-moves ' + (i.history.pushed_out >= 2 ? 'bad' : 'warn')}>
-                      {i.history.date_moves}×
-                    </span>
                     <span className="ia-list-main">
                       <strong>{i.product}</strong>
                       <span className="ia-list-sub">
                         {last
                           ? `${last.from ? fmtDate(last.from) : 'no date'} → ${last.to ? fmtDate(last.to) : 'no date'}`
                           : 'date revised'}
-                        {i.history.pushed_out > 0 && ` · pushed back ${i.history.pushed_out} time${i.history.pushed_out === 1 ? '' : 's'}`}
+                        {i.history.pushed_out > 0
+                          ? ` · pushed back ${i.history.pushed_out} time${i.history.pushed_out === 1 ? '' : 's'}`
+                          : ' · brought forward'}
                       </span>
                     </span>
                   </button>
@@ -212,9 +207,10 @@ export default function Dashboard({ app, watch, go }) {
           </span>
         </div>
         <p className="ia-panel-lead">
-          When several products of the same substance fail together, demand moves to whatever
-          is left. These are the substances carrying that load today. This is what the
-          register shows, not a forecast.
+          When several products of the same substance fail together, demand moves to whatever is
+          left. The bar shows how much of each substance&apos;s interchangeable group is already
+          short: a full bar means nothing in that group is available. This is what the register
+          shows, not a forecast.
         </p>
         <div className="ia-press">
           {pressure.slice(0, 8).map((p) => (
@@ -224,15 +220,24 @@ export default function Dashboard({ app, watch, go }) {
               onClick={() => go('shortages', p.products[0].id)}
             >
               <span className="ia-press-name">{p.substance}</span>
-              <span className="ia-press-bar" aria-hidden="true">
+              {p.shortShare === null ? (
+                <span className="ia-press-nobar">not on the interchangeable list</span>
+              ) : (
                 <span
-                  className={'fill ' + band(p.worstRisk)}
-                  style={{ width: Math.max(8, p.worstRisk) + '%' }}
-                />
-              </span>
+                  className="ia-press-bar"
+                  role="img"
+                  aria-label={`${p.groupShort} of ${p.groupTotal} products short`}
+                >
+                  <span
+                    className={'fill ' + shareBand(p.shortShare)}
+                    style={{ width: Math.max(4, Math.round(p.shortShare * 100)) + '%' }}
+                  />
+                </span>
+              )}
               <span className="ia-press-meta">
-                {p.count} product{p.count > 1 ? 's' : ''} short
-                {p.groupsLeft !== null && ` · ${p.groupsLeft} left across its groups`}
+                {p.shortShare !== null
+                  ? `${p.groupShort} of ${p.groupTotal} short · ${p.groupsLeft} left`
+                  : `${p.count} product${p.count > 1 ? 's' : ''} short`}
               </span>
             </button>
           ))}
@@ -326,6 +331,8 @@ function ChangeCol({ title, tone, rows, go, watch }) {
   );
 }
 
-function band(n) {
-  return n >= 60 ? 'high' : n >= 30 ? 'medium' : 'low';
+/* Colour by how much of the group is gone, not by a risk score.
+   Nothing here needs a legend: a fuller bar is a worse position. */
+function shareBand(share) {
+  return share >= 0.75 ? 'high' : share >= 0.4 ? 'medium' : 'low';
 }

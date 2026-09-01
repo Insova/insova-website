@@ -172,12 +172,11 @@ export default function ULM({ app }) {
       </p>
 
       <p className="ia-note-rule">
-        These records are shared with colleagues at your pharmacy and, de-identified, across
-        other pharmacies. Keep patient details out of them.
+        These records are shared across pharmacies anonymously. Keep patient details out of them.
       </p>
 
       <div className="ia-callout">
-        <strong>This is a reimbursement record, not a recommendation.</strong>
+        <p>This is a reimbursement record, not a recommendation.</p>
         <p>
           What another pharmacy supplied and whether it was paid for is useful to know. It is
           not advice about what you should supply. That decision is yours, with the prescriber.
