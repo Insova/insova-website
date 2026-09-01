@@ -160,14 +160,17 @@ export default function Dashboard({ app, watch, go }) {
               The total shown on the HPRA website.
             </span>
           </div>
-          <div className="ia-hl-small">
+          <button
+            className="ia-hl-small clickable"
+            onClick={() => go('shortages', null, 'not_started')}
+          >
             <span className="n">{c.not_started}</span>
             <span className="l">announced, not started yet</span>
             <span className="d">
               The shortage date on the register has not arrived. There is still time to order
-              ahead on these.
+              ahead on these. Click to see them.
             </span>
-          </div>
+          </button>
         </div>
       </section>
 
@@ -295,7 +298,8 @@ export default function Dashboard({ app, watch, go }) {
             </button>
           ))}
         </div>
-        <More shown={topRisk.length} total={highRisk.length} noun="product" go={go} />
+        <More shown={topRisk.length} total={highRisk.length} noun="product" go={go}
+              preset="high_risk" />
       </section>
 
       {/* ---- announced ahead ---- */}
@@ -316,7 +320,8 @@ export default function Dashboard({ app, watch, go }) {
               </button>
             ))}
           </div>
-          <More shown={starting.length} total={startingAll.length} noun="product" go={go} />
+          <More shown={starting.length} total={startingAll.length} noun="product" go={go}
+            preset="not_started" />
         </section>
       )}
 
@@ -330,13 +335,13 @@ export default function Dashboard({ app, watch, go }) {
 }
 
 /* A capped list next to a real total reads as a bug unless it says so. */
-function More({ shown, total, noun, go }) {
+function More({ shown, total, noun, go, preset }) {
   if (total <= shown) return null;
   return (
     <p className="ia-more-note">
       Showing {shown} of {total} {noun}{total === 1 ? '' : 's'}.{' '}
-      <button className="ia-linkbtn inline" onClick={() => go('shortages')}>
-        See all in Shortages
+      <button className="ia-linkbtn inline" onClick={() => go('shortages', null, preset)}>
+        See all {total} in Shortages
       </button>
     </p>
   );

@@ -5,18 +5,29 @@ import History from './History';
 
 const PAGE = 40;
 
-export default function Shortages({ app, watch, focusId }) {
+export default function Shortages({ app, watch, focusId, preset }) {
   const { data } = app;
   const [q, setQ] = useState('');
   const [reason, setReason] = useState('all');
   const [altType, setAltType] = useState('all');
   const [risk, setRisk] = useState('all');
   const [group, setGroup] = useState('all');
+  const [timing, setTiming] = useState('all');
   const [mine, setMine] = useState(false);
   const [shown, setShown] = useState(PAGE);
   const [open, setOpen] = useState(focusId || null);
 
   useEffect(() => { if (focusId) setOpen(focusId); }, [focusId]);
+
+  // A preset arrives when the user followed a "see all 20" link from the
+  // Today screen. Landing on the unfiltered list would make that link a
+  // lie, so it applies the matching filter.
+  useEffect(() => {
+    if (!preset) return;
+    if (preset === 'high_risk') { setRisk('high'); setTiming('all'); }
+    else { setTiming(preset); setRisk('all'); }
+    setGroup('all'); setReason('all'); setAltType('all'); setQ('');
+  }, [preset]);
 
   const reasons = useMemo(
     () => [...new Set(data.items.map((i) => i.reason))].sort(),
@@ -34,6 +45,12 @@ export default function Shortages({ app, watch, focusId }) {
       if (group === 'one' && !(i.group && i.group.left === 1)) return false;
       if (group === 'lowish' && !(i.group && i.group.left <= 2)) return false;
       if (group === 'moved' && !(i.history && i.history.date_moves > 0)) return false;
+      if (timing === 'not_started' && !i.not_started) return false;
+      if (timing === 'past_return' && !i.past_return_date) return false;
+      if (timing === 'no_return' && i.expected_return) return false;
+      if (timing === 'over_year' && !(i.days_running && i.days_running > 365)) return false;
+      if (timing === 'new' && !(i.days_running !== null && i.days_running <= 30)) return false;
+      if (timing === 'notice' && i.notices.length === 0) return false;
       if (!term) return true;
       const hay = [
         i.product, i.mah, i.reason, i.form, i.pack,
@@ -43,12 +60,12 @@ export default function Shortages({ app, watch, focusId }) {
       ].join(' ').toLowerCase();
       return hay.includes(term);
     });
-  }, [data, q, reason, altType, risk, group, mine, watch.ids]);
+  }, [data, q, reason, altType, risk, group, timing, mine, watch.ids]);
 
-  useEffect(() => { setShown(PAGE); }, [q, reason, altType, risk, group, mine]);
+  useEffect(() => { setShown(PAGE); }, [q, reason, altType, risk, group, timing, mine]);
 
   const anyFilter = q || reason !== 'all' || altType !== 'all' || risk !== 'all'
-    || group !== 'all' || mine;
+    || group !== 'all' || timing !== 'all' || mine;
 
   return (
     <>
@@ -87,6 +104,16 @@ export default function Shortages({ app, watch, focusId }) {
               ['none', 'Not on the interchangeable list'],
               ['moved', 'Return date has been revised'],
             ]} />
+          <Select label="Timing" value={timing} onChange={setTiming}
+            options={[
+              ['all', 'Any timing'],
+              ['not_started', 'Announced, not started yet'],
+              ['new', 'Started in the last 30 days'],
+              ['past_return', 'Past its return date'],
+              ['no_return', 'No return date given'],
+              ['over_year', 'Running over a year'],
+              ['notice', 'Has a supply notice'],
+            ]} />
           <Select label="Supply risk" value={risk} onChange={setRisk}
             options={[['all', 'Any risk'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']]} />
         </div>
@@ -97,7 +124,10 @@ export default function Shortages({ app, watch, focusId }) {
           {anyFilter && (
             <button
               className="ia-linkbtn inline"
-              onClick={() => { setQ(''); setReason('all'); setAltType('all'); setRisk('all'); setGroup('all'); setMine(false); }}
+              onClick={() => {
+                setQ(''); setReason('all'); setAltType('all');
+                setRisk('all'); setGroup('all'); setTiming('all'); setMine(false);
+              }}
             >
               Clear filters
             </button>

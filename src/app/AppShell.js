@@ -31,12 +31,17 @@ export default function AppShell({ onHome }) {
   const [view, setView] = useState('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
   const [focusId, setFocusId] = useState(null);
+  const [preset, setPreset] = useState(null);
 
   const nav = isAdmin ? [...NAV, { id: 'admin', label: 'Admin', icon: '⚙' }] : NAV;
 
-  const go = (id, id2) => {
+  // go('shortages', someId) opens that product.
+  // go('shortages', null, 'not_started') opens the list already filtered,
+  // so a "see all 20" link lands on the 20 rather than on everything.
+  const go = (id, id2, filterPreset) => {
     setView(id);
     setFocusId(id2 || null);
+    setPreset(filterPreset || null);
     setMenuOpen(false);
     window.scrollTo(0, 0);
   };
@@ -71,15 +76,28 @@ export default function AppShell({ onHome }) {
     <div className={'ia' + (menuOpen ? ' ia-menu-open' : '')}>
       <aside className="ia-side">
         <div className="ia-side-top">
-          <img
-            className="ia-side-logo"
-            src={process.env.PUBLIC_URL + '/insova-logo.png'}
-            alt="Insova"
-          />
-          <div className="ia-side-org">
-            <strong>{pharmacy?.name || 'Insova'}</strong>
-            <span>{[pharmacy?.town, pharmacy?.county].filter(Boolean).join(', ')}</span>
+          {/* Product identity first. The mark is rendered as a white
+              silhouette because the logo contains the same navy as this
+              sidebar, so in colour it half disappears. */}
+          <div className="ia-side-brand">
+            <img
+              className="ia-side-logo"
+              src={process.env.PUBLIC_URL + '/insova-logo.png'}
+              alt=""
+            />
+            <span className="ia-side-word">Insova</span>
           </div>
+
+          {/* Then who you are signed in as, which is a different thing. */}
+          {pharmacy && (
+            <div className="ia-side-org">
+              <span className="k">Signed in for</span>
+              <strong>{pharmacy.name}</strong>
+              {[pharmacy.town, pharmacy.county].filter(Boolean).length > 0 && (
+                <span>{[pharmacy.town, pharmacy.county].filter(Boolean).join(', ')}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <nav className="ia-nav">
@@ -162,7 +180,9 @@ export default function AppShell({ onHome }) {
 
           {app.ready && view === 'dashboard' && <Dashboard app={app} watch={watch} go={go} />}
           {app.ready && view === 'watchlist' && <Watchlist app={app} watch={watch} go={go} />}
-          {app.ready && view === 'shortages' && <Shortages app={app} watch={watch} focusId={focusId} />}
+          {app.ready && view === 'shortages' && (
+            <Shortages app={app} watch={watch} focusId={focusId} preset={preset} />
+          )}
           {app.ready && view === 'groups' && <Groups app={app} go={go} />}
           {app.ready && view === 'notices' && <Notices app={app} />}
           {view === 'ulm' && <ULM app={app} />}
