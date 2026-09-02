@@ -76,16 +76,15 @@ export default function AppShell({ onHome }) {
     <div className={'ia' + (menuOpen ? ' ia-menu-open' : '')}>
       <aside className="ia-side">
         <div className="ia-side-top">
-          {/* Product identity first. The mark is rendered as a white
-              silhouette because the logo contains the same navy as this
-              sidebar, so in colour it half disappears. */}
+          {/* Product identity first. The header band is its own light
+              section so the full-colour mark reads against it; only the
+              nav below stays navy. */}
           <div className="ia-side-brand">
             <img
               className="ia-side-logo"
-              src={process.env.PUBLIC_URL + '/insova-logo.png'}
-              alt=""
+              src={process.env.PUBLIC_URL + '/insova-logo-mark.png'}
+              alt="Insova"
             />
-            <span className="ia-side-word">Insova</span>
           </div>
 
           {/* Then who you are signed in as, which is a different thing. */}
