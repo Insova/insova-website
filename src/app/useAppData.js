@@ -127,47 +127,37 @@ export function durationText(days) {
 }
 
 /*
-  SPC links.
+  Links to the official product documents.
 
   We used to point at medicines.ie. That was wrong and it failed most of
-  the time. medicines.ie is an industry portal that companies opt into,
+  the time: medicines.ie is an industry portal that companies opt into,
   not the regulator, so a product can be perfectly well authorised in
-  Ireland and simply not be listed there. Imdur is one of many.
+  Ireland and simply not be listed. Imdur is one of many.
 
-  The HPRA holds the SPC for every product it has authorised, because it
-  approved the document. So that is where the link goes now.
+  Then we tried deep-linking the HPRA search with a base64 parameter
+  copied from a different page on their site. It filled the search box
+  and then hung on a spinner, because the rest of the payload was wrong.
 
-  We cannot link straight to the PDF. Those URLs look like
+  The actual answer was in the register data all along. Every shortage
+  record carries productID, which is the HPRA's own internal key, and
+  their product pages are addressed by it directly:
 
-      assets.hpra.ie/products/Human/27476/Final_PA22655-001-001_0703....pdf
+      /find-a-medicine/for-human-use/authorised-medicines/details/27476
 
-  and carry an internal product id and a document version timestamp,
-  neither of which appears anywhere in the data the HPRA publishes to
-  us. So this links to the product page, where the SPC button sits.
+  That page holds the Summary of Product Characteristics, the package
+  leaflet and the public assessment report. It is also one of only five
+  paths the HPRA explicitly allows in its robots.txt, so it is the
+  destination they intend people to reach.
 
-  It searches by LICENCE NUMBER, not product name. The HPRA search
-  accepts "product name, active substance, licence number or licence
-  holder", and a licence is exact. Product names differ between the
-  shortage register and the authorised list often enough to matter, and
-  that mismatch is exactly what broke the medicines.ie links.
+  No name matching, no search, no scraping, and it is exact to the
+  licence rather than to a product name that might not match.
 */
 const HPRA_AUTHORISED =
   'https://www.hpra.ie/find-a-medicine/for-human-use/authorised-medicines';
 
-export function hpraProductUrl(licence, product) {
-  const term = (licence || product || '').trim();
-  if (!term) return HPRA_AUTHORISED;
-  // The HPRA site carries its search state in a base64 "data" parameter.
-  // Deduced from a live URL: {"id":null,"skip":10,"take":10,"query":null,
-  // "order":null,"filter":"All"}
-  try {
-    const payload = {
-      id: null, skip: 0, take: 25, query: term, order: null, filter: 'All',
-    };
-    return HPRA_AUTHORISED + '?data=' + btoa(JSON.stringify(payload));
-  } catch (e) {
-    // btoa throws on non-Latin1 characters. Fall back to the plain page
-    // rather than producing a broken link.
-    return HPRA_AUTHORISED;
-  }
+export function hpraProductUrl(hpraId) {
+  // Older exports predate hpra_id. Send those to the search page rather
+  // than to a details URL that would 404.
+  if (!hpraId) return HPRA_AUTHORISED;
+  return `${HPRA_AUTHORISED}/details/${encodeURIComponent(hpraId)}`;
 }

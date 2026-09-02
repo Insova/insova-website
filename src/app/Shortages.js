@@ -328,8 +328,10 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
               </div>
 
               <div className="ia-card-links">
-                <a href={hpraProductUrl(i.licence, i.product)} target="_blank" rel="noreferrer">
-                  SPC on the HPRA{i.licence ? ` (${i.licence})` : ''} →
+                <a href={hpraProductUrl(i.hpra_id)} target="_blank" rel="noreferrer">
+                  {i.hpra_id
+                    ? 'SPC and package leaflet on the HPRA →'
+                    : 'Find this product on the HPRA →'}
                 </a>
                 {i.info_link && (
                   <a href={i.info_link} target="_blank" rel="noreferrer">
@@ -338,9 +340,9 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
                 )}
               </div>
               <p className="ia-cite block">
-                The link searches the HPRA authorised medicines list by licence number. The SPC
-                and patient leaflet are the buttons on the result. We cannot link straight to the
-                PDF: those addresses carry an internal document id the HPRA does not publish.
+                {i.hpra_id
+                  ? `Opens the HPRA's own page for licence ${i.licence || 'this product'}, where the Summary of Product Characteristics, package leaflet and assessment report are published.`
+                  : 'This product has no HPRA product id in today\'s export, so the link goes to the authorised medicines search rather than straight to the page.'}
               </p>
             </>
           )}
