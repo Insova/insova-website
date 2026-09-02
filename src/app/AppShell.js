@@ -82,9 +82,10 @@ export default function AppShell({ onHome }) {
           <div className="ia-side-brand">
             <img
               className="ia-side-logo"
-              src={process.env.PUBLIC_URL + '/insova-logo-mark.png'}
-              alt="Insova"
+              src={process.env.PUBLIC_URL + '/insova-logo.png'}
+              alt=""
             />
+            <span className="ia-side-word">Insova</span>
           </div>
 
           {/* Then who you are signed in as, which is a different thing. */}

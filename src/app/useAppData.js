@@ -126,15 +126,48 @@ export function durationText(days) {
   return m ? `${y}y ${m}m` : `${y} year${y > 1 ? 's' : ''}`;
 }
 
-/* medicines.ie does not expose a stable per-product SPC URL we can
-   construct, so we send the pharmacist to a search rather than a link
-   that might 404. The HPRA product page is given as the fallback,
-   because that is the authoritative source for the licence. */
-export function spcSearchUrl(product) {
-  return 'https://www.medicines.ie/search?q=' + encodeURIComponent(product || '');
-}
+/*
+  SPC links.
 
-export function hpraSearchUrl(term) {
-  return 'https://www.hpra.ie/find-a-medicine/for-human-use/medicine-shortages?q=' +
-    encodeURIComponent(term || '');
+  We used to point at medicines.ie. That was wrong and it failed most of
+  the time. medicines.ie is an industry portal that companies opt into,
+  not the regulator, so a product can be perfectly well authorised in
+  Ireland and simply not be listed there. Imdur is one of many.
+
+  The HPRA holds the SPC for every product it has authorised, because it
+  approved the document. So that is where the link goes now.
+
+  We cannot link straight to the PDF. Those URLs look like
+
+      assets.hpra.ie/products/Human/27476/Final_PA22655-001-001_0703....pdf
+
+  and carry an internal product id and a document version timestamp,
+  neither of which appears anywhere in the data the HPRA publishes to
+  us. So this links to the product page, where the SPC button sits.
+
+  It searches by LICENCE NUMBER, not product name. The HPRA search
+  accepts "product name, active substance, licence number or licence
+  holder", and a licence is exact. Product names differ between the
+  shortage register and the authorised list often enough to matter, and
+  that mismatch is exactly what broke the medicines.ie links.
+*/
+const HPRA_AUTHORISED =
+  'https://www.hpra.ie/find-a-medicine/for-human-use/authorised-medicines';
+
+export function hpraProductUrl(licence, product) {
+  const term = (licence || product || '').trim();
+  if (!term) return HPRA_AUTHORISED;
+  // The HPRA site carries its search state in a base64 "data" parameter.
+  // Deduced from a live URL: {"id":null,"skip":10,"take":10,"query":null,
+  // "order":null,"filter":"All"}
+  try {
+    const payload = {
+      id: null, skip: 0, take: 25, query: term, order: null, filter: 'All',
+    };
+    return HPRA_AUTHORISED + '?data=' + btoa(JSON.stringify(payload));
+  } catch (e) {
+    // btoa throws on non-Latin1 characters. Fall back to the plain page
+    // rather than producing a broken link.
+    return HPRA_AUTHORISED;
+  }
 }

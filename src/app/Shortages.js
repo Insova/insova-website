@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { fmtDate, durationText, spcSearchUrl } from './useAppData';
+import { fmtDate, durationText, hpraProductUrl } from './useAppData';
 import { WatchStar } from './useWatchlist';
 import History from './History';
 
@@ -328,9 +328,20 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
               </div>
 
               <div className="ia-card-links">
-                <a href={spcSearchUrl(i.product)} target="_blank" rel="noreferrer">Find the SPC on medicines.ie →</a>
-                {i.info_link && <a href={i.info_link} target="_blank" rel="noreferrer">Further information from the HPRA →</a>}
+                <a href={hpraProductUrl(i.licence, i.product)} target="_blank" rel="noreferrer">
+                  SPC on the HPRA{i.licence ? ` (${i.licence})` : ''} →
+                </a>
+                {i.info_link && (
+                  <a href={i.info_link} target="_blank" rel="noreferrer">
+                    Further information from the HPRA →
+                  </a>
+                )}
               </div>
+              <p className="ia-cite block">
+                The link searches the HPRA authorised medicines list by licence number. The SPC
+                and patient leaflet are the buttons on the result. We cannot link straight to the
+                PDF: those addresses carry an internal document id the HPRA does not publish.
+              </p>
             </>
           )}
         </div>
