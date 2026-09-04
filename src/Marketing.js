@@ -163,14 +163,14 @@ function CountUp({ target, suffix = '' }) {
 /* ---------------------------- PROGRESS ---------------------------- */
 const PROGRESS = [
   {
-    date: 'August 2026',
-    title: 'National analysis + Prototypes distributed',
-    body: 'First analysis of shortage patterns produced from data we collect ourselves.',
+    date: 'September 2026',
+    title: 'Early Access',
+    body: 'Pharmacist application prototype available - feedback shaping what gets built next',
   },
   {
     date: 'August 2026',
     title: 'Daily data collection',
-    body: 'Insova began collecting the national medicine shortage register every morning, building a continuous record of how shortages develop over time.',
+    body: 'Insova began collecting shortage registers every morning, building a continuous record of how shortages develop over time.',
   },
   {
     date: 'July 2026',
@@ -178,7 +178,7 @@ const PROGRESS = [
     body: 'A working prototype of the pharmacist dashboard was built, including extra features we found in our research to be useful.',
   },
   {
-    date: 'June 2026',
+    date: 'April to June 2026',
     title: 'Research and validation',
     body: 'We spoke with pharmacists and experts about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.',
   },
