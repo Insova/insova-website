@@ -1533,3 +1533,119 @@ button.nav-cta {
 @media (max-width: 600px) {
   .footer-links { gap: 16px; }
 }
+
+
+/* =====================================================================
+   APPEND TO THE END OF src/App.css
+
+   This replaces the earlier .ia-boot rules. Later rules win, so you can
+   simply paste this at the bottom; if you would rather keep the file
+   tidy, delete the old .ia-boot and .ia-boot img block first.
+
+   What was wrong with the old one:
+
+     * The background was --dark navy and the logo contains that same
+       navy, so the wordmark vanished and only the green shapes showed.
+     * It was a still image with the word "Loading", which reads as
+       stuck rather than working.
+     * It appeared on the public marketing site, where there is no
+       session to check. App.js now only shows it on the app and login
+       routes.
+   ===================================================================== */
+
+.ia-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--warm-white, #F8FAFC);
+}
+
+/* A very faint grid, the same one the hero and the data page use, so
+   this reads as part of the product rather than a browser default. */
+.ia-boot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(15, 32, 64, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 32, 64, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.ia-boot-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 320px;
+}
+
+/* On a light background the logo can be shown in its own colours, so
+   nothing needs inverting and the wordmark stays legible. */
+.ia-boot-logo {
+  height: 72px;
+  width: auto;
+  display: block;
+  margin-bottom: 26px;
+}
+
+.ia-boot-bar {
+  width: 148px;
+  height: 3px;
+  border-radius: 100px;
+  background: rgba(15, 32, 64, 0.09);
+  overflow: hidden;
+}
+
+.ia-boot-bar span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #46df62 0%, #03bf64 100%);
+  animation: iaBootSlide 1.15s ease-in-out infinite;
+}
+
+@keyframes iaBootSlide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.ia-boot-text {
+  margin-top: 16px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate, #4A6080);
+  letter-spacing: 0.2px;
+}
+
+.ia-boot-slow {
+  margin-top: 10px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--slate-light, #7A94AA);
+}
+
+@media (max-width: 480px) {
+  .ia-boot-logo { height: 60px; margin-bottom: 22px; }
+}
+
+/* A moving bar is there to show the page is alive. For anyone who has
+   asked their system not to animate, hold it still and full width
+   instead of flashing. */
+@media (prefers-reduced-motion: reduce) {
+  .ia-boot-bar span {
+    animation: none;
+    width: 100%;
+    opacity: 0.55;
+  }
+}
