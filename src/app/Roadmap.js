@@ -60,7 +60,7 @@ const ROADMAP = [
     body:
       'Flagging which medicines are likely to become hard to get, before they are notified.',
     detail:
-      'This is what Insova is being built towards and it is not close. A model cannot learn from a ' +
+      'This is what Insova is being built towards. A model cannot learn from a ' +
       'register that only shows today, which is why we archive it. The best published work in this ' +
       'area reached about 69% accuracy a month ahead, and it used pharmacy dispensing data rather ' +
       'than a shortage register alone. We will publish what we actually achieve, including if it ' +

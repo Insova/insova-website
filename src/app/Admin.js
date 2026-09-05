@@ -271,12 +271,14 @@ function Health({ app }) {
     },
     {
       name: 'HPRA reconciliation',
-      ok: true,
+      ok: c.hpra_total === c.current,
       warn: c.hpra_total !== c.current,
       value: c.hpra_total === c.current
-        ? 'Matches the HPRA count'
+        ? `Matches the HPRA count of ${c.hpra_total}`
         : `We say ${c.current}, HPRA says ${c.hpra_total}`,
-      note: c.resolved_note || 'The difference is records carrying a resolution date that the register still returns.',
+      note: c.hpra_total === c.current
+        ? 'Our count and the regulator\'s agree. If they ever diverge, assume the fault is ours until shown otherwise: it was last time.'
+        : (c.resolved_note || 'Our count differs from the HPRA\'s. Check the collector before quoting either number.'),
     },
     {
       name: 'Interchangeable list',
