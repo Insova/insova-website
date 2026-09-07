@@ -136,7 +136,9 @@ export default function Watchlist({ app, watch, go }) {
         <div className="ia-panel-head">
           <h3>Still short</h3>
           <span className="ia-panel-note">
-            Changes shown are against {data.meta.compare_label || 'the previous collection'}
+            {data.meta.hpra_last_updated
+              ? `Changes since the HPRA last updated the register on ${fmtDate(data.meta.hpra_last_updated)}`
+              : `Changes shown are against ${data.meta.compare_label || 'the previous collection'}`}
           </span>
         </div>
 
@@ -182,7 +184,11 @@ export default function Watchlist({ app, watch, go }) {
 
                   {ch && (
                     <div className="ia-watch-change">
-                      <span className="ia-tag amber">since {data.meta.compare_label}</span>
+                      <span className="ia-tag amber">
+                        since {data.meta.hpra_last_updated
+                          ? fmtDate(data.meta.hpra_last_updated)
+                          : data.meta.compare_label}
+                      </span>
                       <span>{ch.kind === 'date_moved' ? `Return date moved ${ch.detail}` : ch.detail || ch.kind}</span>
                     </div>
                   )}

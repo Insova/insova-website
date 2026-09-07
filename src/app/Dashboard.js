@@ -47,20 +47,32 @@ export default function Dashboard({ app, watch, go }) {
       <section className="ia-panel">
         <div className="ia-panel-head">
           <h3>What changed</h3>
+          {/* "the last day the register moved" claimed more than we can
+              know: we only ever see when our own snapshots differ, and
+              our capture lags the HPRA by a day. This says what is
+              actually true. */}
+          {/* The HPRA states on its own page when the register was last
+              updated. Where we have that, say it: it is their fact, not
+              our inference from snapshots differing. */}
           <span className="ia-panel-note">
-            {m.compare_day
-              ? `Compared with ${m.compare_label}, the last day the register moved`
-              : 'No earlier snapshot to compare against yet'}
-            {m.quiet_mornings
-              ? `. Stood still for ${m.quiet_mornings} morning${m.quiet_mornings > 1 ? 's' : ''} in between.`
-              : ''}
+            {m.hpra_last_updated
+              ? `The HPRA last updated the register on ${fmtDate(m.hpra_last_updated)}`
+              : m.compare_day
+                ? `Changes since our snapshot of ${m.compare_label}`
+                : 'No earlier snapshot to compare against yet'}
+            {m.hpra_last_updated && m.compare_day
+              ? `. Compared with our snapshot of ${m.compare_label}.`
+              : m.quiet_mornings
+                ? `. Nothing has changed in the ${m.quiet_mornings} morning${m.quiet_mornings > 1 ? 's' : ''} since.`
+                : ''}
           </span>
         </div>
 
         {changes.length === 0 ? (
           <p className="ia-empty">
-            Nothing has appeared, left, or had its return date moved. The register does not
-            change every day; it is generally still at weekends.
+            {m.hpra_last_updated
+              ? `Nothing has appeared, left, or had its return date moved. The HPRA has not updated the register since ${fmtDate(m.hpra_last_updated)}.`
+              : 'Nothing has appeared, left, or had its return date moved. The register does not change every day; it is generally still at weekends.'}
           </p>
         ) : (
           <div className="ia-change-cols">
@@ -75,6 +87,20 @@ export default function Dashboard({ app, watch, go }) {
             <strong>"Left the register" is not the same as "back in stock."</strong> It means
             the HPRA no longer lists it. Supply usually recovers before that happens, but the
             only way to know your wholesaler has it is to check.
+          </p>
+        )}
+
+        {m.renumbered > 0 && (
+          <p className="ia-footnote">
+            <strong>
+              {m.renumbered} shortage{m.renumbered === 1 ? '' : 's'} changed reference number
+              without anything else changing
+            </strong>
+            {m.renumbered_detail && m.renumbered_detail.length > 0 && (
+              <> ({m.renumbered_detail.map((r) => r.product.slice(0, 40)).join(', ')})</>
+            )}
+            . The HPRA reissues these from time to time. Not listed above, because nothing
+            actually happened to the medicine.
           </p>
         )}
       </section>

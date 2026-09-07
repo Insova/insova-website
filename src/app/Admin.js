@@ -295,6 +295,17 @@ function Health({ app }) {
       note: 'A number that climbs every single day suggests letters.py is treating regenerated URLs as new documents again.',
     },
     {
+      name: 'HPRA update date',
+      ok: Boolean(d.meta.hpra_last_updated),
+      warn: !d.meta.hpra_last_updated,
+      value: d.meta.hpra_last_updated
+        ? `HPRA says ${d.meta.hpra_last_updated}`
+        : 'not recorded',
+      note: d.meta.hpra_last_updated
+        ? 'Read from the HPRA page itself. Everything about what changed is measured against this rather than against our own snapshots differing.'
+        : 'The collector could not read "List last updated" from the page. Change detection falls back to comparing snapshots, which cannot tell a real change from a record being renumbered.',
+    },
+    {
       name: 'Archive depth',
       ok: d.meta.days_archived >= 7,
       warn: d.meta.days_archived < 7,
@@ -329,7 +340,10 @@ function Health({ app }) {
           <F k="Collected" v={d.meta.as_of_label} />
           <F k="Generated" v={(d.meta.generated_at || '').replace('T', ' ').slice(0, 19)} />
           <F k="Schema" v={d.meta.schema} />
-          <F k="Compared against" v={d.meta.compare_label || 'nothing yet'} />
+          <F k="HPRA last updated the list"
+             v={d.meta.hpra_last_updated || 'not recorded (pre-v0.8 snapshot)'} />
+          <F k="Compared against our snapshot of" v={d.meta.compare_label || 'nothing yet'} />
+          <F k="Renumbered by the HPRA" v={String(d.meta.renumbered ?? 0)} />
           <F k="Quiet mornings skipped" v={String(d.meta.quiet_mornings)} />
           <F k="Changes found" v={String((d.changes || []).length)} />
           <F k="Groups down to one" v={String(c.groups_last_product)} />

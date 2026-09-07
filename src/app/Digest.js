@@ -152,8 +152,9 @@ export default function Digest({ app, watch }) {
 
           {changes.length === 0 && (
             <p className="ia-email-quiet">
-              The register has not moved since {data.meta.compare_label || 'the last collection'}.
-              It is generally still at weekends.
+              {data.meta.hpra_last_updated
+                ? `The HPRA has not updated the register since ${fmtDate(data.meta.hpra_last_updated)}.`
+                : `The register has not moved since ${data.meta.compare_label || 'the last collection'}. It is generally still at weekends.`}
             </p>
           )}
 
