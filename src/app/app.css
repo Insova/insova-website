@@ -1064,3 +1064,18 @@ button.ia-hl-small:hover {
   border-color: #03bf64;
   box-shadow: 0 6px 20px rgba(3, 191, 100, 0.10);
 }
+
+/* ---------------------------------------------------------------------
+   APPEND TO THE END OF src/app/app.css
+   --------------------------------------------------------------------- */
+
+/* Required attribution under the CC BY 4.0 licence the HPRA granted on
+   9 September 2026. Quiet, but present on every screen of the app. */
+.ia-side-fine.attribution {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.38);
+}

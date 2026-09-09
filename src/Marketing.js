@@ -691,6 +691,19 @@ function Marketing({ onLogin }) {
             <a href="/data.html">The data</a>
             <a href="mailto:contact@insova.ie">contact@insova.ie</a>
           </div>
+                    {/* Required by the CC BY 4.0 licence granted by the HPRA on
+              9 September 2026. Their wording, verbatim. The second line
+              is the licence's No Endorsement condition. */}
+          <div className="footer-attribution">
+            <p>
+              Information provided courtesy of the Health Products Regulatory
+              Authority (HPRA) under a Creative Commons Attribution 4.0
+              International{' '}
+              <a href="http://creativecommons.org/licenses/by/4.0/"
+                 target="_blank" rel="license noreferrer">CC BY 4.0</a> licence.
+            </p>
+            <p>Insova is not connected with, sponsored by, or endorsed by the HPRA.</p>
+          </div>
           <div className="footer-bottom">
             <span>&copy; 2026 Insova. All rights reserved.</span>
             <span>Cork, Ireland</span>

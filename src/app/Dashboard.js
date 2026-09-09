@@ -51,28 +51,22 @@ export default function Dashboard({ app, watch, go }) {
               know: we only ever see when our own snapshots differ, and
               our capture lags the HPRA by a day. This says what is
               actually true. */}
-          {/* The HPRA states on its own page when the register was last
-              updated. Where we have that, say it: it is their fact, not
-              our inference from snapshots differing. */}
+          {/* One date, ours, stated plainly.
+              Two sentences quoting two dates that looked like the same
+              date told the reader nothing. The HPRA's own field could
+              not carry the claim either: it is the newest date on any
+              record, so a product being REMOVED does not move it. */}
           <span className="ia-panel-note">
-            {m.hpra_last_updated
-              ? `The HPRA last updated the register on ${fmtDate(m.hpra_last_updated)}`
-              : m.compare_day
-                ? `Changes since our snapshot of ${m.compare_label}`
-                : 'No earlier snapshot to compare against yet'}
-            {m.hpra_last_updated && m.compare_day
-              ? `. Compared with our snapshot of ${m.compare_label}.`
-              : m.quiet_mornings
-                ? `. Nothing has changed in the ${m.quiet_mornings} morning${m.quiet_mornings > 1 ? 's' : ''} since.`
-                : ''}
+            {m.compare_day
+              ? `Since our previous collection on ${m.compare_label}`
+              : 'No earlier collection to compare against yet'}
           </span>
         </div>
 
         {changes.length === 0 ? (
           <p className="ia-empty">
-            {m.hpra_last_updated
-              ? `Nothing has appeared, left, or had its return date moved. The HPRA has not updated the register since ${fmtDate(m.hpra_last_updated)}.`
-              : 'Nothing has appeared, left, or had its return date moved. The register does not change every day; it is generally still at weekends.'}
+            Nothing has appeared, left, or had its return date moved since our
+            previous collection. The register does not change every day.
           </p>
         ) : (
           <div className="ia-change-cols">

@@ -127,6 +127,15 @@ export default function AppShell({ onHome }) {
             Information only. Insova never substitutes, orders or dispenses.
             Not a patient record system.
           </p>
+          {/* Required by the CC BY 4.0 licence the HPRA granted on
+              9 September 2026. The wording is theirs, taken verbatim
+              from the decision letter, and must not be paraphrased.
+              It sits in the sidebar so it appears on every screen. */}
+          <p className="ia-side-fine attribution">
+            Information provided courtesy of the Health Products Regulatory
+            Authority (HPRA) under a Creative Commons Attribution 4.0
+            International (CC BY 4.0) licence.
+          </p>
         </div>
       </aside>
 
