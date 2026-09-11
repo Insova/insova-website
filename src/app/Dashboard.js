@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { fmtDate, durationText } from './useAppData';
 import { NextStrip } from './Roadmap';
 
@@ -368,6 +368,12 @@ function More({ shown, total, noun, go, preset }) {
 }
 
 function ChangeCol({ title, tone, rows, go, watch }) {
+  // Capped at first, because three long columns side by side is
+  // unreadable. But "and 4 more" with no way to see them is worse than
+  // useless on a busy day: the whole point of this screen is that a
+  // pharmacist can see everything that moved.
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? rows : rows.slice(0, CHANGE_SHOW);
   return (
     <div className="ia-change-col">
       <h4 className={'ia-change-title ' + tone}>
@@ -377,7 +383,7 @@ function ChangeCol({ title, tone, rows, go, watch }) {
         <p className="ia-empty small">None</p>
       ) : (
         <>
-        {rows.slice(0, CHANGE_SHOW).map((r) => (
+        {visible.map((r) => (
           <button key={r.kind + r.id} className="ia-change-row" onClick={() => go('shortages', r.id)}>
             <strong>
               {watch.ids.has(r.id) && <span className="ia-mini-star" title="On your list">★</span>}
@@ -387,9 +393,11 @@ function ChangeCol({ title, tone, rows, go, watch }) {
           </button>
         ))}
         {rows.length > CHANGE_SHOW && (
-          <p className="ia-more-note small">
-            and {rows.length - CHANGE_SHOW} more
-          </p>
+          <button className="ia-linkbtn showall" onClick={() => setShowAll((v) => !v)}>
+            {showAll
+              ? 'Show fewer'
+              : `Show all ${rows.length}`}
+          </button>
         )}
         </>
       )}
