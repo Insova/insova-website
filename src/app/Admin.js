@@ -19,6 +19,24 @@ import { fmtDate, daysSince } from './useAppData';
 export default function Admin({ app }) {
   const { user } = useAuth();
   const [tab, setTab] = useState('health');
+  const [newCount, setNewCount] = useState(0);
+
+  // Counted here rather than inside the Feedback tab, because a badge
+  // that only appears after you open the tab tells you nothing. This is
+  // the whole reason the badge exists: to say "someone wrote to you"
+  // before you go looking.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('feedback')
+        .select('id')
+        .eq('status', 'new');
+      if (!cancelled && !error && data) setNewCount(data.length);
+    })();
+    return () => { cancelled = true; };
+  }, [tab]);
   const [pharmacies, setPharmacies] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const [invites, setInvites] = useState([]);
@@ -94,6 +112,9 @@ export default function Admin({ app }) {
         <button className={tab === 'people' ? 'on' : ''} onClick={() => setTab('people')}>
           People <span>{profiles.length}</span>
         </button>
+        <button className={tab === 'feedback' ? 'on' : ''} onClick={() => setTab('feedback')}>
+          Feedback{newCount > 0 && <span className="ia-tab-badge">{newCount}</span>}
+        </button>
         <button className={tab === 'pharmacies' ? 'on' : ''} onClick={() => setTab('pharmacies')}>
           Pharmacies <span>{pharmacies.length}</span>
         </button>
@@ -103,6 +124,8 @@ export default function Admin({ app }) {
       {msg && <div className="ia-alert ok"><strong>{msg}</strong></div>}
 
       {tab === 'health' && <Health app={app} />}
+
+      {tab === 'feedback' && <FeedbackAdmin onCount={setNewCount} />}
 
       {/* ---------------- people ---------------- */}
       {tab === 'people' && (
@@ -362,4 +385,160 @@ function Health({ app }) {
 
 function F({ k, v }) {
   return <div className="ia-fact"><span className="k">{k}</span><span className="v">{v}</span></div>;
+}
+
+
+/* ---------------------------------------------------------------------
+   Feedback triage.
+
+   Read-only on the words. An admin can change the status and attach a
+   reply, and that reply is shown back to the person who wrote it, but
+   the message itself cannot be edited: a database trigger refuses, and
+   so does this screen. Feedback you can rewrite is not feedback.
+   --------------------------------------------------------------------- */
+function FeedbackAdmin({ onCount }) {
+  const [rows, setRows] = useState([]);
+  const [filter, setFilter] = useState('new');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
+
+  const load = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { data, error: e } = await supabase
+      .from('feedback')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (e) setError(e.message);
+    else {
+      setRows(data || []);
+      onCount((data || []).filter((r) => r.status === 'new').length);
+    }
+    setLoading(false);
+  }, [onCount]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const setStatus = async (id, status, note) => {
+    const patch = { status };
+    if (note !== undefined) patch.admin_note = note || null;
+    if (status !== 'new') patch.handled_at = new Date().toISOString();
+    const { error: e } = await supabase.from('feedback').update(patch).eq('id', id);
+    if (e) setError(e.message);
+    setReplyTo(null);
+    setReplyText('');
+    load();
+  };
+
+  const shown = rows.filter((r) => filter === 'all' || r.status === filter);
+  const counts = {
+    new: rows.filter((r) => r.status === 'new').length,
+    read: rows.filter((r) => r.status === 'read').length,
+    actioned: rows.filter((r) => r.status === 'actioned').length,
+  };
+
+  const CAT = {
+    wrong: ['A number looks wrong', 'red'],
+    broken: ['Something is broken', 'amber'],
+    idea: ['Something is missing', 'green'],
+    other: ['Something else', 'grey'],
+  };
+
+  return (
+    <>
+      <p className="ia-lead">
+        Everything pharmacists have sent. Anything marked <b>a number looks
+        wrong</b> should be checked against the HPRA the same day: if our
+        figure disagrees with theirs, ours is the one to fix.
+      </p>
+
+      {error && <div className="ia-alert error"><span>{error}</span></div>}
+
+      <div className="ia-filters">
+        {[['new', `New (${counts.new})`], ['read', `Read (${counts.read})`],
+          ['actioned', `Acted on (${counts.actioned})`], ['all', `All (${rows.length})`]]
+          .map(([v, l]) => (
+            <button key={v}
+              className={'ia-chip' + (filter === v ? ' on' : '')}
+              onClick={() => setFilter(v)}>{l}</button>
+          ))}
+      </div>
+
+      {loading ? (
+        <p className="ia-empty">Loading…</p>
+      ) : shown.length === 0 ? (
+        <p className="ia-empty">
+          {filter === 'new'
+            ? 'Nothing new. That is either good or it means nobody is using it.'
+            : 'Nothing here.'}
+        </p>
+      ) : (
+        <div className="ia-fb-admin">
+          {shown.map((f) => {
+            const [label, tone] = CAT[f.category] || [f.category, 'grey'];
+            return (
+              <article key={f.id} className={'ia-fb-admin-item ' + f.status}>
+                <div className="ia-fb-admin-top">
+                  <span className={'ia-tag ' + tone}>{label}</span>
+                  <span className="ia-fb-admin-meta">
+                    {fmtDate(f.created_at)}
+                    {f.screen && ` · on ${f.screen}`}
+                    {f.data_date && ` · reading the register of ${fmtDate(f.data_date)}`}
+                  </span>
+                </div>
+
+                <p className="ia-fb-admin-msg">{f.message}</p>
+
+                {f.admin_note && (
+                  <p className="ia-fb-item-reply">
+                    <strong>Replied:</strong> {f.admin_note}
+                  </p>
+                )}
+
+                {replyTo === f.id ? (
+                  <div className="ia-fb-admin-reply">
+                    <textarea
+                      rows={3}
+                      value={replyText}
+                      placeholder="This is shown back to the person who sent it."
+                      onChange={(e) => setReplyText(e.target.value)}
+                    />
+                    <div className="ia-fb-admin-actions">
+                      <button className="ia-btn small"
+                        onClick={() => setStatus(f.id, 'actioned', replyText)}>
+                        Save and mark acted on
+                      </button>
+                      <button className="ia-linkbtn" onClick={() => setReplyTo(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="ia-fb-admin-actions">
+                    {f.status === 'new' && (
+                      <button className="ia-linkbtn" onClick={() => setStatus(f.id, 'read')}>
+                        Mark read
+                      </button>
+                    )}
+                    <button className="ia-linkbtn"
+                      onClick={() => { setReplyTo(f.id); setReplyText(f.admin_note || ''); }}>
+                      {f.admin_note ? 'Edit reply' : 'Reply'}
+                    </button>
+                    {f.status !== 'closed' && (
+                      <button className="ia-linkbtn" onClick={() => setStatus(f.id, 'closed')}>
+                        Close
+                      </button>
+                    )}
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
 }

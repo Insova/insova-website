@@ -10,6 +10,7 @@ import Notices from './Notices';
 import ULM from './ULM';
 import Digest from './Digest';
 import Roadmap from './Roadmap';
+import Feedback from './Feedback';
 import Admin from './Admin';
 import './app.css';
 
@@ -22,6 +23,7 @@ const NAV = [
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
   { id: 'digest',    label: 'Daily brief',  icon: '⏱' },
   { id: 'roadmap',   label: "What's next", icon: '◇' },
+  { id: 'feedback',  label: 'Tell us',      icon: '✎' },
 ];
 
 export default function AppShell({ onHome }) {
@@ -196,6 +198,7 @@ export default function AppShell({ onHome }) {
           {view === 'ulm' && <ULM app={app} />}
           {app.ready && view === 'digest' && <Digest app={app} watch={watch} />}
           {view === 'roadmap' && <Roadmap app={app} />}
+          {view === 'feedback' && <Feedback app={app} />}
           {view === 'admin' && isAdmin && <Admin app={app} />}
         </main>
       </div>

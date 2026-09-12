@@ -1079,3 +1079,242 @@ button.ia-hl-small:hover {
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.38);
 }
+
+
+/* ---------------------------------------------------------------------
+   APPEND TO THE END OF src/app/app.css
+   --------------------------------------------------------------------- */
+
+/* "Show all 14" under a capped change column. The cap keeps three
+   columns readable side by side; the button means nothing is hidden
+   from a pharmacist on a busy day. */
+.ia-linkbtn.showall {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eef2f7;
+  width: 100%;
+  text-align: left;
+  font-size: 12.5px;
+}
+
+
+/* ---------------------------------------------------------------------
+   APPEND TO THE END OF src/app/app.css
+   Feedback: the pharmacist-facing form and the admin triage list.
+   --------------------------------------------------------------------- */
+
+.ia-fb-form { display: flex; flex-direction: column; gap: 16px; }
+
+.ia-fb-cats {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ia-fb-cats legend {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--slate-light, #7A94AA);
+  margin-bottom: 10px;
+  padding: 0;
+}
+.ia-fb-cat {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border, #D8E4F0);
+  background: #fff;
+  color: var(--slate, #4A6080);
+  cursor: pointer;
+  transition: all 0.16s;
+}
+.ia-fb-cat:hover { border-color: #03bf64; color: var(--dark, #0F2040); }
+.ia-fb-cat.on {
+  background: var(--dark, #0F2040);
+  border-color: var(--dark, #0F2040);
+  color: #fff;
+}
+.ia-fb-hint {
+  margin-top: -6px;
+  font-size: 13px;
+  color: var(--slate-light, #7A94AA);
+  line-height: 1.55;
+}
+
+.ia-fb-field { display: flex; flex-direction: column; gap: 6px; }
+.ia-fb-field > span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--slate-light, #7A94AA);
+}
+.ia-fb-field select,
+.ia-fb-field textarea {
+  font: inherit;
+  font-size: 15px;
+  padding: 11px 14px;
+  border: 1px solid var(--border, #D8E4F0);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--dark, #0F2040);
+  width: 100%;
+}
+.ia-fb-field textarea { line-height: 1.65; resize: vertical; min-height: 150px; }
+.ia-fb-field select:focus,
+.ia-fb-field textarea:focus {
+  outline: none;
+  border-color: #03bf64;
+  box-shadow: 0 0 0 3px rgba(3, 191, 100, 0.10);
+}
+.ia-fb-count {
+  font-size: 12px;
+  color: var(--slate-light, #7A94AA);
+  text-align: right;
+  min-height: 16px;
+}
+
+.ia-fb-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ia-fb-meta {
+  font-size: 12.5px;
+  color: var(--slate-light, #7A94AA);
+  line-height: 1.5;
+  flex: 1;
+  min-width: 220px;
+}
+
+.ia-sent {
+  background: rgba(3, 191, 100, 0.06);
+  border: 1px solid rgba(3, 191, 100, 0.22);
+  border-radius: 12px;
+  padding: 22px 24px;
+}
+.ia-sent strong { display: block; font-size: 16px; margin-bottom: 8px; }
+.ia-sent p {
+  font-size: 14px;
+  color: var(--slate, #4A6080);
+  line-height: 1.65;
+  margin-bottom: 14px;
+  max-width: 62ch;
+}
+
+/* what the person has sent before */
+.ia-fb-list { display: flex; flex-direction: column; gap: 12px; }
+.ia-fb-item {
+  border: 1px solid var(--border, #D8E4F0);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.ia-fb-item-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.ia-fb-item-cat { font-size: 13px; font-weight: 600; color: var(--dark, #0F2040); }
+.ia-fb-item-date { font-size: 12.5px; color: var(--slate-light, #7A94AA); margin-left: auto; }
+.ia-fb-item-msg {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--slate, #4A6080);
+  white-space: pre-wrap;
+}
+.ia-fb-item-reply {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--section-alt, #EEF4FF);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dark, #0F2040);
+}
+
+/* admin triage */
+.ia-tab-badge {
+  display: inline-block;
+  margin-left: 7px;
+  min-width: 18px;
+  padding: 1px 6px;
+  border-radius: 100px;
+  background: #d94141;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+.ia-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.ia-chip {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border, #D8E4F0);
+  background: #fff;
+  color: var(--slate, #4A6080);
+  cursor: pointer;
+}
+.ia-chip.on { background: var(--dark, #0F2040); border-color: var(--dark, #0F2040); color: #fff; }
+
+.ia-fb-admin { display: flex; flex-direction: column; gap: 14px; }
+.ia-fb-admin-item {
+  border: 1px solid var(--border, #D8E4F0);
+  border-left: 3px solid var(--slate-light, #7A94AA);
+  border-radius: 0 12px 12px 0;
+  padding: 18px 20px;
+  background: #fff;
+}
+.ia-fb-admin-item.new { border-left-color: #d94141; background: rgba(217, 65, 65, 0.02); }
+.ia-fb-admin-item.actioned { border-left-color: #03bf64; }
+.ia-fb-admin-item.closed { opacity: 0.65; }
+.ia-fb-admin-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ia-fb-admin-meta { font-size: 12.5px; color: var(--slate-light, #7A94AA); }
+.ia-fb-admin-msg {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--dark, #0F2040);
+  white-space: pre-wrap;
+  max-width: 76ch;
+}
+.ia-fb-admin-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #eef2f7;
+}
+.ia-fb-admin-reply { margin-top: 14px; }
+.ia-fb-admin-reply textarea {
+  font: inherit;
+  font-size: 14.5px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border, #D8E4F0);
+  border-radius: 10px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+@media (max-width: 720px) {
+  .ia-fb-item-date { margin-left: 0; width: 100%; }
+}
