@@ -145,7 +145,7 @@ export default function Feedback({ app }) {
         ) : (
           <form onSubmit={submit} className="ia-fb-form">
             <fieldset className="ia-fb-cats">
-              <legend>What kind of thing is it?</legend>
+              <legend></legend>
               {CATEGORIES.map((c) => (
                 <button
                   type="button"
@@ -161,7 +161,7 @@ export default function Feedback({ app }) {
             {chosen && <p className="ia-fb-hint">{chosen.hint}</p>}
 
             <label className="ia-fb-field">
-              <span>Where were you?</span>
+              <span>Which section of the application?</span>
               <select value={screen} onChange={(e) => setScreen(e.target.value)}>
                 {SCREENS.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>

@@ -23,7 +23,7 @@ const NAV = [
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
   { id: 'digest',    label: 'Daily brief',  icon: '⏱' },
   { id: 'roadmap',   label: "What's next", icon: '◇' },
-  { id: 'feedback',  label: 'Give Feedback',      icon: '✎' },
+  { id: 'feedback',  label: 'Give feedback',      icon: '✎' },
 ];
 
 export default function AppShell({ onHome }) {
