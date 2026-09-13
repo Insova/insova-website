@@ -1,12 +1,12 @@
 {
-  "as_of": "2026-09-12",
-  "as_of_label": "12 September 2026",
+  "as_of": "2026-09-13",
+  "as_of_label": "13 September 2026",
   "notified": 341,
   "current": 341,
   "hpra_total": 341,
   "resolved_still_listed": 0,
   "over_one_year": 75,
-  "new_30d": 75,
+  "new_30d": 72,
   "not_yet_impacting": 14,
   "past_return_date": 29,
   "no_return_date_pct": 36,
@@ -16,5 +16,5 @@
   "no_interchangeable_pct": 54,
   "groups_last_product": 15,
   "letters_tracked": 16,
-  "days_archived": 41
+  "days_archived": 42
 }
