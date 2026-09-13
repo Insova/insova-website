@@ -84,19 +84,15 @@ export default function Dashboard({ app, watch, go }) {
           </p>
         )}
 
-        {m.renumbered > 0 && (
-          <p className="ia-footnote">
-            <strong>
-              {m.renumbered} shortage{m.renumbered === 1 ? '' : 's'} changed reference number
-              without anything else changing
-            </strong>
-            {m.renumbered_detail && m.renumbered_detail.length > 0 && (
-              <> ({m.renumbered_detail.map((r) => r.product.slice(0, 40)).join(', ')})</>
-            )}
-            . The HPRA reissues these from time to time. Not listed above, because nothing
-            actually happened to the medicine.
-          </p>
-        )}
+        {/* The renumbering footnote lived here. Removed deliberately.
+            The HPRA reissues at least one record's reference number
+            nightly while changing nothing about the medicine, so the
+            note fired every single morning naming the same product. It
+            is a pipeline diagnostic, not news for a pharmacist.
+            meta.renumbered and meta.renumbered_detail are still
+            exported and belong on Admin. The suppression itself still
+            happens in export_app_data.py: renumbered pairs are removed
+            from the change list, which is the part that matters. */}
       </section>
 
       {/* ---- your pharmacy, before the national picture ---- */}
@@ -173,13 +169,15 @@ export default function Dashboard({ app, watch, go }) {
           </div>
         </div>
         <div className="ia-headline-side">
-          <div className="ia-hl-small">
-            <span className="n">{c.hpra_total}</span>
-            <span className="l">notified in total on the HPRA page</span>
-            <span className="d">
-              The total shown on the HPRA website.
-            </span>
-          </div>
+          {/* The "notified in total on the HPRA page" card was here.
+              Removed: hpra_total is len(current) + len(resolved), and
+              the resolved list is almost always empty, so it printed
+              the same figure as the headline every day. Two cards
+              showing one number reads as a bug. counts.hpra_total and
+              counts.resolved_note are still exported; if the two ever
+              genuinely diverge, that belongs on Admin, where it is a
+              pipeline problem rather than something a pharmacist can
+              act on. */}
           <button
             className="ia-hl-small clickable"
             onClick={() => go('shortages', null, 'not_started')}
