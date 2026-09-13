@@ -14,16 +14,36 @@ import Feedback from './Feedback';
 import Admin from './Admin';
 import './app.css';
 
-const NAV = [
-  { id: 'dashboard', label: 'Today',        icon: '▦' },
-  { id: 'watchlist', label: 'Your list',    icon: '★' },
-  { id: 'shortages', label: 'Shortages',    icon: '☰' },
-  { id: 'groups',    label: 'Running low',  icon: '◨' },
-  { id: 'notices',   label: 'Notices',      icon: '✉' },
+/*
+  Navigation is split into two groups.
+
+  Ten items in one undivided column read as a long list you have to scan.
+  Six of them are the register: what is short, what changed, what is
+  left. The other three are about Insova itself rather than about
+  medicines, and a pharmacist reaches for them far less often. Grouping
+  them says which is which without hiding anything.
+
+  The legal text used to live in the sidebar footer. Between the
+  information-only line and the CC BY attribution it ran to about two
+  paragraphs, which pushed the nav into its own small scrolling window
+  and produced a stubby scrollbar on any normal laptop. It now sits
+  under the main content, where it is still on every screen and still
+  satisfies the licence, but is not competing with navigation for
+  vertical space.
+*/
+const NAV_MAIN = [
+  { id: 'dashboard', label: 'Today',                icon: '▦' },
+  { id: 'watchlist', label: 'Your list',            icon: '★' },
+  { id: 'shortages', label: 'Shortages',            icon: '☰' },
+  { id: 'groups',    label: 'Running low',          icon: '◧' },
+  { id: 'notices',   label: 'Notices',              icon: '✉' },
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
-  { id: 'digest',    label: 'Daily brief',  icon: '⏱' },
-  { id: 'roadmap',   label: "What's next", icon: '◇' },
-  { id: 'feedback',  label: 'Give feedback',      icon: '✎' },
+];
+
+const NAV_MORE = [
+  { id: 'digest',   label: 'Daily brief',   icon: '◷' },
+  { id: 'roadmap',  label: "What's next",   icon: '◇' },
+  { id: 'feedback', label: 'Give feedback', icon: '✎' },
 ];
 
 export default function AppShell({ onHome }) {
@@ -35,7 +55,10 @@ export default function AppShell({ onHome }) {
   const [focusId, setFocusId] = useState(null);
   const [preset, setPreset] = useState(null);
 
-  const nav = isAdmin ? [...NAV, { id: 'admin', label: 'Admin', icon: '⚙' }] : NAV;
+  const navMore = isAdmin
+    ? [...NAV_MORE, { id: 'admin', label: 'Admin', icon: '⚙' }]
+    : NAV_MORE;
+  const allNav = [...NAV_MAIN, ...navMore];
 
   // go('shortages', someId) opens that product.
   // go('shortages', null, 'not_started') opens the list already filtered,
@@ -74,13 +97,26 @@ export default function AppShell({ onHome }) {
       + (app.data.recently_left || []).filter((r) => watch.ids.has(r.id)).length
     : 0;
 
+  const NavItem = (n) => (
+    <button
+      key={n.id}
+      className={'ia-nav-item' + (view === n.id ? ' on' : '')}
+      onClick={() => go(n.id)}
+    >
+      <span className="ia-nav-icon" aria-hidden="true">{n.icon}</span>
+      <span className="ia-nav-label">{n.label}</span>
+      {n.id === 'watchlist' && watch.rows.length > 0 && (
+        <span className={'ia-nav-badge' + (watchAlerts ? ' alert' : '')}>
+          {watchAlerts || watch.rows.length}
+        </span>
+      )}
+    </button>
+  );
+
   return (
     <div className={'ia' + (menuOpen ? ' ia-menu-open' : '')}>
       <aside className="ia-side">
         <div className="ia-side-top">
-          {/* Product identity first. The header band is its own light
-              section so the full-colour mark reads against it; only the
-              nav below stays navy. */}
           <div className="ia-side-brand">
             <img
               className="ia-side-logo"
@@ -89,7 +125,6 @@ export default function AppShell({ onHome }) {
             />
           </div>
 
-          {/* Then who you are signed in as, which is a different thing. */}
           {pharmacy && (
             <div className="ia-side-org">
               <span className="k">Signed in for</span>
@@ -102,21 +137,14 @@ export default function AppShell({ onHome }) {
         </div>
 
         <nav className="ia-nav">
-          {nav.map((n) => (
-            <button
-              key={n.id}
-              className={'ia-nav-item' + (view === n.id ? ' on' : '')}
-              onClick={() => go(n.id)}
-            >
-              <span className="ia-nav-icon" aria-hidden="true">{n.icon}</span>
-              <span>{n.label}</span>
-              {n.id === 'watchlist' && watch.rows.length > 0 && (
-                <span className={'ia-nav-badge' + (watchAlerts ? ' alert' : '')}>
-                  {watchAlerts || watch.rows.length}
-                </span>
-              )}
-            </button>
-          ))}
+          <div className="ia-nav-group">
+            {NAV_MAIN.map(NavItem)}
+          </div>
+
+          <div className="ia-nav-group secondary">
+            <span className="ia-nav-heading">Insova</span>
+            {navMore.map(NavItem)}
+          </div>
         </nav>
 
         <div className="ia-side-foot">
@@ -125,19 +153,6 @@ export default function AppShell({ onHome }) {
             Privacy
           </a>
           <button className="ia-linkbtn" onClick={signOut}>Sign out</button>
-          <p className="ia-side-fine">
-            Information only. Insova never substitutes, orders or dispenses.
-            Not a patient record system.
-          </p>
-          {/* Required by the CC BY 4.0 licence the HPRA granted on
-              9 September 2026. The wording is theirs, taken verbatim
-              from the decision letter, and must not be paraphrased.
-              It sits in the sidebar so it appears on every screen. */}
-          <p className="ia-side-fine attribution">
-            Information provided courtesy of the Health Products Regulatory
-            Authority (HPRA) under a Creative Commons Attribution 4.0
-            International (CC BY 4.0) licence.
-          </p>
         </div>
       </aside>
 
@@ -146,7 +161,7 @@ export default function AppShell({ onHome }) {
           <button className="ia-burger" aria-label="Menu" onClick={() => setMenuOpen((v) => !v)}>
             ☰
           </button>
-          <div className="ia-top-title">{nav.find((n) => n.id === view)?.label}</div>
+          <div className="ia-top-title">{allNav.find((n) => n.id === view)?.label}</div>
           <div className="ia-top-right">
             {app.data && (
               <span className={'ia-freshness' + (stale > 1 ? ' warn' : '')}>
@@ -201,6 +216,23 @@ export default function AppShell({ onHome }) {
           {view === 'feedback' && <Feedback app={app} />}
           {view === 'admin' && isAdmin && <Admin app={app} />}
         </main>
+
+        {/* Moved out of the sidebar. Still on every screen, still
+            satisfies the CC BY 4.0 attribution the HPRA requires, but no
+            longer squeezing the navigation into a scrolling box. */}
+        <footer className="ia-foot">
+          <p>
+            Information only. Insova never substitutes, orders or dispenses.
+            Not a patient record system.
+          </p>
+          <p>
+            Information provided courtesy of the Health Products Regulatory Authority
+            (HPRA) under a Creative Commons Attribution 4.0 International{' '}
+            <a href="http://creativecommons.org/licenses/by/4.0/"
+               target="_blank" rel="license noreferrer">CC BY 4.0</a> licence.
+            Insova is not connected with, sponsored by, or endorsed by the HPRA.
+          </p>
+        </footer>
       </div>
 
       {menuOpen && <div className="ia-scrim" onClick={() => setMenuOpen(false)} />}
