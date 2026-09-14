@@ -5,7 +5,6 @@ import { useWatchlist } from './useWatchlist';
 import Dashboard from './Dashboard';
 import Watchlist from './Watchlist';
 import Shortages from './Shortages';
-import AskAI from './AskAI';
 import Groups from './Groups';
 import Notices from './Notices';
 import ULM from './ULM';
@@ -32,16 +31,25 @@ import './app.css';
   satisfies the licence, but is not competing with navigation for
   vertical space.
 
-  Ask AI sits directly under Shortages because it is another way into
-  the same list, not a separate thing to learn. Someone who does not
-  want it can ignore one row; someone who does will look for it beside
-  the list it searches.
+  ASK AI IS WITHDRAWN, NOT DELETED.
+  src/app/AskAI.js and the nl-search Edge Function are both still in
+  place and still deployed. What was removed is the nav entry, the
+  import and the render line, so there is no route to the screen and no
+  way for anyone to reach it.
+
+  To put it back: re-add the import, the { id: 'askai', label: 'Ask AI',
+  icon: '✧' } entry to NAV_MAIN after 'shortages', and the render line
+  in the main block. Nothing else changed.
+
+  Note the function is still live and still billable, so if it is going
+  to be off for a while, either revoke the Anthropic key or set the
+  workspace spend cap to zero. Nothing in the app calls it now, but
+  the endpoint is public and takes a signed-in JWT.
 */
 const NAV_MAIN = [
   { id: 'dashboard', label: 'Today',                icon: '▦' },
   { id: 'watchlist', label: 'Your list',            icon: '★' },
   { id: 'shortages', label: 'Shortages',            icon: '☰' },
-  { id: 'askai',     label: 'Ask AI',               icon: '✧' },
   { id: 'groups',    label: 'Running low',          icon: '◧' },
   { id: 'notices',   label: 'Notices',              icon: '✉' },
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
@@ -215,9 +223,6 @@ export default function AppShell({ onHome }) {
           {app.ready && view === 'shortages' && (
             <Shortages app={app} watch={watch} focusId={focusId} preset={preset} />
           )}
-          {/* Ask AI needs the register loaded, because it filters data
-              already in the browser rather than asking a model for it. */}
-          {app.ready && view === 'askai' && <AskAI app={app} go={go} />}
           {app.ready && view === 'groups' && <Groups app={app} go={go} />}
           {app.ready && view === 'notices' && <Notices app={app} />}
           {view === 'ulm' && <ULM app={app} />}
