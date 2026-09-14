@@ -5,6 +5,7 @@ import { useWatchlist } from './useWatchlist';
 import Dashboard from './Dashboard';
 import Watchlist from './Watchlist';
 import Shortages from './Shortages';
+import AskAI from './AskAI';
 import Groups from './Groups';
 import Notices from './Notices';
 import ULM from './ULM';
@@ -30,11 +31,17 @@ import './app.css';
   under the main content, where it is still on every screen and still
   satisfies the licence, but is not competing with navigation for
   vertical space.
+
+  Ask AI sits directly under Shortages because it is another way into
+  the same list, not a separate thing to learn. Someone who does not
+  want it can ignore one row; someone who does will look for it beside
+  the list it searches.
 */
 const NAV_MAIN = [
   { id: 'dashboard', label: 'Today',                icon: '▦' },
   { id: 'watchlist', label: 'Your list',            icon: '★' },
   { id: 'shortages', label: 'Shortages',            icon: '☰' },
+  { id: 'askai',     label: 'Ask AI',               icon: '✧' },
   { id: 'groups',    label: 'Running low',          icon: '◧' },
   { id: 'notices',   label: 'Notices',              icon: '✉' },
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
@@ -208,6 +215,9 @@ export default function AppShell({ onHome }) {
           {app.ready && view === 'shortages' && (
             <Shortages app={app} watch={watch} focusId={focusId} preset={preset} />
           )}
+          {/* Ask AI needs the register loaded, because it filters data
+              already in the browser rather than asking a model for it. */}
+          {app.ready && view === 'askai' && <AskAI app={app} go={go} />}
           {app.ready && view === 'groups' && <Groups app={app} go={go} />}
           {app.ready && view === 'notices' && <Notices app={app} />}
           {view === 'ulm' && <ULM app={app} />}

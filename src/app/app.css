@@ -1445,3 +1445,275 @@ button.ia-hl-small:hover {
 @media (max-width: 900px) {
   .ia-foot { padding: 20px 18px 36px; margin-top: -40px; }
 }
+
+/* ============================================================
+   Natural language search on Shortages.
+   APPEND these to the end of src/app/app.css. Nothing existing
+   changes. Colours use the same palette as the rest of .ia-.
+   ============================================================ */
+
+.ia-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ia-search-row .ia-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ia-ask {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border: 1px solid #0f2a4a;
+  border-radius: 8px;
+  background: #0f2a4a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ia-ask:hover:not(:disabled) { background: #17406f; border-color: #17406f; }
+.ia-ask:disabled { opacity: .45; cursor: default; }
+
+/* The interpretation. Deliberately visible rather than subtle: a
+   pharmacist has to be able to see what was filtered on their behalf. */
+.ia-reading {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid #cfe0f2;
+  border-left: 3px solid #17406f;
+  border-radius: 8px;
+  background: #f4f8fd;
+}
+
+.ia-reading-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: .95rem;
+}
+
+.ia-reading-head strong { color: #0f2a4a; }
+
+.ia-reading-terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ia-term {
+  padding: 3px 9px;
+  border: 1px solid #b9d2ea;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f2a4a;
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.ia-term:hover { background: #ffe9e9; border-color: #e0a3a3; }
+.ia-term span { opacity: .55; margin-left: 2px; }
+
+.ia-reading-warn {
+  margin: 10px 0 0;
+  font-size: .82rem;
+  line-height: 1.45;
+  color: #5a6b7d;
+}
+
+.ia-reading-err {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e6c9c9;
+  border-radius: 8px;
+  background: #fdf4f4;
+  color: #7a3b3b;
+  font-size: .9rem;
+}
+
+@media (max-width: 520px) {
+  .ia-search-row { flex-wrap: wrap; }
+  .ia-ask { width: 100%; padding: 10px; }
+}
+
+
+/* ============================================================
+   Ask AI screen. APPEND to the end of src/app/app.css.
+   Nothing existing changes.
+   ============================================================ */
+
+.ia-ask-intro { margin-bottom: 14px; }
+.ia-ask-intro h3 { margin: 0 0 6px; }
+.ia-ask-intro p {
+  margin: 0;
+  max-width: 60ch;
+  color: #5a6b7d;
+  line-height: 1.5;
+}
+
+.ia-ask-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #dce6f1;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.ia-ask-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd9e4;
+  border-radius: 8px;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.ia-ask-input:focus {
+  outline: none;
+  border-color: #17406f;
+  box-shadow: 0 0 0 3px rgba(23, 64, 111, .12);
+}
+
+.ia-ask-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ia-ask-go {
+  padding: 9px 22px;
+  border: 1px solid #0f2a4a;
+  border-radius: 8px;
+  background: #0f2a4a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ia-ask-go:hover:not(:disabled) { background: #17406f; border-color: #17406f; }
+.ia-ask-go:disabled { opacity: .45; cursor: default; }
+
+.ia-ask-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: .9rem;
+  color: #5a6b7d;
+}
+
+.ia-ask-eg {
+  padding: 5px 11px;
+  border: 1px solid #dce6f1;
+  border-radius: 999px;
+  background: #fff;
+  color: #17406f;
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.ia-ask-eg:hover { background: #f4f8fd; border-color: #b9d2ea; }
+
+/* The interpretation. Deliberately prominent: a pharmacist has to be
+   able to see what was filtered on their behalf. */
+.ia-reading {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #cfe0f2;
+  border-left: 3px solid #17406f;
+  border-radius: 8px;
+  background: #f4f8fd;
+}
+
+.ia-reading-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: .95rem;
+}
+
+.ia-reading-head strong { color: #0f2a4a; }
+
+.ia-reading-chips,
+.ia-reading-terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ia-chip {
+  padding: 3px 9px;
+  border: 1px solid #b9d2ea;
+  border-radius: 999px;
+  background: #e8f1fa;
+  color: #0f2a4a;
+  font-size: .82rem;
+}
+
+.ia-term {
+  padding: 3px 9px;
+  border: 1px solid #b9d2ea;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f2a4a;
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.ia-term:hover { background: #ffe9e9; border-color: #e0a3a3; }
+.ia-term span { opacity: .55; margin-left: 2px; }
+
+.ia-reading-warn {
+  margin: 10px 0 0;
+  font-size: .82rem;
+  line-height: 1.45;
+  color: #5a6b7d;
+}
+
+.ia-reading-err {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid #e6c9c9;
+  border-radius: 8px;
+  background: #fdf4f4;
+  color: #7a3b3b;
+  font-size: .9rem;
+}
+
+.ia-ask-count {
+  margin: 18px 0 10px;
+  font-size: .92rem;
+  color: #5a6b7d;
+}
+
+@media (max-width: 520px) {
+  .ia-ask-go { width: 100%; }
+  .ia-ask-actions { flex-wrap: wrap; }
+}
+
+.ia-err-detail {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .78rem;
+  opacity: .75;
+}
+
+.ia-reading.flat { border-left-color: #b9c4cf; background: #f7f8fa; }
