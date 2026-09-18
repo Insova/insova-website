@@ -1660,3 +1660,66 @@ button.nav-cta {
 }
 .footer-attribution p + p { margin-top: 6px; }
 .footer-attribution a { color: var(--teal-bright); }
+
+
+
+/* ============================================================
+   Email confirmation screen. APPEND to the end of src/App.css.
+   Reuses .ia-boot, so it sits on the same light background and
+   uses the same logo treatment as the sign-in wait screen.
+   ============================================================ */
+
+.ia-boot-inner.wide {
+  max-width: 420px;
+  text-align: center;
+}
+
+.ia-verify-h {
+  margin: 22px 0 10px;
+  font-size: 1.35rem;
+  line-height: 1.3;
+  color: #0f2a4a;
+}
+
+.ia-verify-p {
+  margin: 0 0 20px;
+  font-size: .95rem;
+  line-height: 1.55;
+  color: #5a6b7d;
+}
+
+.ia-verify-btn {
+  display: inline-block;
+  padding: 11px 26px;
+  border: 1px solid #0f2a4a;
+  border-radius: 8px;
+  background: #0f2a4a;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ia-verify-btn:hover { background: #17406f; border-color: #17406f; }
+
+/* Supabase's own wording. Useful to you when someone forwards a
+   screenshot, quiet enough not to alarm a pharmacist. */
+.ia-verify-detail {
+  margin: 0 0 20px;
+  padding: 9px 12px;
+  border: 1px solid #e6dfd0;
+  border-radius: 8px;
+  background: #fdfaf3;
+  font-size: .82rem;
+  line-height: 1.45;
+  color: #7a6a4a;
+}
+
+.ia-verify-help {
+  margin: 18px 0 0;
+  font-size: .85rem;
+  line-height: 1.5;
+  color: #7a8794;
+}
+
+.ia-verify-help a { color: #17406f; }

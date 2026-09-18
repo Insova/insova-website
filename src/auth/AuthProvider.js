@@ -39,6 +39,25 @@ export function useAuth() {
 // wrong about the session is recoverable; a permanent spinner is not.
 const AUTH_TIMEOUT_MS = 8000;
 
+/*
+  Where a confirmation email sends people.
+
+  Left unset, Supabase falls back to the project's Site URL, which is
+  how new pharmacists ended up on a page that did not exist. Sending
+  them to the origin is the one target guaranteed to be served, because
+  it is index.html. App.js recognises the auth payload Supabase appends
+  and shows the confirmation screen.
+
+  Built from window.location.origin rather than hardcoded so that a
+  local build confirms locally and production confirms on production.
+  Every origin used has to be listed in Supabase under Authentication,
+  URL Configuration, Redirect URLs, or Supabase ignores it and falls
+  back to Site URL again.
+*/
+const emailRedirectTo = typeof window !== 'undefined'
+  ? window.location.origin + '/'
+  : undefined;
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -160,7 +179,23 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName }, emailRedirectTo },
+      });
+      return error;
+    } catch (e) {
+      return { message: e?.message || 'Could not reach the sign-up service' };
+    }
+  };
+
+  // For the person who says the link expired. Sends a fresh confirmation
+  // to the same address, pointed at the same place.
+  const resendConfirmation = async (email) => {
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo },
       });
       return error;
     } catch (e) {
@@ -191,6 +226,7 @@ export function AuthProvider({ children }) {
     authError,
     signIn,
     signUp,
+    resendConfirmation,
     signOut,
     refreshProfile: () => loadProfile(session?.user?.id),
   };
