@@ -484,7 +484,7 @@ function Marketing({ onLogin }) {
 
           <p className="live-lead reveal">
             To build shortage intelligence, we need to use data from the HPRA's national register, 
-            we also analyse it every morning and publish our findings below
+            we also analyse it every morning.
           </p>
 
           <div className="live-readout">
