@@ -56,10 +56,10 @@ const NAV_MAIN = [
   { id: 'dashboard', label: 'Today',                icon: '▦' },
   { id: 'watchlist', label: 'Your list',            icon: '★' },
   { id: 'shortages', label: 'Shortages',            icon: '☰' },
+  { id: 'medicines', label: 'All medicines',        icon: '◎' },
   { id: 'groups',    label: 'Running low',          icon: '◧' },
   { id: 'notices',   label: 'Notices',              icon: '✉' },
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
-  { id: 'medicines', label: 'All medicines',        icon: '◎' },
 ];
 
 const NAV_MORE = [
