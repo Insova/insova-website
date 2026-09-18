@@ -8,6 +8,7 @@ import Shortages from './Shortages';
 import Groups from './Groups';
 import Notices from './Notices';
 import ULM from './ULM';
+import Medicines from './Medicines';
 import Digest from './Digest';
 import Roadmap from './Roadmap';
 import Feedback from './Feedback';
@@ -31,6 +32,11 @@ import './app.css';
   satisfies the licence, but is not competing with navigation for
   vertical space.
 
+  ALL MEDICINES sits last in the first group, beside Unlicensed
+  medicines. Both are reference lookups about a named product rather
+  than views of what is currently short, so they belong together and
+  below the register screens someone opens every morning.
+
   ASK AI IS WITHDRAWN, NOT DELETED.
   src/app/AskAI.js and the nl-search Edge Function are both still in
   place and still deployed. What was removed is the nav entry, the
@@ -53,6 +59,7 @@ const NAV_MAIN = [
   { id: 'groups',    label: 'Running low',          icon: '◧' },
   { id: 'notices',   label: 'Notices',              icon: '✉' },
   { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
+  { id: 'medicines', label: 'All medicines',        icon: '◎' },
 ];
 
 const NAV_MORE = [
@@ -226,6 +233,10 @@ export default function AppShell({ onHome }) {
           {app.ready && view === 'groups' && <Groups app={app} go={go} />}
           {app.ready && view === 'notices' && <Notices app={app} />}
           {view === 'ulm' && <ULM app={app} />}
+          {/* Gated on app.ready because rows cross-reference today's
+              register to say whether a product is currently short.
+              Without it, everything would silently read as not short. */}
+          {app.ready && view === 'medicines' && <Medicines app={app} go={go} />}
           {app.ready && view === 'digest' && <Digest app={app} watch={watch} />}
           {view === 'roadmap' && <Roadmap app={app} />}
           {view === 'feedback' && <Feedback app={app} />}

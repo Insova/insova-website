@@ -1717,3 +1717,104 @@ button.ia-hl-small:hover {
 }
 
 .ia-reading.flat { border-left-color: #b9c4cf; background: #f7f8fa; }
+
+
+/* ============================================================
+   All Medicines. APPEND to the end of src/app/app.css.
+   ============================================================ */
+
+.ia-meds-intro { margin-bottom: 16px; }
+.ia-meds-intro h3 { margin: 0 0 6px; }
+.ia-meds-intro p {
+  margin: 0;
+  max-width: 64ch;
+  color: #5a6b7d;
+  line-height: 1.5;
+}
+
+.ia-meds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ia-med {
+  border: 1px solid #e3e9f0;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.ia-med.open { border-color: #b9d2ea; }
+
+.ia-med-hit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ia-med-hit:hover { background: #f7fafd; }
+
+.ia-med-main { flex: 1 1 auto; min-width: 0; }
+
+.ia-med-main strong {
+  display: block;
+  color: #0f2a4a;
+  line-height: 1.35;
+}
+
+.ia-med-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: .84rem;
+  line-height: 1.4;
+  color: #6b7a89;
+}
+
+.ia-med-tags {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.ia-med-body {
+  padding: 4px 14px 16px;
+  border-top: 1px solid #eef2f7;
+}
+
+/* The line that stops a status being misread. Never subtle. */
+.ia-med-note {
+  margin: 14px 0 0;
+  padding: 11px 13px;
+  border: 1px solid #cfe0f2;
+  border-radius: 8px;
+  background: #f4f8fd;
+  font-size: .87rem;
+  line-height: 1.55;
+  color: #3f5163;
+}
+
+.ia-med-note strong { color: #0f2a4a; }
+
+.ia-med-note.warn {
+  border-color: #e6dfd0;
+  background: #fdfaf3;
+  color: #6a5c42;
+}
+
+.ia-med-note.warn strong { color: #6b4e18; }
+
+@media (max-width: 640px) {
+  .ia-med-hit { flex-wrap: wrap; }
+  .ia-med-tags { justify-content: flex-start; width: 100%; }
+}
