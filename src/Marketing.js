@@ -537,9 +537,7 @@ function Marketing({ onLogin }) {
             Interchangeable Medicines ({stats.ic_groups} groups), both published by the Health
             Products Regulatory Authority. The analysis is our own.
           </p>
-          <a href="/data.html" className="btn btn-primary" style={{ marginTop: '22px', display: 'inline-block' }}>
-            See today's reading in full
-          </a>
+          
         </div>
       </section>
 
