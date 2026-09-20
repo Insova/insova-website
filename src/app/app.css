@@ -1919,3 +1919,40 @@ button.ia-hl-small:hover {
 .ia-med-note,
 .ia-reading-warn,
 .ia-ask-count { max-width: 80ch; }
+
+
+/* ============================================================
+   Alternatives: two questions, labelled.
+   APPEND to the end of src/app/app.css.
+   ============================================================ */
+
+.ia-alt-intro {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--slate, #4A6080);
+  max-width: 78ch;
+  margin-bottom: 12px;
+}
+
+/* The question this box answers, above the HPRA's own wording. Without
+   it the classification and the interchangeable verdict look like one
+   statement contradicting the other. */
+.ia-altclass-q {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--slate-light, #7A94AA);
+  margin-bottom: 8px;
+}
+
+/* The second question is answered in .ia-sub-lead, so its opening
+   phrase carries the same weight as the label above. */
+.ia-sub-lead > strong:first-child {
+  color: var(--dark, #0F2040);
+}
+
+.ia-sub-lead.warn > strong:first-child {
+  color: #6b4200;
+}

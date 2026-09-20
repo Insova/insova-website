@@ -171,6 +171,23 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
   const [tab, setTab] = useState('detail');
   const h = i.history;
 
+  // The HPRA answers two different questions and the app was printing
+  // both without saying they were different.
+  //
+  //   alternative_type       is there something else that could treat
+  //                          this patient?
+  //   Interchangeable list   may a pharmacist swap it at the counter
+  //                          without going back to the prescriber?
+  //
+  // A product can easily be "Appropriate alternative medicine
+  // authorised" AND absent from the interchangeable list. Printed one
+  // after the other, that reads as yes then no, which is exactly what
+  // Daktarin and Atomoxetine looked like.
+  //
+  // So when there is no group, the conclusion below leads with the
+  // classification rather than ignoring it. One box, one answer.
+  const classified = i.alt_key && i.alt_key !== 'None' && i.alt_key !== 'Unknown';
+
   return (
     <article className={'ia-card' + (open ? ' open' : '')}>
       <div className="ia-card-head as-row">
@@ -246,7 +263,17 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
               <div className="ia-sub">
                 <h4>Alternatives</h4>
 
+                {/* Two different questions, labelled as such, so the two
+                    answers below cannot read as one contradicting the
+                    other. */}
+                <p className="ia-alt-intro">
+                  The HPRA answers two separate questions about this product:
+                  whether another medicine is authorised for the condition, and
+                  whether this one may be substituted at the counter.
+                </p>
+
                 <div className="ia-altclass">
+                  <span className="ia-altclass-q">Is another medicine authorised?</span>
                   <span className={'ia-tag ' + (i.alt_key === 'None' ? 'red' : 'green')}>
                     {i.alt_text || 'Not classified'}
                   </span>
@@ -257,9 +284,9 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
                 {i.group ? (
                   <>
                     <p className="ia-sub-lead">
-                      This product sits in an HPRA interchangeable group. Substitution at the
-                      counter is only possible within this group. <strong>{i.group.short} of{' '}
-                      {i.group.total}</strong> products in it are currently short.
+                      <strong>May you substitute it at the counter?</strong> Yes, within its
+                      HPRA interchangeable group, and only within it. <strong>{i.group.short} of{' '}
+                      {i.group.total}</strong> products in that group are currently short.
                     </p>
                     <div className="ia-groupbox">
                       <div className="ia-groupbox-head">
@@ -287,10 +314,24 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
                   </>
                 ) : (
                   <p className="ia-sub-lead warn">
-                    This product is not on the HPRA List of Interchangeable Medicines, so there is
-                    no statutory route to substitute it at the counter. It needs the prescriber, or
-                    an unlicensed medicine. If you source one, record it under Unlicensed so the
-                    next pharmacy facing this has something to go on.
+                    <strong>May you substitute it at the counter?</strong> No.{' '}
+                    {classified ? (
+                      <>
+                        An alternative being authorised is not the same as being
+                        interchangeable. This product is not on the HPRA List of
+                        Interchangeable Medicines, so there is no statutory route to swap
+                        it yourself. Acting on the classification above needs the
+                        prescriber, or an unlicensed medicine.
+                      </>
+                    ) : (
+                      <>
+                        This product is not on the HPRA List of Interchangeable Medicines,
+                        so there is no statutory route to substitute it at the counter. It
+                        needs the prescriber, or an unlicensed medicine.
+                      </>
+                    )}{' '}
+                    If you source an unlicensed one, record it under Unlicensed so the next
+                    pharmacy facing this has something to go on.
                   </p>
                 )}
               </div>
