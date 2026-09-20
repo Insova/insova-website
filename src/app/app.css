@@ -1886,3 +1886,36 @@ button.ia-hl-small:hover {
 @media (max-width: 640px) {
   .ia-med-alert-row { flex-direction: column; gap: 2px; }
 }
+
+
+
+/* =====================================================================
+   Content width.
+
+   1180px was leaving most of a wide dispensary monitor empty while the
+   three change columns wrapped long product names onto three lines.
+   1400px fits "Irinotecan Hydrochloride 20 mg / mL concentrate for
+   solution for infusion" without wrapping, which is the actual test.
+
+   Above 1800px the column is centred rather than left-aligned: on an
+   ultrawide the content otherwise sits in the left third with a large
+   dead area beside it. Below that it stays left-aligned against the
+   sidebar, which is how a dashboard should sit.
+   ===================================================================== */
+
+.ia-body { max-width: 1400px; }
+.ia-foot { max-width: 1400px; }
+
+@media (min-width: 1800px) {
+  .ia-body, .ia-foot { margin-left: auto; margin-right: auto; }
+  .ia-foot { margin-top: -48px; }
+}
+
+/* Wider panels must not mean wider paragraphs. Past roughly 80
+   characters a line gets hard to track back to the start of the next
+   one, so prose keeps its own cap while the lists and columns widen. */
+.ia-footnote,
+.ia-mine-quiet,
+.ia-med-note,
+.ia-reading-warn,
+.ia-ask-count { max-width: 80ch; }
