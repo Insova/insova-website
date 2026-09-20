@@ -236,7 +236,7 @@ export default function AppShell({ onHome }) {
           {/* Gated on app.ready because rows cross-reference today's
               register to say whether a product is currently short.
               Without it, everything would silently read as not short. */}
-          {app.ready && view === 'medicines' && <Medicines app={app} go={go} />}
+          {app.ready && view === 'medicines' && <Medicines app={app} watch={watch} go={go} />}
           {app.ready && view === 'digest' && <Digest app={app} watch={watch} />}
           {view === 'roadmap' && <Roadmap app={app} />}
           {view === 'feedback' && <Feedback app={app} />}

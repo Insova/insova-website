@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { fmtDate } from './useAppData';
+import { WatchLicenceStar } from './useWatchlist';
 
 /*
   All Medicines.
@@ -14,6 +15,17 @@ import { fmtDate } from './useAppData';
   might be authorised but never marketed, or its licence might have been
   withdrawn years ago. Without this, the pharmacist leaves Insova and
   searches two more lists on hpra.ie by hand.
+
+  STARRING FROM HERE IS THE POINT
+  -------------------------------
+  Starring from the register only ever records problems already
+  discovered. Starring here marks what the pharmacy actually dispenses,
+  before anything is wrong, so the morning it appears on the register it
+  is already on their list.
+
+  Be careful with the promise. Nothing sends. A starred product surfaces
+  in the app the next morning, and the copy below says exactly that
+  rather than implying an email or an alert.
 
   LOADED ON DEMAND, NOT AT BOOT
   -----------------------------
@@ -37,12 +49,13 @@ import { fmtDate } from './useAppData';
 const MIN_CHARS = 2;
 const SHOW = 50;
 
-export default function Medicines({ app, go }) {
+export default function Medicines({ app, watch, go }) {
   const [db, setDb] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('all');
+  const [mineOnly, setMineOnly] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,17 +88,32 @@ export default function Medicines({ app, go }) {
     return m;
   }, [app]);
 
+  // Watched products that have turned up on the register. This is the
+  // whole reason for starring here, so it goes above the search box
+  // rather than waiting to be found.
+  const watchedShort = useMemo(() => {
+    if (!watch?.licenceRows?.length) return [];
+    return watch.licenceRows
+      .map((r) => ({ row: r, item: shortByLicence.get(String(r.licence).trim().toUpperCase()) }))
+      .filter((x) => x.item);
+  }, [watch, shortByLicence]);
+
   const term = q.trim().toLowerCase();
-  const ready = Boolean(db) && term.length >= MIN_CHARS;
+  const searching = term.length >= MIN_CHARS;
+  const ready = Boolean(db) && (searching || mineOnly);
 
   const hits = useMemo(() => {
-    if (!ready) return [];
+    if (!db || !ready) return [];
     return db.items.filter((it) => {
+      if (mineOnly && !watch.hasLicence(it.licence)) return false;
       if (status === 'authorised' && it.withdrawn) return false;
       if (status === 'withdrawn' && !it.withdrawn) return false;
+      if (!searching) return true;
       return it.hay.includes(term);
     });
-  }, [db, term, status, ready]);
+  }, [db, term, status, ready, searching, mineOnly, watch]);
+
+  const watchedCount = watch?.licenceRows?.length || 0;
 
   return (
     <>
@@ -94,7 +122,8 @@ export default function Medicines({ app, go }) {
         <p>
           Search the full list of authorised products and the list of withdrawn
           products together. Use this when something is not on the shortage
-          register and you need to know why.
+          register and you need to know why, and star anything you dispense so
+          it is already on your list if it goes short.
         </p>
       </section>
 
@@ -110,6 +139,21 @@ export default function Medicines({ app, go }) {
         </div>
       )}
 
+      {db && watchedShort.length > 0 && (
+        <div className="ia-med-alert">
+          <strong>
+            {watchedShort.length} product{watchedShort.length === 1 ? '' : 's'} you
+            starred {watchedShort.length === 1 ? 'is' : 'are'} now on the shortage register.
+          </strong>
+          {watchedShort.map(({ row, item }) => (
+            <button key={row.id} className="ia-med-alert-row" onClick={() => go('shortages', item.id)}>
+              <span>{row.product}</span>
+              <span className="ia-med-alert-go">Open in Shortages →</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {db && (
         <>
           <div className="ia-filters">
@@ -122,6 +166,16 @@ export default function Medicines({ app, go }) {
               aria-label="Search all medicines"
             />
             <div className="ia-filter-row">
+              {watch?.enabled && watchedCount > 0 && (
+                <label className="ia-toggle">
+                  <input
+                    type="checkbox"
+                    checked={mineOnly}
+                    onChange={(e) => setMineOnly(e.target.checked)}
+                  />
+                  <span>Starred only ({watchedCount})</span>
+                </label>
+              )}
               <label className="ia-select">
                 <span>Show</span>
                 <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -132,21 +186,21 @@ export default function Medicines({ app, go }) {
               </label>
             </div>
             <div className="ia-filter-count">
-              {term.length < MIN_CHARS
+              {!ready
                 ? `${db.counts.total.toLocaleString()} products: ${db.counts.authorised.toLocaleString()} authorised, ${db.counts.withdrawn.toLocaleString()} withdrawn`
                 : `${hits.length.toLocaleString()} matching`}
             </div>
           </div>
 
-          {term.length > 0 && term.length < MIN_CHARS && (
+          {q.length > 0 && q.length < MIN_CHARS && !mineOnly && (
             <p className="ia-empty">Keep typing.</p>
           )}
 
           {ready && hits.length === 0 && (
             <p className="ia-empty">
-              Nothing on either HPRA list matches that. Brand names used in
-              conversation are often not the name a product is licensed under,
-              so try the active substance.
+              {mineOnly && !searching
+                ? 'Nothing starred yet. Search for something you dispense and use the ☆ beside its name.'
+                : 'Nothing on either HPRA list matches that. Brand names used in conversation are often not the name a product is licensed under, so try the active substance.'}
             </p>
           )}
 
@@ -155,6 +209,7 @@ export default function Medicines({ app, go }) {
               <Row
                 key={it.key}
                 it={it}
+                watch={watch}
                 short={shortByLicence.get(it.licence.toUpperCase())}
                 go={go}
               />
@@ -180,31 +235,35 @@ export default function Medicines({ app, go }) {
   );
 }
 
-function Row({ it, short, go }) {
+function Row({ it, watch, short, go }) {
   const [open, setOpen] = useState(false);
+  const starred = watch?.enabled && watch.hasLicence(it.licence);
 
   return (
     <article className={'ia-med' + (open ? ' open' : '')}>
-      <button className="ia-med-hit" onClick={() => setOpen(!open)} aria-expanded={open}>
-        <span className="ia-med-main">
-          <strong>{it.product || 'Name not stated'}</strong>
-          <span className="ia-med-sub">
-            {it.substances.join(', ') || 'Substance not stated'}
-            {it.holder ? ` · ${it.holder}` : ''}
-            {it.licence ? ` · ${it.licence}` : ''}
+      <div className="ia-med-head">
+        <WatchLicenceStar med={it} watch={watch} />
+        <button className="ia-med-hit" onClick={() => setOpen(!open)} aria-expanded={open}>
+          <span className="ia-med-main">
+            <strong>{it.product || 'Name not stated'}</strong>
+            <span className="ia-med-sub">
+              {it.substances.join(', ') || 'Substance not stated'}
+              {it.holder ? ` · ${it.holder}` : ''}
+              {it.licence ? ` · ${it.licence}` : ''}
+            </span>
           </span>
-        </span>
-        <span className="ia-med-tags">
-          {short && <span className="ia-tag red">in shortage</span>}
-          {it.withdrawn
-            ? <span className="ia-tag grey">withdrawn</span>
-            : <span className="ia-tag green">authorised</span>}
-          {!it.withdrawn && it.market === 'Not marketed' && (
-            <span className="ia-tag amber">not marketed</span>
-          )}
-        </span>
-        <span className="ia-chev" aria-hidden="true">{open ? '−' : '+'}</span>
-      </button>
+          <span className="ia-med-tags">
+            {short && <span className="ia-tag red">in shortage</span>}
+            {it.withdrawn
+              ? <span className="ia-tag grey">withdrawn</span>
+              : <span className="ia-tag green">authorised</span>}
+            {!it.withdrawn && it.market === 'Not marketed' && (
+              <span className="ia-tag amber">not marketed</span>
+            )}
+          </span>
+          <span className="ia-chev" aria-hidden="true">{open ? '−' : '+'}</span>
+        </button>
+      </div>
 
       {open && (
         <div className="ia-med-body">
@@ -249,6 +308,26 @@ function Row({ it, short, go }) {
               </>
             )}
           </p>
+
+          {/* What starring actually does. Said plainly, because nothing
+              sends and the word "notify" would promise an email. */}
+          {watch?.enabled && it.licence && !short && (
+            <p className="ia-med-watch">
+              {starred ? (
+                <>
+                  <strong>On your list.</strong> If this licence appears on the
+                  shortage register, it will be waiting on your Today screen the
+                  next morning. Insova does not send anything, so you will see it
+                  when you open the app.
+                </>
+              ) : (
+                <>
+                  Star this if you dispense it. Anything on your list that appears
+                  on the register shows up on Today the next morning.
+                </>
+              )}
+            </p>
+          )}
 
           <div className="ia-card-links">
             {short && (
