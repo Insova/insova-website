@@ -102,7 +102,7 @@ export default function AppShell({ onHome }) {
           <p>
             You are signed in as {profile?.email}, but no pharmacy has been assigned to this
             account, so there is nothing to show you. If you were expecting access, let us
-            know and we will sort it.
+            know and we will sort it. If you were previously granted access, please try refreshing the page
           </p>
           <a className="ia-btn" href="mailto:contact@insova.ie">Email contact@insova.ie</a>
           <button className="ia-linkbtn" onClick={signOut}>Sign out</button>
