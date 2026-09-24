@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-23",
-  "as_of_label": "23 September 2026",
+  "as_of": "2026-09-24",
+  "as_of_label": "24 September 2026",
   "notified": 360,
   "current": 360,
   "hpra_total": 360,
@@ -8,13 +8,13 @@
   "over_one_year": 74,
   "new_30d": 87,
   "not_yet_impacting": 21,
-  "past_return_date": 30,
+  "past_return_date": 29,
   "no_return_date_pct": 36,
   "ic_groups": 518,
   "ic_products": 2927,
-  "no_interchangeable": 196,
-  "no_interchangeable_pct": 54,
-  "groups_last_product": 17,
+  "no_interchangeable": 198,
+  "no_interchangeable_pct": 55,
+  "groups_last_product": 16,
   "letters_tracked": 16,
-  "days_archived": 52
+  "days_archived": 53
 }
