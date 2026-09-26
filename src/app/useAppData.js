@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /*
   Loads /insova-app.json, the per-product export the pipeline publishes
@@ -9,32 +9,102 @@ import { useEffect, useMemo, useState } from 'react';
   That matters because a pharmacist looking at an empty screen has no
   way to tell the difference between "nothing is short" and "the
   collector broke".
+
+  KEEPING IT CURRENT WHILE IT STAYS OPEN
+  --------------------------------------
+  This used to load once, when the app started. That was fine in a
+  browser tab, which gets closed at the end of the day. Installed as an
+  app and pinned to a dispensary taskbar, Insova can sit open overnight
+  or all week, and the next morning it would still be showing yesterday's
+  register with the green "collected" dot beside it.
+
+  So it now checks again:
+    * whenever the window comes back into view or focus, which is the
+      moment someone looks at it, at most once every few minutes;
+    * every half hour while it is open, so a screen left up on a second
+      monitor also moves.
+
+  A check that finds nothing new changes nothing on screen: expanded
+  cards stay expanded and the scroll position stays put. A check that
+  fails keeps the data already showing rather than blanking it. The
+  freshness label and the stale-data warning are what tell the
+  pharmacist how old it is, and they are recomputed on every check.
 */
+
+const CHECK_EVERY_MS = 30 * 60 * 1000;  // while open
+const MIN_GAP_MS = 5 * 60 * 1000;       // between focus-triggered checks
+
 export function useAppData() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Bumped on every successful check, found something new or not, so
+  // anything computed from "now" (days since collection) is refreshed.
+  const [checkedAt, setCheckedAt] = useState(null);
+
+  const lastCheck = useRef(0);
+  const current = useRef(null);
+  const inFlight = useRef(false);
+
+  const load = useCallback(async (first) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    lastCheck.current = Date.now();
+    try {
+      const r = await fetch(process.env.PUBLIC_URL + '/insova-app.json', { cache: 'no-store' });
+      if (!r.ok) throw new Error(`insova-app.json returned ${r.status}`);
+      const d = await r.json();
+      if (!d || !Array.isArray(d.items)) throw new Error('Unexpected data shape');
+
+      // Only replace what is on screen if the pipeline has actually
+      // published something new. Swapping in an identical copy would
+      // re-render every screen and close whatever the pharmacist had open.
+      const was = current.current?.meta;
+      const is = d.meta;
+      const changed = !was
+        || was.generated_at !== is?.generated_at
+        || was.as_of !== is?.as_of;
+      if (changed) {
+        current.current = d;
+        setData(d);
+      }
+      setError(null);
+      setCheckedAt(Date.now());
+    } catch (e) {
+      // On the first load there is nothing to show, so say so. On a
+      // later check, keep the good data already on screen: a dropped
+      // connection for one refresh is not a reason to empty the app.
+      if (first || !current.current) {
+        setError(e.message || 'Could not load the register');
+      }
+    } finally {
+      inFlight.current = false;
+      if (first) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch(process.env.PUBLIC_URL + '/insova-app.json', { cache: 'no-store' })
-      .then((r) => {
-        if (!r.ok) throw new Error(`insova-app.json returned ${r.status}`);
-        return r.json();
-      })
-      .then((d) => {
-        if (cancelled) return;
-        if (!d || !Array.isArray(d.items)) throw new Error('Unexpected data shape');
-        setData(d);
-        setLoading(false);
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        setError(e.message || 'Could not load the register');
-        setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
+    load(true);
+
+    const maybe = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastCheck.current < MIN_GAP_MS) return;
+      load(false);
+    };
+
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') load(false);
+    }, CHECK_EVERY_MS);
+
+    document.addEventListener('visibilitychange', maybe);
+    window.addEventListener('focus', maybe);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', maybe);
+      window.removeEventListener('focus', maybe);
+    };
+  }, [load]);
 
   const derived = useMemo(() => {
     if (!data) return null;
@@ -82,14 +152,19 @@ export function useAppData() {
         return bs - as || b.count - a.count;
       });
 
-    const staleDays = daysSince(data.meta.as_of);
-
-    return { items, byId, pressure, staleDays };
+    return { items, byId, pressure };
   }, [data]);
+
+  // Outside the memo on purpose: it depends on today's date, not just on
+  // the data. Computed on every render, and setCheckedAt above forces a
+  // render on every check, so it can never go stale while the app is open.
+  const staleDays = data ? daysSince(data.meta.as_of) : null;
 
   return {
     data,
     ...(derived || {}),
+    staleDays,
+    checkedAt,
     loading,
     error,
     ready: Boolean(data && !loading && !error),
