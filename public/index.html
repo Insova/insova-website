@@ -6,26 +6,44 @@
     <link rel="icon" href="%PUBLIC_URL%/insova-favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/logo192.png" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!-- Makes Insova installable as an app, from the browser or the
+         Microsoft Store. See public/manifest.json and public/sw.js. -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0F2040" />
-    <meta name="description" content="Insova collects and analyses Ireland's national medicine shortage register every day, giving community pharmacies advance warning, sanctioned alternatives and cascade detection." />
+    <!-- Shown under Insova in Google results. Previously promised
+         "advance warning", which is prediction, and Insova does not
+         predict. -->
+    <meta name="description" content="Insova collects Ireland's national medicine shortage register every morning and shows community pharmacies what changed, which return dates keep slipping, and which alternatives the HPRA lists." />
     <link rel="canonical" href="https://www.insova.ie/" />
 
-    <meta property="og:title" content="Insova, medication shortage intelligence for Irish pharmacies" />
+    <meta property="og:title" content="Insova, medicine shortage information for Irish pharmacies" />
     <meta property="og:description" content="Ireland's national shortage register, collected and analysed every morning." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.insova.ie/" />
     <meta property="og:image" content="https://www.insova.ie/logo512.png" />
     <meta property="og:locale" content="en_IE" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Insova, medication shortage intelligence for Irish pharmacies" />
+    <meta name="twitter:title" content="Insova, medicine shortage information for Irish pharmacies" />
     <meta name="twitter:description" content="Ireland's national shortage register, collected and analysed every morning." />
     <meta name="twitter:image" content="https://www.insova.ie/logo512.png" />
 
-    <title>Insova, Medication Shortage Intelligence for Irish Pharmacies</title>
+    <title>Insova, Medicine Shortage Information for Irish Pharmacies</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
+    <!-- Registered here rather than in src/index.js so installability
+         does not depend on the React bundle, and so it can be removed
+         in one place if it ever causes trouble. The worker caches no
+         data; see the comment at the top of sw.js. -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('%PUBLIC_URL%/sw.js').catch(function () {});
+        });
+      }
+    </script>
   </body>
 </html>
