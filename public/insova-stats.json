@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-09-26",
-  "as_of_label": "26 September 2026",
+  "as_of": "2026-09-27",
+  "as_of_label": "27 September 2026",
   "notified": 366,
   "current": 366,
   "hpra_total": 366,
@@ -16,5 +16,5 @@
   "no_interchangeable_pct": 55,
   "groups_last_product": 16,
   "letters_tracked": 16,
-  "days_archived": 55
+  "days_archived": 56
 }
