@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import Marketing from './Marketing';
 import Login from './auth/Login';
+import SetPassword from './auth/SetPassword';
 import AppShell from './app/AppShell';
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 
@@ -15,29 +16,29 @@ import { AuthProvider, useAuth } from './auth/AuthProvider';
   /data.html keeps working untouched because it is a real file.
 
     #/          marketing site
-    #/login     sign in
+    #/login     sign in, create account, forgot password
     #/app       pharmacy application
     #/verify    after an email confirmation link
+    #/password  set a new password, from a reset link or while signed in
 
-  EMAIL CONFIRMATION
-  ------------------
-  Supabase's confirmation link goes to Supabase first, which verifies the
-  token and then redirects the browser back here. How it hands the result
-  over depends on the flow:
+  EMAIL LINKS
+  -----------
+  Supabase's email links go to Supabase first, which verifies the token
+  and then redirects the browser back here. How it hands the result over
+  depends on the flow:
 
     implicit   #access_token=...&refresh_token=...&type=signup
     PKCE       ?code=...
     failure    #error=access_denied&error_description=...
 
   All three land on whatever redirect target Supabase was given, and none
-  of them look like "#/verify". So the route is detected from the payload
-  rather than from a path we control: anything carrying one of those
-  shapes is a confirmation landing, wherever it landed.
+  of them look like one of our routes. So the route is detected from the
+  payload rather than from a path we control.
 
-  supabase-js reads the fragment itself and establishes the session, so
-  this screen mostly waits for AuthProvider to see it. What matters is
-  that the person is told what happened instead of being dropped on a
-  blank page, which is what pharmacists were hitting.
+  A password reset link arrives through exactly the same door as a
+  confirmation link. AuthProvider works out which it was and exposes
+  `recovering`; that is checked first, so a reset never shows the
+  "your email is confirmed" screen.
 */
 
 function hasAuthPayload() {
@@ -59,6 +60,7 @@ function route() {
   if (hasAuthPayload()) return 'verify';
   const h = (window.location.hash || '').replace(/^#\/?/, '').split('?')[0];
   if (h.startsWith('verify')) return 'verify';
+  if (h.startsWith('password')) return 'password';
   if (h.startsWith('app')) return 'app';
   if (h.startsWith('login')) return 'login';
   return 'home';
@@ -135,8 +137,9 @@ function Booting() {
     link dead                 expired, or already used
     still waiting             a few seconds, then treat as not signed in
 
-  The old behaviour was none of these: the payload did not match any
-  route, so people landed on nothing at all.
+  An expired PASSWORD RESET link also lands here, as a failure, because
+  Supabase does not say which kind of link it was when one has expired.
+  So the failure wording covers both.
 */
 function Verified({ go }) {
   const { session, loading } = useAuth();
@@ -188,8 +191,10 @@ function Verified({ go }) {
           <>
             <h1 className="ia-verify-h">That link did not work</h1>
             <p className="ia-verify-p">
-              Confirmation links expire, and they can only be used once. If you
-              have already confirmed, just sign in.
+              Links in our emails expire, and each one can only be used once.
+              If you were confirming your email and have already done it, just
+              sign in. If you were resetting your password, you can ask for a
+              new link from the sign-in page.
             </p>
             <p className="ia-verify-detail">{problem}</p>
             <button className="ia-verify-btn" onClick={() => go('login')}>
@@ -197,7 +202,7 @@ function Verified({ go }) {
             </button>
             <p className="ia-verify-help">
               Still stuck? Email <a href="mailto:contact@insova.ie">contact@insova.ie</a>{' '}
-              and we will confirm the account by hand.
+              and we will sort it by hand.
             </p>
           </>
         )}
@@ -225,7 +230,7 @@ function Verified({ go }) {
 }
 
 function Router() {
-  const { session, loading } = useAuth();
+  const { session, loading, recovering, endRecovery } = useAuth();
   const [where, setWhere] = useState(route());
 
   useEffect(() => {
@@ -246,14 +251,28 @@ function Router() {
   }, []);
 
   // Send a signed-in user who lands on /login straight into the app, and
-  // bounce anyone who asks for /app without a session back to sign in.
-  // The verify route is exempt: it is a message, and it decides for
-  // itself where the person goes next.
+  // bounce anyone who asks for /app or /password without a session back
+  // to sign in. The verify route is exempt: it is a message, and it
+  // decides for itself where the person goes next. A password reset in
+  // progress is exempt too: it has to finish before anything else.
   useEffect(() => {
-    if (loading || where === 'verify') return;
+    if (loading || recovering || where === 'verify') return;
     if (session && where === 'login') go('app');
-    if (!session && where === 'app') go('login');
-  }, [session, where, loading, go]);
+    if (!session && (where === 'app' || where === 'password')) go('login');
+  }, [session, where, loading, recovering, go]);
+
+  // A reset link, checked before anything else so it is never mistaken
+  // for a confirmation. Wait for the session the link creates, because
+  // setting a password without one fails with a confusing error.
+  if (recovering) {
+    if (loading && !session) return <Booting />;
+    return (
+      <SetPassword
+        reason="recovery"
+        onDone={() => { endRecovery(); go('app'); }}
+      />
+    );
+  }
 
   if (where === 'verify') {
     return <Verified go={go} />;
@@ -267,6 +286,17 @@ function Router() {
 
   if (where === 'login') {
     return <Login onDone={() => go('app')} onHome={() => go('home')} />;
+  }
+
+  // Changing a password while signed in. Reached from #/password.
+  if (where === 'password' && session) {
+    return (
+      <SetPassword
+        reason="change"
+        onDone={() => go('app')}
+        onCancel={() => go('app')}
+      />
+    );
   }
 
   if (where === 'app' && session) {

@@ -40,23 +40,43 @@ export function useAuth() {
 const AUTH_TIMEOUT_MS = 8000;
 
 /*
-  Where a confirmation email sends people.
+  Where every email link sends people: confirmation, and password reset.
 
   Left unset, Supabase falls back to the project's Site URL, which is
   how new pharmacists ended up on a page that did not exist. Sending
   them to the origin is the one target guaranteed to be served, because
   it is index.html. App.js recognises the auth payload Supabase appends
-  and shows the confirmation screen.
+  and shows the right screen.
 
   Built from window.location.origin rather than hardcoded so that a
-  local build confirms locally and production confirms on production.
-  Every origin used has to be listed in Supabase under Authentication,
-  URL Configuration, Redirect URLs, or Supabase ignores it and falls
-  back to Site URL again.
+  local build works locally and production works on production. Every
+  origin used has to be listed in Supabase under Authentication, URL
+  Configuration, Redirect URLs, or Supabase ignores it and falls back to
+  Site URL again.
 */
 const emailRedirectTo = typeof window !== 'undefined'
   ? window.location.origin + '/'
   : undefined;
+
+/*
+  PASSWORD RESET LINKS
+
+  A reset link comes back through exactly the same door as a
+  confirmation link. Without telling them apart, someone resetting their
+  password would be greeted with "Your email is confirmed", which is
+  wrong and confusing.
+
+  Two signals, because either alone can miss:
+
+    * Supabase fires a PASSWORD_RECOVERY event once it has processed the
+      link. This is the documented signal and it covers both link styles.
+    * The implicit link style also carries type=recovery in the address.
+      That is read here, at module load, before supabase-js clears the
+      address bar, so the very first render already knows. Without it
+      there is a moment where the confirmation screen flashes up first.
+*/
+const arrivedForRecovery = typeof window !== 'undefined'
+  && /type=recovery/.test((window.location.hash || '') + (window.location.search || ''));
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -64,6 +84,7 @@ export function AuthProvider({ children }) {
   const [pharmacy, setPharmacy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [recovering, setRecovering] = useState(arrivedForRecovery);
 
   const loadProfile = useCallback(async (userId) => {
     if (!userId) {
@@ -143,8 +164,9 @@ export function AuthProvider({ children }) {
       }
     })();
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, s) => {
       if (cancelled) return;
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true);
       setSession(s);
       try {
         await loadProfile(s?.user?.id);
@@ -203,6 +225,36 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // "Forgot your password?" Supabase emails a link back to this site,
+  // which lands on the set-new-password screen.
+  const requestPasswordReset = async (email) => {
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: emailRedirectTo,
+      });
+      return error;
+    } catch (e) {
+      return { message: e?.message || 'Could not reach the sign-in service' };
+    }
+  };
+
+  // Used both by someone arriving from a reset link and by someone
+  // already signed in who wants to change theirs. Either way they hold
+  // a valid session, which is what Supabase requires.
+  const updatePassword = async (password) => {
+    setAuthError(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (!error) setRecovering(false);
+      return error;
+    } catch (e) {
+      return { message: e?.message || 'Could not reach the sign-in service' };
+    }
+  };
+
+  const endRecovery = () => setRecovering(false);
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -210,6 +262,7 @@ export function AuthProvider({ children }) {
       setProfile(null);
       setPharmacy(null);
       setSession(null);
+      setRecovering(false);
     }
   };
 
@@ -224,9 +277,13 @@ export function AuthProvider({ children }) {
     hasPharmacy: Boolean(profile?.pharmacy_id),
     loading,
     authError,
+    recovering,
     signIn,
     signUp,
     resendConfirmation,
+    requestPasswordReset,
+    updatePassword,
+    endRecovery,
     signOut,
     refreshProfile: () => loadProfile(session?.user?.id),
   };

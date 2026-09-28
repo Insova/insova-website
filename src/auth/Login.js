@@ -3,7 +3,7 @@ import { useAuth } from './AuthProvider';
 import './auth.css';
 
 export default function Login({ onDone, onHome }) {
-  const { signIn, signUp, configured } = useAuth();
+  const { signIn, signUp, requestPasswordReset, configured } = useAuth();
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,6 +11,12 @@ export default function Login({ onDone, onHome }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+
+  const switchTo = (m) => {
+    setMode(m);
+    setError('');
+    setNotice('');
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -22,13 +28,26 @@ export default function Login({ onDone, onHome }) {
         const err = await signIn(email.trim(), password);
         if (err) setError(friendly(err.message));
         else onDone && onDone();
-      } else {
+      } else if (mode === 'signup') {
         const err = await signUp(email.trim(), password, fullName.trim());
         if (err) setError(friendly(err.message));
         else setNotice(
           'Account created. Check your email and click the confirmation link, then sign in. ' +
           'Your pharmacy is attached once the address is confirmed.'
         );
+      } else {
+        const err = await requestPasswordReset(email.trim());
+        // Deliberately the same message whether or not an account exists
+        // for that address. Saying "no account found" would let anyone
+        // check which emails are registered.
+        if (err && /rate|too many|security purposes/i.test(err.message || '')) {
+          setError('Too many requests. Wait a minute and try again.');
+        } else {
+          setNotice(
+            'If there is an Insova account for that address, a link to reset the password ' +
+            'is on its way. It can take a few minutes, and it is worth checking junk mail.'
+          );
+        }
       }
     } finally {
       setBusy(false);
@@ -51,6 +70,20 @@ export default function Login({ onDone, onHome }) {
     );
   }
 
+  const title = mode === 'signin'
+    ? 'Pharmacy sign in'
+    : mode === 'signup' ? 'Create your account' : 'Reset your password';
+
+  const lead = mode === 'signin'
+    ? 'Access is by invitation while Insova is in trial.'
+    : mode === 'signup'
+      ? 'Use the email address your invitation was sent to.'
+      : 'Enter the email you sign in with and we will send you a link to set a new password.';
+
+  const button = mode === 'signin'
+    ? 'Sign in'
+    : mode === 'signup' ? 'Create account' : 'Send reset link';
+
   return (
     <div className="auth-page">
       <div className="auth-grid">
@@ -65,12 +98,8 @@ export default function Login({ onDone, onHome }) {
         </div>
 
         <div className="auth-card">
-          <h1>{mode === 'signin' ? 'Pharmacy sign in' : 'Create your account'}</h1>
-          <p className="auth-lead">
-            {mode === 'signin'
-              ? 'Access is by invitation while Insova is in trial.'
-              : 'Use the email address your invitation was sent to.'}
-          </p>
+          <h1>{title}</h1>
+          <p className="auth-lead">{lead}</p>
 
           <form onSubmit={submit}>
             {mode === 'signup' && (
@@ -97,17 +126,19 @@ export default function Login({ onDone, onHome }) {
               />
             </label>
 
-            <label>
-              Password
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                minLength={8}
-                required
-              />
-            </label>
+            {mode !== 'forgot' && (
+              <label>
+                Password
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                  minLength={8}
+                  required
+                />
+              </label>
+            )}
 
             {/*
               Article 13 of the GDPR requires that people are told what is
@@ -130,24 +161,35 @@ export default function Login({ onDone, onHome }) {
             {notice && <div className="auth-notice">{notice}</div>}
 
             <button className="auth-btn" type="submit" disabled={busy}>
-              {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+              {busy ? 'Working…' : button}
             </button>
           </form>
 
+          {mode === 'signin' && (
+            <div className="auth-switch">
+              <button type="button" onClick={() => switchTo('forgot')}>
+                Forgot your password?
+              </button>
+            </div>
+          )}
+
           <div className="auth-switch">
-            {mode === 'signin' ? (
+            {mode === 'signin' && (
               <>
                 Been invited but have no account yet?{' '}
-                <button type="button" onClick={() => { setMode('signup'); setError(''); }}>
-                  Create one
-                </button>
+                <button type="button" onClick={() => switchTo('signup')}>Create one</button>
               </>
-            ) : (
+            )}
+            {mode === 'signup' && (
               <>
                 Already have an account?{' '}
-                <button type="button" onClick={() => { setMode('signin'); setError(''); }}>
-                  Sign in
-                </button>
+                <button type="button" onClick={() => switchTo('signin')}>Sign in</button>
+              </>
+            )}
+            {mode === 'forgot' && (
+              <>
+                Remembered it?{' '}
+                <button type="button" onClick={() => switchTo('signin')}>Back to sign in</button>
               </>
             )}
           </div>
