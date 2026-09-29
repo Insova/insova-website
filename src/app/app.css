@@ -1956,3 +1956,50 @@ button.ia-hl-small:hover {
 .ia-sub-lead.warn > strong:first-child {
   color: #6b4200;
 }
+
+
+/* ============================================================
+   Alternatives, Isobel's wording.
+   APPEND to the end of src/app/app.css.
+   ============================================================ */
+
+/* One verdict, stated once, coloured by what it means for the
+   pharmacist: can substitute, needs the prescriber, or nothing. */
+.ia-alt-verdict {
+  margin: 0 0 14px;
+  padding: 13px 16px;
+  border-left: 3px solid;
+  border-radius: 0 10px 10px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 80ch;
+}
+.ia-alt-verdict strong { display: block; margin-bottom: 2px; }
+.ia-alt-verdict.ok   { background: rgba(3, 191, 100, .07);  border-color: #03bf64; color: #1d4a36; }
+.ia-alt-verdict.rx   { background: rgba(217, 164, 65, .10); border-color: #d9a441; color: #5e3d00; }
+.ia-alt-verdict.none { background: rgba(207, 37, 64, .06);  border-color: #cf2540; color: #6e1a27; }
+.ia-alt-verdict.ok strong   { color: #0f3a28; }
+.ia-alt-verdict.rx strong   { color: #4a2f00; }
+.ia-alt-verdict.none strong { color: #5a1320; }
+
+/* The other products in the interchangeable group. */
+.ia-alt-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.ia-alt-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(15, 32, 64, .08);
+}
+.ia-alt-list li:first-child { border-top: 0; }
+.ia-alt-name { min-width: 0; }
+.ia-alt-name strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.4; }
+.ia-alt-name span { display: block; font-size: 12.5px; color: var(--slate, #4A6080); margin-top: 1px; }
+.ia-alt-list li.short strong,
+.ia-alt-list li.unmarketed strong { color: var(--slate, #4A6080); font-weight: 500; }
+.ia-alt-list .ia-tag { flex-shrink: 0; }
+
+@media (max-width: 640px) {
+  .ia-alt-list li { flex-direction: column; align-items: flex-start; gap: 6px; }
+}

@@ -150,7 +150,7 @@ export default function Shortages({ app, watch, focusId, preset }) {
             item={i}
             watch={watch}
             meta={data.meta}
-            defs={data.alt_defs}
+            members={data.group_members}
             open={open === i.id}
             onToggle={() => setOpen(open === i.id ? null : i.id)}
           />
@@ -166,27 +166,10 @@ export default function Shortages({ app, watch, focusId, preset }) {
   );
 }
 
-function Row({ item, watch, meta, defs, open, onToggle }) {
+function Row({ item, watch, meta, members, open, onToggle }) {
   const i = item;
   const [tab, setTab] = useState('detail');
   const h = i.history;
-
-  // The HPRA answers two different questions and the app was printing
-  // both without saying they were different.
-  //
-  //   alternative_type       is there something else that could treat
-  //                          this patient?
-  //   Interchangeable list   may a pharmacist swap it at the counter
-  //                          without going back to the prescriber?
-  //
-  // A product can easily be "Appropriate alternative medicine
-  // authorised" AND absent from the interchangeable list. Printed one
-  // after the other, that reads as yes then no, which is exactly what
-  // Daktarin and Atomoxetine looked like.
-  //
-  // So when there is no group, the conclusion below leads with the
-  // classification rather than ignoring it. One box, one answer.
-  const classified = i.alt_key && i.alt_key !== 'None' && i.alt_key !== 'Unknown';
 
   return (
     <article className={'ia-card' + (open ? ' open' : '')}>
@@ -259,82 +242,7 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
                 </button>
               )}
 
-              {/* ---- alternatives, HPRA sourced only ---- */}
-              <div className="ia-sub">
-                <h4>Alternatives</h4>
-
-                {/* Two different questions, labelled as such, so the two
-                    answers below cannot read as one contradicting the
-                    other. */}
-                <p className="ia-alt-intro">
-                  The HPRA answers two separate questions about this product:
-                  whether another medicine is authorised for the condition, and
-                  whether this one may be substituted at the counter.
-                </p>
-
-                <div className="ia-altclass">
-                  <span className="ia-altclass-q">Is another medicine authorised?</span>
-                  <span className={'ia-tag ' + (i.alt_key === 'None' ? 'red' : 'green')}>
-                    {i.alt_text || 'Not classified'}
-                  </span>
-                  <p>{defs[i.alt_key] || defs.Unknown}</p>
-                  <span className="ia-cite">HPRA medicine shortage register, alternative classification field</span>
-                </div>
-
-                {i.group ? (
-                  <>
-                    <p className="ia-sub-lead">
-                      <strong>May you substitute it at the counter?</strong> Yes, within its
-                      HPRA interchangeable group, and only within it. <strong>{i.group.short} of{' '}
-                      {i.group.total}</strong> products in that group are currently short.
-                    </p>
-                    <div className="ia-groupbox">
-                      <div className="ia-groupbox-head">
-                        <strong>{i.group.desc}</strong>
-                        <span className="ia-cite">IC code {i.group.code}</span>
-                      </div>
-                      <div className="ia-groupbar" aria-hidden="true">
-                        {Array.from({ length: i.group.total }).map((_, n) => (
-                          <span key={n} className={n < i.group.short ? 'seg short' : 'seg ok'} />
-                        ))}
-                      </div>
-                      <p className="ia-groupbox-foot">
-                        {i.group.left === 0
-                          ? 'Nothing in this group is available. Substitution within the group is not possible.'
-                          : i.group.left === 1
-                            ? 'One product is still available. Every patient on this medicine now depends on a single supplier.'
-                            : `${i.group.left} products are still available.`}
-                      </p>
-                    </div>
-                    <p className="ia-cite block">
-                      Source: HPRA List of Interchangeable Medicines. Insova shows only what is on
-                      that list and never suggests a substitute of its own. The decision is the
-                      pharmacist's, in consultation with the prescriber.
-                    </p>
-                  </>
-                ) : (
-                  <p className="ia-sub-lead warn">
-                    <strong>May you substitute it at the counter?</strong> No.{' '}
-                    {classified ? (
-                      <>
-                        An alternative being authorised is not the same as being
-                        interchangeable. This product is not on the HPRA List of
-                        Interchangeable Medicines, so there is no statutory route to swap
-                        it yourself. Acting on the classification above needs the
-                        prescriber, or an unlicensed medicine.
-                      </>
-                    ) : (
-                      <>
-                        This product is not on the HPRA List of Interchangeable Medicines,
-                        so there is no statutory route to substitute it at the counter. It
-                        needs the prescriber, or an unlicensed medicine.
-                      </>
-                    )}{' '}
-                    If you source an unlicensed one, record it under Unlicensed so the next
-                    pharmacy facing this has something to go on.
-                  </p>
-                )}
-              </div>
+              <Alternatives item={i} members={members} />
 
               {/* ---- supply notices ---- */}
               {i.notices.length > 0 && (
@@ -393,6 +301,141 @@ function Row({ item, watch, meta, defs, open, onToggle }) {
   );
 }
 
+/*
+  Alternatives. Wording set by Isobel.
+
+  One verdict, in one of three forms:
+
+    on the Interchangeable list   say so, and list the products in the
+                                  group with whether each is available
+    not on it, HPRA says None     no appropriate alternative exists
+    not on it, HPRA classifies    an appropriate alternative exists, but
+    an alternative                substitution needs the prescriber
+
+  Everything listed comes from the HPRA List of Interchangeable
+  Medicines. Insova never proposes a substitute of its own.
+
+  LISTING THE GROUP
+  -----------------
+  The member list arrives as data.group_members, keyed by IC code, once
+  export_app_data.py publishes it. Until then this falls back to the
+  group summary it has always shown, so the screen is never empty.
+
+  A product the HPRA records as not marketed is shown as such, and never
+  as available. Listing it as something to reach for would send a
+  pharmacist looking for a product that is not on the market.
+*/
+function Alternatives({ item, members }) {
+  const i = item;
+  const inGroup = Boolean(i.group);
+  const classified = ['Exact', 'Similar', 'Appropriate', 'Comparable'].includes(i.alt_key);
+  const list = inGroup && members ? members[i.group.code] : null;
+  const me = (i.licence || '').trim().toUpperCase();
+
+  const others = list
+    ? list
+      .filter((m) => (m.licence || '').trim().toUpperCase() !== me)
+      .map((m) => ({
+        ...m,
+        state: m.short ? 'short' : m.marketed === false ? 'unmarketed' : 'available',
+      }))
+      .sort((a, b) => rank(a.state) - rank(b.state) || a.product.localeCompare(b.product))
+    : null;
+
+  return (
+    <div className="ia-sub">
+      <h4>Alternatives</h4>
+
+      {inGroup ? (
+        <>
+          <p className="ia-alt-verdict ok">
+            <strong>This medicine appears on the HPRA List of Interchangeable Medicines.</strong>{' '}
+            Substitution at the counter is only possible within its group.
+          </p>
+
+          <div className="ia-groupbox">
+            <div className="ia-groupbox-head">
+              <strong>{i.group.desc}</strong>
+              <span className="ia-cite">IC code {i.group.code}</span>
+            </div>
+
+            {others ? (
+              others.length === 0 ? (
+                <p className="ia-groupbox-foot">
+                  This is the only product in its group, so there is nothing to substitute within it.
+                </p>
+              ) : (
+                <ul className="ia-alt-list">
+                  {others.map((m) => (
+                    <li key={m.licence || m.product} className={m.state}>
+                      <span className="ia-alt-name">
+                        <strong>{m.product}</strong>
+                        <span>{[m.mah, m.licence].filter(Boolean).join(' · ')}</span>
+                      </span>
+                      <span className={'ia-tag ' + tagClass(m.state)}>{label(m.state)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )
+            ) : (
+              <>
+                <div className="ia-groupbar" aria-hidden="true">
+                  {Array.from({ length: i.group.total }).map((_, n) => (
+                    <span key={n} className={n < i.group.short ? 'seg short' : 'seg ok'} />
+                  ))}
+                </div>
+                <p className="ia-groupbox-foot">
+                  {i.group.left === 0
+                    ? 'Nothing in this group is available. Substitution within the group is not possible.'
+                    : i.group.left === 1
+                      ? 'One product is still available. Every patient on this medicine now depends on a single supplier.'
+                      : `${i.group.left} of the ${i.group.total} products are still available.`}
+                </p>
+              </>
+            )}
+          </div>
+
+          <p className="ia-cite block">
+            Source: HPRA List of Interchangeable Medicines. Insova shows only what is on that
+            list and never suggests a substitute of its own. The decision is the pharmacist's.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className={'ia-alt-verdict ' + (i.alt_key === 'None' ? 'none' : 'rx')}>
+            <strong>This medicine does not appear on the HPRA List of Interchangeable Medicines.</strong>{' '}
+            {i.alt_key === 'None'
+              ? 'No appropriate alternative exists.'
+              : classified
+                ? 'An appropriate alternative medicine exists, but it requires the prescriber\u2019s decision before substitution.'
+                : 'The register does not say whether an alternative exists. Any substitution requires the prescriber\u2019s decision.'}
+          </p>
+          <p className="ia-sub-lead">
+            If you source an unlicensed medicine instead, record it under Unlicensed so the
+            next pharmacy facing this has something to go on.
+          </p>
+        </>
+      )}
+
+      {i.alt_text && (
+        <p className="ia-cite block">HPRA classification: {i.alt_text}</p>
+      )}
+    </div>
+  );
+}
+
+function rank(state) {
+  return state === 'available' ? 0 : state === 'unmarketed' ? 1 : 2;
+}
+function label(state) {
+  // "not short", not "available": being off the register says nothing
+  // about whether the pharmacy's wholesaler has it in stock.
+  return state === 'available' ? 'not short' : state === 'unmarketed' ? 'not marketed' : 'also short';
+}
+function tagClass(state) {
+  return state === 'available' ? 'green' : state === 'unmarketed' ? 'grey' : 'red';
+}
+
 function Fact({ k, v, warn }) {
   return (
     <div className="ia-fact">
@@ -402,10 +445,10 @@ function Fact({ k, v, warn }) {
   );
 }
 
-function Select({ label, value, onChange, options }) {
+function Select({ label: text, value, onChange, options }) {
   return (
     <label className="ia-select">
-      <span>{label}</span>
+      <span>{text}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
