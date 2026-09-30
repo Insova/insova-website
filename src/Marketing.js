@@ -837,7 +837,7 @@ function Marketing({ onLogin }) {
             <div>
               <Icon name="mail" size={22} />
               <span>
-                <b>Arrives each morning <em className="mk-soon inline">Coming soon</em></b>
+                <b>Arrives each morning </b>
                 A short brief by email, so nothing depends on remembering to open it.
               </span>
             </div>
