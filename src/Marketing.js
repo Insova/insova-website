@@ -1,23 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import './App.css';
+import './Marketing.css';
+
+/*
+  insova.ie, the public homepage.
+
+  Everything here is namespaced .mk- and styled from Marketing.css, so it
+  cannot collide with App.css, which the app, the sign-in page and the
+  loading screens still use.
+
+  WHAT IS REAL ON THIS PAGE
+  -------------------------
+  * The four figures in the navy band come from /insova-stats.json, which
+    the pipeline rebuilds every morning. Every one has a source button.
+  * The dashboard demo and the moving cards use REAL entries from the
+    HPRA register as collected on 19 and 20 September 2026: real
+    products, real dates, real changes. They are labelled as examples
+    with that date, so they stay honest as they age. Nothing in them is
+    invented, because a pharmacist who spots one made-up return date on
+    the homepage will wonder what else is made up.
+
+  WHAT IS NOT BUILT, AND SAYS SO
+  ------------------------------
+  * The daily brief email does not send yet. Everywhere it appears it is
+    marked "Coming soon". Remove those labels the day it sends.
+  * Wholesaler availability and earlier warning are shown under "In
+    development", below what works today, never as the headline.
+*/
 
 /* ------------------------------------------------------------------
    LIVE DATA
-   Reads /insova-stats.json from public/ so figures can be refreshed
-   without a rebuild. Values below are the fallback.
    ------------------------------------------------------------------ */
 const FALLBACK_STATS = {
-  as_of_label: '9 August 2026',
-  notified: 371,
-  current: 371,
-  groups_last_product: 18,
-  no_interchangeable_pct: 55,
-  over_one_year: 91,
-  past_return_date: 38,
-  ic_groups: 507,
-  days_archived: 1,
+  as_of: '2026-09-29',
+  as_of_label: '29 September 2026',
+  notified: 372,
+  current: 372,
+  past_return_date: 35,
+  not_yet_impacting: 27,
+  groups_last_product: 16,
+  ic_groups: 518,
+  days_archived: 58,
 };
+
+const FIRST_ARCHIVED = '2026-08-03';
 
 function useLiveStats() {
   const [stats, setStats] = useState(FALLBACK_STATS);
@@ -34,11 +60,30 @@ function useLiveStats() {
   return stats;
 }
 
+/* True once the element has scrolled into view. Used for the archive
+   grid and the progress line, which animate once and stay put. */
+function useInView(threshold = 0.25) {
+  const ref = useRef(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || seen) return undefined;
+    if (!('IntersectionObserver' in window)) { setSeen(true); return undefined; }
+    const o = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setSeen(true); o.disconnect(); }
+    }, { threshold });
+    o.observe(el);
+    return () => o.disconnect();
+  }, [seen, threshold]);
+  return [ref, seen];
+}
+
 /* ------------------------------------------------------------------
    SOURCE BUTTON
-   Every figure on the page can show where it came from.
+   Every figure on the page can show where it came from. Rendered into
+   document.body, so its styles in Marketing.css are not scoped to .mk.
    ------------------------------------------------------------------ */
-function Info({ label, children, dark = false }) {
+function Info({ label, children }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
   const btnRef = useRef(null);
@@ -67,7 +112,7 @@ function Info({ label, children, dark = false }) {
   };
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     const outside = (e) => {
       const inBtn = btnRef.current && btnRef.current.contains(e.target);
       const inPop = popRef.current && popRef.current.contains(e.target);
@@ -92,7 +137,7 @@ function Info({ label, children, dark = false }) {
   const popup = open && pos ? createPortal(
     <div
       ref={popRef}
-      className="info-pop"
+      className="mk-info-pop"
       role="tooltip"
       style={{
         left: pos.left + 'px',
@@ -101,18 +146,18 @@ function Info({ label, children, dark = false }) {
         bottom: pos.bottom !== null ? pos.bottom + 'px' : 'auto',
       }}
     >
-      <span className="info-pop-label">Source</span>
+      <span className="mk-info-pop-label">Source</span>
       {children}
     </div>,
     document.body
   ) : null;
 
   return (
-    <span className={'info' + (dark ? ' info-dark' : '')}>
+    <span className="mk-info">
       <button
         ref={btnRef}
         type="button"
-        className="info-btn"
+        className="mk-info-btn"
         aria-label={'Where this figure comes from: ' + label}
         aria-expanded={open}
         onClick={toggle}
@@ -124,586 +169,968 @@ function Info({ label, children, dark = false }) {
   );
 }
 
-function CountUp({ target, suffix = '' }) {
+function CountUp({ target }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const started = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!el) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        || !('IntersectionObserver' in window)) {
       setCount(target);
-      return;
+      return undefined;
     }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !started.current) {
-          started.current = true;
-          const duration = 1800;
-          const startTime = performance.now();
-          const step = (now) => {
-            const progress = Math.min((now - startTime) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            setCount(Math.round(eased * target));
-            if (progress < 1) requestAnimationFrame(step);
-          };
-          requestAnimationFrame(step);
-        }
-      },
-      { threshold: 0.5 }
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        const duration = 1500;
+        const startTime = performance.now();
+        const step = (now) => {
+          const p = Math.min((now - startTime) / duration, 1);
+          setCount(Math.round((1 - Math.pow(1 - p, 3)) * target));
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+    }, { threshold: 0.5 });
     observer.observe(el);
     return () => observer.disconnect();
   }, [target]);
 
-  return <span ref={ref}>{count}{suffix}</span>;
+  // If the live figure arrives after the count has run, show the new one.
+  useEffect(() => { if (started.current) setCount(target); }, [target]);
+
+  return <span ref={ref}>{count}</span>;
+}
+
+/* ------------------------------------------------------------------
+   EXAMPLE DATA
+   Real entries from the HPRA register as collected on 19 and 20
+   September 2026. Do not add anything here that did not happen.
+   ------------------------------------------------------------------ */
+const EXAMPLE_DATE = '19 September 2026';
+
+const CHANGES = {
+  appeared: {
+    count: 19,
+    rows: [
+      ['Calvepen 666 mg Tablets', 'Manufacturing delay'],
+      ['Parox 10 mg Film-Coated Tablets', 'Manufacturing delay'],
+      ['Vatan 40 mg Film-coated Tablets', 'Manufacturing delay'],
+      ['Gabin 100 mg capsules, hard', 'Manufacturing delay'],
+    ],
+  },
+  left: {
+    count: 8,
+    rows: [
+      ['Olanzapine Teva 10 mg Orodispersible tablet', ''],
+      ['Letrozole Teva 2.5 mg film-coated tablets', ''],
+      ['Silcarfil 20 mg film-coated tablets', ''],
+      ['Tevaquel 25 mg Film-coated Tablets', ''],
+    ],
+  },
+  moved: {
+    count: 9,
+    rows: [
+      ['Ondansetron 8 mg film-coated tablets', 'no date \u2192 20 Nov'],
+      ['Pregabalin Sandoz 150 mg hard capsules', '30 Sep \u2192 2 Oct'],
+      ['Diclac 1% w/w Gel', '5 Oct \u2192 21 Oct'],
+      ['Amlodipine Teva 10 mg Tablets', '13 Nov \u2192 4 Dec'],
+    ],
+  },
+};
+
+const FEED = [
+  ['a', 'Calvepen 666 mg Tablets', 'appeared, manufacturing delay'],
+  ['b', 'Olanzapine Teva 10 mg Orodispersible', 'left the register'],
+  ['c', 'Pregabalin Sandoz 150 mg', 'return 30 Sep \u2192 2 Oct'],
+  ['a', 'Parox 10 mg Film-Coated Tablets', 'appeared, manufacturing delay'],
+  ['b', 'Letrozole Teva 2.5 mg', 'left the register'],
+  ['c', 'Ondansetron 8 mg', 'return date set to 20 Nov'],
+  ['a', 'Gabin 100 mg capsules', 'appeared, manufacturing delay'],
+  ['b', 'Silcarfil 20 mg', 'left the register'],
+  ['c', 'Diclac 1% w/w Gel', 'return 5 Oct \u2192 21 Oct'],
+  ['a', 'Vatan 40 mg Film-coated Tablets', 'appeared, manufacturing delay'],
+  ['b', 'Tevaquel 25 mg', 'left the register'],
+  ['c', 'Amlodipine Teva 10 mg', 'return 13 Nov \u2192 4 Dec'],
+];
+const FEED_LABEL = { a: 'Appeared', b: 'Left', c: 'Date moved' };
+
+const MEDS = [
+  ['Co-Amoxiclav TEVA 500 mg / 100 mg Powder for Solution for Injection / Infusion', 'PA0749/011/001', 'Teva Pharma B.V.', 'short'],
+  ['Daktarin 20 mg / g Oral Gel', 'PA23490/028/003', 'JNTL Consumer Health I (Ireland) Limited', 'short'],
+  ['Osmohale, inhalation powder, hard capsule', 'PA22655/001/001', 'Pharmaxis Europe Limited', 'short'],
+  ['XEOMIN 200 units powder for solution for injection', 'PA1907/001/003', 'Merz Pharmaceuticals GmbH', 'auth'],
+  ['Visipaque 320 mg I / ml Solution for Injection', 'PA0735/009/013', 'GE Healthcare AS', 'auth'],
+  ['Keppra', 'EU/1/00/146/030', 'UCB Pharma S.A.', 'wd'],
+  ['Panretin', 'EU/1/00/149/001', 'Amdipharm Limited', 'wd'],
+  ['Competact', 'EU/1/06/354/10-12', 'Takeda Pharma A/S', 'wd'],
+];
+const MED_TAG = { short: 'in shortage', auth: 'authorised', wd: 'withdrawn' };
+
+const SHORTAGES = [
+  ['Tendrotil SR 2 mg Prolonged-Release Capsules, Hard', 'Tolterodine tartrate \u00b7 Accord Healthcare Ireland Ltd.', 72, [['amber', '1 left in group']]],
+  ['Trusitev SR 2 mg Prolonged-release Capsules, hard', 'Tolterodine tartrate \u00b7 Teva Pharma B.V.', 70, [['amber', '1 left in group']]],
+  ['Grepid 75 mg film-coated tablets', 'Clopidogrel besilate \u00b7 Pharmathen S.A.', 65, [['amber', 'date revised'], ['grey', 'not on IC list'], ['red', 'past return date']]],
+  ['Osmohale, inhalation powder, hard capsule', 'Mannitol \u00b7 Pharmaxis Europe Limited', 64, [['grey', 'not on IC list'], ['green', 'notice']]],
+];
+
+/* ------------------------------------------------------------------
+   ICONS
+   ------------------------------------------------------------------ */
+const I = {
+  today: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
+  list: <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" />,
+  shortages: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
+  meds: <><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></>,
+  low: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 4v16" /></>,
+  notices: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
+  ulm: <><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></>,
+  brief: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  browser: <><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></>,
+  install: <><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></>,
+  mail: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 6l-10 7L2 6" /></>,
+  q1: <><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /><path d="M11 8v3l2 1" /></>,
+  q2: <><path d="M7 7h11l-3-3" /><path d="M17 17H6l3 3" /></>,
+  q3: <><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></>,
+  q4: <><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></>,
+};
+
+const LinkedInIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+  </svg>
+);
+
+function Icon({ name, size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {I[name]}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------
+   APPLICATION DEMO
+   ------------------------------------------------------------------ */
+const TABS = [
+  ['today', 'Today'],
+  ['list', 'Your list'],
+  ['shortages', 'Shortages'],
+  ['meds', 'All medicines'],
+  ['low', 'Running low'],
+  ['notices', 'Notices'],
+  ['ulm', 'Unlicensed medicines'],
+  ['brief', 'Daily brief'],
+];
+
+function Demo() {
+  const [tab, setTab] = useState('today');
+  // Bumped each time Your list opens, so the return-date history
+  // replays its animation rather than showing only the first time.
+  const [openCount, setOpenCount] = useState(0);
+
+  const pick = (id) => {
+    setTab(id);
+    if (id === 'list') setOpenCount((n) => n + 1);
+  };
+
+  const title = TABS.find((t) => t[0] === tab)[1];
+
+  return (
+    <div className="mk-demo mk-reveal">
+      <div className="mk-demo-side" role="tablist" aria-label="Insova screens">
+        <div className="mk-demo-brand">
+          <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="" />
+        </div>
+        {TABS.map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            className={'mk-demo-tab' + (tab === id ? ' on' : '')}
+            onClick={() => pick(id)}
+          >
+            <Icon name={id} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mk-demo-main">
+        <div className="mk-demo-top">
+          <b>{title}</b>
+          <span><span className="mk-pulse" />Register collected {EXAMPLE_DATE}</span>
+        </div>
+
+        <div className="mk-demo-body" key={tab}>
+          {tab === 'today' && <PanelToday />}
+          {tab === 'list' && <PanelList replay={openCount} />}
+          {tab === 'shortages' && <PanelShortages />}
+          {tab === 'meds' && <PanelMeds />}
+          {tab === 'low' && <PanelLow />}
+          {tab === 'notices' && <PanelNotices />}
+          {tab === 'ulm' && <PanelUlm />}
+          {tab === 'brief' && <PanelBrief />}
+        </div>
+
+        <div className="mk-demo-note">
+          Example screens. Products, dates and changes are real, from the HPRA register as
+          collected on {EXAMPLE_DATE}.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PanelToday() {
+  const cols = [
+    ['a', 'Appeared', CHANGES.appeared],
+    ['b', 'Left the register', CHANGES.left],
+    ['c', 'Return date moved', CHANGES.moved],
+  ];
+  return (
+    <>
+      <div className="mk-chg-cols">
+        {cols.map(([k, name, c]) => (
+          <div key={k}>
+            <h5 className={'mk-chg-h ' + k}>{name} <em>{c.count}</em></h5>
+            {c.rows.map(([p, d]) => (
+              <div className="mk-chg" key={p}>
+                <strong>{p}</strong>
+                {d && <small>{d}</small>}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <p className="mk-panel-foot">
+        <b>"Left the register" is not the same as "back in stock."</b> It means the HPRA no
+        longer lists it. The only way to know your wholesaler has it is to check.
+      </p>
+    </>
+  );
+}
+
+function PanelList({ replay }) {
+  return (
+    <>
+      <div className="mk-mine">
+        <div className="mk-mine-row">
+          <span className="mk-tag amber">date moved</span>
+          <span>
+            <strong>Amlodipine Teva 10 mg Tablets</strong>
+            <small>Expected return, as our archive recorded it:</small>
+            <ol className="mk-tl" key={replay}>
+              <li><b>30 October 2026</b><span>the date given in early September</span></li>
+              <li><b>13 November 2026</b><span>pushed back two weeks</span></li>
+              <li><b>4 December 2026</b><span>pushed back again, three weeks</span></li>
+            </ol>
+          </span>
+        </div>
+        <div className="mk-mine-row">
+          <span className="mk-tag green">off the register</span>
+          <span><strong>Letrozole Teva 2.5 mg film-coated tablets</strong><small>Left 18 Sept 2026. Worth ringing your wholesaler.</small></span>
+        </div>
+        <div className="mk-mine-row">
+          <span className="mk-tag red">newly short</span>
+          <span><strong>Calvepen 666 mg Tablets</strong><small>Manufacturing delay</small></span>
+        </div>
+        <div className="mk-mine-row">
+          <span className="mk-tag green">off the register</span>
+          <span><strong>Lercanidipine Clonmel 10 mg film-coated tablets</strong><small>Left 17 Sept 2026. Worth ringing your wholesaler.</small></span>
+        </div>
+      </div>
+      <p className="mk-panel-foot">
+        Star the products you dispense, from the shortage list or from every licensed medicine.
+        Whatever changes on them comes first each morning.
+      </p>
+    </>
+  );
+}
+
+function PanelShortages() {
+  return (
+    <>
+      <div className="mk-cards">
+        {SHORTAGES.map(([p, sub, risk, tags]) => (
+          <div className="mk-scard" key={p}>
+            <span className="mk-star" aria-hidden="true">{'\u2606'}</span>
+            <span className="mk-risk">{risk}</span>
+            <span className="mk-scard-main"><strong>{p}</strong><small>{sub}</small></span>
+            <span className="mk-scard-tags">
+              {tags.map(([c, t]) => <span className={'mk-tag ' + c} key={t}>{t}</span>)}
+            </span>
+          </div>
+        ))}
+
+        <div className="mk-scard open">
+          <div className="mk-scard-head">
+            <span className="mk-star" aria-hidden="true">{'\u2606'}</span>
+            <span className="mk-risk">68</span>
+            <span className="mk-scard-main">
+              <strong>Daktarin 20 mg / g Oral Gel</strong>
+              <small>Miconazole · JNTL Consumer Health I (Ireland) Limited</small>
+            </span>
+            <span className="mk-scard-tags"><span className="mk-tag grey">not on IC list</span></span>
+          </div>
+          <div className="mk-scard-body">
+            <div className="mk-facts">
+              <div><span>Shortage date</span><b>31 Aug 2023</b></div>
+              <div><span>Running</span><b>3 years 1 month</b></div>
+              <div><span>Expected return</span><b>none given</b></div>
+              <div><span>Reason</span><b>Quality issue</b></div>
+              <div><span>Licence</span><b>PA23490/028/003</b></div>
+              <div><span>Markets affected</span><b>Global</b></div>
+            </div>
+            <div className="mk-verdict rx">
+              <strong>This medicine does not appear on the HPRA List of Interchangeable Medicines.</strong>
+              An appropriate alternative medicine exists, but it requires the prescriber's decision
+              before substitution.
+            </div>
+            <p className="mk-riskline">
+              <b>Supply risk 68.</b> How hard this shortage is to work around. The app shows
+              every reason behind the score.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PanelMeds() {
+  return (
+    <>
+      <div className="mk-search" aria-hidden="true">
+        <Icon name="meds" size={18} />
+        <span>Product name, active substance, licence or company</span>
+      </div>
+      <p className="mk-search-hint">Around 30,000 authorised and withdrawn medicines in Ireland. Eight shown here.</p>
+      {MEDS.map(([p, lic, holder, st]) => (
+        <div className="mk-med" key={lic}>
+          <span><strong>{p}</strong><small>{lic} · {holder}</small></span>
+          <span className={'mk-tag ' + (st === 'short' ? 'red' : st === 'auth' ? 'green' : 'grey')}>{MED_TAG[st]}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function PanelLow() {
+  return (
+    <>
+      <p className="mk-panel-lead">
+        When a medicine goes short, demand moves to the others in its interchangeable group.
+        These are the groups closest to having nothing left.
+      </p>
+      {[
+        ['Tendrotil SR 2 mg Prolonged-Release Capsules, Hard', 'Accord Healthcare Ireland Ltd.'],
+        ['Trusitev SR 2 mg Prolonged-release Capsules, hard', 'Teva Pharma B.V.'],
+      ].map(([p, holder]) => (
+        <div className="mk-low" key={p}>
+          <span><strong>{p}</strong><small>Tolterodine tartrate · {holder}</small></span>
+          <span className="mk-bar" aria-hidden="true"><i /><i /><i className="ok" /></span>
+          <span className="mk-tag amber">1 left in group</span>
+        </div>
+      ))}
+      <p className="mk-panel-foot">
+        Every other product in the group is shown too, marked not short, also short, or not
+        marketed. A licence that isn't on the market doesn't count as an alternative.
+      </p>
+    </>
+  );
+}
+
+function PanelNotices() {
+  return (
+    <>
+      <p className="mk-panel-lead">
+        Letters manufacturers have issued about a shortage. We link to them where the HPRA
+        publishes them, and never summarise or reword them.
+      </p>
+      {[
+        ['DHCP Letter (1)', 'Osmohale, inhalation powder, hard capsule'],
+        ['HCP Letter', 'Atomoxetine Accord 25 mg Hard Capsules'],
+      ].map(([t, p]) => (
+        <div className="mk-notice" key={t}>
+          <span><strong>{t}</strong><small>{p}</small></span>
+          <span className="mk-notice-go">Open on hpra.ie {'\u2192'}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function PanelUlm() {
+  return (
+    <>
+      <p className="mk-panel-lead">
+        When nothing licensed is available, a shared record of the unlicensed medicines your
+        pharmacy has sourced, so the next pharmacist facing the same shortage has something to
+        go on.
+      </p>
+      <div className="mk-form" aria-hidden="true">
+        <div><span>Medicine sourced</span><i /></div>
+        <div><span>Sourced from</span><i /></div>
+        <div className="wide"><span>Notes for the next pharmacist</span><i className="tall" /></div>
+      </div>
+      <p className="mk-panel-foot">Not a patient record. No patient details go in here.</p>
+    </>
+  );
+}
+
+function PanelBrief() {
+  return (
+    <>
+      <span className="mk-soon">Coming soon</span>
+      <div className="mk-email">
+        <div className="mk-email-head">
+          <div><span>From</span>Insova</div>
+          <div><span>Subject</span>Your Insova morning: 3 of your products moved</div>
+        </div>
+        <div className="mk-email-body">
+          <p>Good morning. Here's what changed on the HPRA register, starting with your list.</p>
+          <b>On your list</b>
+          <ul>
+            <li>Amlodipine Teva 10 mg: return date pushed back, 13 Nov to 4 Dec</li>
+            <li>Letrozole Teva 2.5 mg: left the register</li>
+            <li>Calvepen 666 mg: newly short, manufacturing delay</li>
+          </ul>
+          <b>Across Ireland</b>
+          <ul>
+            <li>19 products appeared on the register</li>
+            <li>8 left it</li>
+            <li>9 had their expected return date changed</li>
+          </ul>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------
+   ARCHIVE GRID
+   One square per morning collected. Says "none missed" only when the
+   count of snapshots matches the number of days since collection began.
+   ------------------------------------------------------------------ */
+function DaysGrid({ archived, asOf }) {
+  const [ref, seen] = useInView(0.3);
+  const from = new Date(FIRST_ARCHIVED + 'T00:00:00');
+  const to = new Date((asOf || FIRST_ARCHIVED) + 'T00:00:00');
+  const calendar = Math.max(1, Math.round((to - from) / 86400000) + 1);
+  const n = Math.max(1, archived || 1);
+  const complete = n >= calendar;
+
+  return (
+    <div>
+      <div ref={ref} className={'mk-days' + (seen ? ' on' : '')} aria-hidden="true">
+        {Array.from({ length: n }).map((_, i) => (
+          <i key={i} style={{ transitionDelay: `${i * 18}ms` }} />
+        ))}
+      </div>
+      <p className="mk-days-cap">
+        {complete
+          ? `${n} mornings of the register, collected and kept since 3 August. None missed.`
+          : `${n} mornings of the register, collected and kept since 3 August.`}
+      </p>
+    </div>
+  );
 }
 
 /* ---------------------------- PROGRESS ---------------------------- */
 const PROGRESS = [
-  {
-    date: 'September 2026',
-    title: 'Early Access',
-    body: 'Pharmacist application prototype available - feedback shaping what gets built next',
-  },
-  {
-    date: 'August 2026',
-    title: 'Daily data collection',
-    body: 'Insova began collecting shortage registers every morning, building a continuous record of how shortages develop over time.',
-  },
-  {
-    date: 'July 2026',
-    title: 'Prototype reviewed',
-    body: 'A working prototype of the pharmacist dashboard was built, including extra features we found in our research to be useful.',
-  },
-  {
-    date: 'April to June 2026',
-    title: 'Research and validation',
-    body: 'We spoke with pharmacists and experts about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.',
-  },
+  ['September 2026', 'Early access', 'First community pharmacists given access. feedback shaping what gets built next.'],
+  ['August 2026', 'Daily collection', 'Started keeping a copy of the shortage register every morning, on 3 August.'],
+  ['July 2026', 'Prototype reviewed', 'A working prototype of the pharmacist dashboard, reviewed with pharmacists.'],
+  ['April to June 2026', 'Research and validation', 'We spoke with pharmacists and experts about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.'],
 ];
+
+function Progress() {
+  const [ref, seen] = useInView(0.2);
+  return (
+    <div ref={ref} className={'mk-tlwrap' + (seen ? ' on' : '')}>
+      <span className="mk-tlfill" aria-hidden="true" />
+      <ol className="mk-progress">
+        {PROGRESS.map(([when, t, body]) => (
+          <li key={when} className="mk-reveal">
+            <span className="mk-when">{when}</span>
+            <h3>{t}</h3>
+            <p>{body}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/* ================================================================== */
 
 function Marketing({ onLogin }) {
   const stats = useLiveStats();
 
+  // Fade sections up as they scroll into view.
   useEffect(() => {
-    const els = document.querySelectorAll('.reveal');
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible');
-            obs.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    );
+    const els = document.querySelectorAll('.mk-reveal');
+    if (!('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('mk-in'));
+      return undefined;
+    }
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('mk-in'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const g1 = document.querySelector('.hero-glow-1');
-      const g2 = document.querySelector('.hero-glow-2');
-      const g3 = document.querySelector('.hero-glow-3');
-      if (g1) g1.style.transform = `translateY(${y * 0.15}px)`;
-      if (g2) g2.style.transform = `translateY(${y * -0.1}px)`;
-      if (g3) g3.style.transform = `translate(-50%, calc(-50% + ${y * 0.08}px))`;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  const feedRows = [...FEED, ...FEED];
+  const tickRows = [...FEED, ...FEED];
 
   return (
-    <div className="app">
-      {/* Navigation */}
-      <nav className="nav">
-        <div className="nav-container">
-          <div className="logo">
-            <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="100" height="100" />
-          </div>
-          <div className="nav-links">
-            <a href="#product" className="nav-link">Our product</a>
-            <a href="#live" className="nav-link">The data</a>
-            <a href="#progress" className="nav-link">Progress</a>
-            <a href="#contact" className="nav-link">Contact</a>
-            <button type="button" className="nav-cta" onClick={onLogin}>
+    <div className="mk">
+      {/* ---------------- nav ---------------- */}
+      <nav className="mk-nav">
+        <div className="mk-wrap mk-nav-in">
+          <a href="#top" className="mk-logo" aria-label="Insova home">
+            <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
+          </a>
+          <div className="mk-nav-links">
+            <a href="#demo">The application</a>
+            <a href="#questions">What it does</a>
+            <a href="#founding">Early access</a>
+            <a href="#progress">Progress</a>
+            <a href="#contact">Contact</a>
+            <button type="button" className="mk-btn mk-btn-outline" onClick={onLogin}>
               Pharmacy sign in
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <header className="hero">
-        <div className="hero-glow hero-glow-1"></div>
-        <div className="hero-glow hero-glow-2"></div>
-        <div className="hero-glow hero-glow-3"></div>
-        <div className="hero-grid-bg"></div>
-        <div className="hero-container">
-          <h1 className="hero-title">
-            {['Predicting', 'medication', 'shortages'].map((word, i) => (
-              <React.Fragment key={i}>
-                <span className="hero-word" style={{ animationDelay: `${0.2 + i * 0.13}s` }}>{word}</span>{' '}
-              </React.Fragment>
-            ))}
-            <span className="hero-title-accent hero-word" style={{ animationDelay: `${0.59 + 3 * 0.13}s` }}>
-              before they happen.
-            </span>
-          </h1>
-          <p className="hero-subtitle">
-            We are building shortage prediction intelligence for Irish community pharmacies.
-            Insova pairs AI-driven insight with pharmacist expertise to make managing
-            medication shortages smarter and more efficient.
-          </p>
-          <div className="hero-actions">
-            <a href="#product" className="btn btn-primary">Our product</a>
-            <button type="button" className="btn btn-secondary" onClick={onLogin}>
-              Pharmacy sign in
-            </button>
+      {/* ---------------- hero ---------------- */}
+      <header className="mk-hero" id="top">
+        <div className="mk-wrap mk-hero-grid">
+          <div>
+            <span className="mk-pill"><span className="mk-pulse" />The HPRA shortage register, collected every morning</span>
+            <ol className="mk-hero-q">
+              <li>Is it short?</li>
+              <li>Can I get it?</li>
+              <li>What else can I give?</li>
+            </ol>
+            <p className="mk-hero-sub">
+              The same questions come up at the counter every time a medicine is short. Insova
+              answers them in one place, so Irish community pharmacists spend less time chasing
+              shortages and more time with patients.
+            </p>
+            <div className="mk-hero-cta">
+              <a className="mk-btn mk-btn-solid" href="#founding">Become a founding pharmacy</a>
+              <a className="mk-btn mk-btn-line" href="#demo">See the application</a>
+            </div>
+          </div>
+
+          <div className="mk-stage" aria-hidden="true">
+            <div className="mk-card mk-card-main">
+              <div className="mk-c-head"><b>What changed</b><span>since Fri 18 Sep <em className="mk-ex">Example</em></span></div>
+              <div className="mk-mini-cols">
+                {[['a', 'Appeared', CHANGES.appeared], ['b', 'Left', CHANGES.left], ['c', 'Date moved', CHANGES.moved]].map(([k, name, c], ci) => (
+                  <div key={k}>
+                    <h6 className={k}>{name}</h6>
+                    {c.rows.slice(0, 3).map(([p, d], ri) => (
+                      <div className="mk-mini-row" key={p} style={{ animationDelay: `${0.9 + ci * 0.3 + ri * 0.1}s` }}>
+                        {p}{d && <small>{d}</small>}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mk-card mk-card-feed">
+              <div className="mk-c-head"><b>This morning</b><span><em className="mk-ex">Example</em></span></div>
+              <div className="mk-feed">
+                <div className="mk-feed-track">
+                  {feedRows.map(([k, p, d], i) => (
+                    <div className="mk-feed-item" key={i}>
+                      <span className={'mk-dot ' + k} />
+                      <span><b>{p}</b><br /><small>{d}</small></span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mk-card mk-card-hist">
+              <div className="mk-c-head"><b>Amlodipine Teva 10 mg</b><span>expected return</span></div>
+              <div className="mk-hist-line">
+                <span className="mk-hist-date">30 Oct</span><span className="mk-hist-arrow">{'\u2192'}</span>
+                <span className="mk-hist-date">13 Nov</span><span className="mk-hist-arrow">{'\u2192'}</span>
+                <span className="mk-hist-date now">4 Dec</span>
+              </div>
+              <p className="mk-hist-note">Pushed back twice in September. The register only shows the last date.</p>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Problem */}
-      <section className="section section-problem" id="problem">
-        <div className="container">
-          <h2 className="section-title">Ireland's pharmacies have a problem.</h2>
-          <p className="section-intro">
-            Every pharmacy in Ireland is affected by medication shortages, and the only system
-            in place is reactive. Pharmacists discover shortages when it is already too late.
-          </p>
-          <div className="stats-grid">
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="stat-number">
-                <CountUp target={42} suffix="%" />
-                <Info label="pharmacists encountering over 61 shortages">
-                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
-                </Info>
-              </div>
-              <div className="stat-desc">of pharmacists encountered over 61 shortages in the previous 4 months</div>
-            </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.08s' }}>
-              <div className="stat-number">
-                <CountUp target={6} suffix="+ hrs" />
-                <Info label="hours per week managing shortages">
-                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
-                </Info>
-              </div>
-              <div className="stat-desc">per week spent by pharmacists manually managing shortages</div>
-            </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.16s' }}>
-              <div className="stat-number">
-                <CountUp target={71} suffix="%" />
-                <Info label="pharmacists reporting negative patient outcomes">
-                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
-                </Info>
-              </div>
-              <div className="stat-desc">report negative patient outcomes directly from shortages</div>
-            </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.24s' }}>
-              <div className="stat-number">
-                <CountUp target={73} suffix="%" />
-                <Info label="pharmacists reporting burnout">
-                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
-                </Info>
-              </div>
-              <div className="stat-desc">of community pharmacists indicated they experienced burnout in their role</div>
-            </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.32s' }}>
-              <div className="stat-number">
-                <CountUp target={78} suffix="%" />
-                <Info label="pharmacists expecting shortages to worsen">
-                  Irish Pharmacy Union Medicine Shortages Survey, 2025.
-                </Info>
-              </div>
-              <div className="stat-desc">expect the medicine shortage crisis to worsen over the coming year</div>
-            </div>
-            <div className="stat-card reveal" style={{ '--reveal-delay': '0.40s' }}>
-              <div className="stat-number">
-                <CountUp target={stats.past_return_date} />
-                <Info label="shortages past their expected return date">
-                  Insova analysis of the HPRA register, {stats.as_of_label}.
-                </Info>
-              </div>
-              <div className="stat-desc">shortages today are already past the return date the register gives them</div>
-            </div>
-          </div>
-          <div className="problem-quote reveal">
-            <p>
-              "Whilst medicine shortages may be a feature of modern health systems, we need to
-              ensure that the impact of such shortages is minimised to the greatest extent possible."
-            </p>
-            <cite>Clare Fitzell, Secretary General, Irish Pharmacy Union, 2025</cite>
-          </div>
-        </div>
-      </section>
-
-      {/* OUR PRODUCT */}
-      <section className="section section-product" id="product">
-        <div className="container">
-          <div className="section-label">Our Product</div>
-          <h2 className="section-title">What we are building.</h2>
-          <p className="section-intro">
-            A web application for the dispensary. It runs in the browser with nothing to set up,
-            and offers to install itself as an app whenever you want it standalone.
-          </p>
-
-          {/* Platform strip */}
-          <div className="platform-strip reveal">
-            <div className="platform-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-              </svg>
-              <div>
-                <h4>Runs in the browser</h4>
-                <p>Open it on the dispensary computer. Nothing to install, no IT project, no new hardware.</p>
-              </div>
-            </div>
-            <div className="platform-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v12"/><polyline points="8 11 12 15 16 11"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
-              </svg>
-              <div>
-                <h4>Install it if you want it</h4>
-                <p>Insova offers to install itself as an app. Same tool, its own window.</p>
-              </div>
-            </div>
-            <div className="platform-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/>
-              </svg>
-              <div>
-                <h4>Arrives each morning</h4>
-                <p>A short brief by email, so nothing depends on remembering to open it.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* What it does */}
-          <div className="section-label">What it does</div>
-          <div className="features-grid features-tight">
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="feature-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-              </div>
-              <h3>Early warning</h3>
-              <p>
-                We are building towards flagging a shortage roughly a month before it
-                reaches the counter. The archive that makes that possible is being
-                collected now.
-              </p>
-            </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.06s' }}>
-              <div className="feature-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                </svg>
-              </div>
-              <h3>Cascade detection</h3>
-              <p>
-                When one medicine goes short, demand moves to its alternatives. Insova tracks
-                whole interchangeable groups, so the second wave is visible early.
-              </p>
-            </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.12s' }}>
-              <div className="feature-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-              </div>
-              <h3>Alternatives from the regulator</h3>
-              <p>
-                Substitutes come only from the HPRA List of Interchangeable Medicines, cited by
-                IC code, with how many products are left in the group.
-              </p>
-            </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.18s' }}>
-              <div className="feature-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              </div>
-              <h3>Pharmacy network</h3>
-              <p>
-                See which nearby pharmacies are holding what, instead of ringing around one by one.
-              </p>
-            </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.24s' }}>
-              <div className="feature-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
-                </svg>
-              </div>
-              <h3>Straight to the source</h3>
-              <p>
-                Where a manufacturer has issued a supply notice about a shortage, we link you
-                to the document itself rather than summarising it.
-              </p>
-            </div>
-            <div className="feature-card reveal" style={{ '--reveal-delay': '0.30s' }}>
-              <div className="feature-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
-              </div>
-              <h3>Human in the loop</h3>
-              <p>
-                Insova never substitutes, orders or dispenses. It informs; the pharmacist decides.
-              </p>
-            </div>
-          </div>
-
-          <p className="live-note" style={{ marginTop: '36px', color: 'var(--slate-light)' }}>
-            Insova is in development and is not yet available. Nothing here is clinical guidance.
-          </p>
-        </div>
-      </section>
-
-      {/* LIVE REGISTER */}
-      <section className="section section-live" id="live">
-        <div className="container">
-          <div className="live-head">
-            <div className="live-status">
-              <span className="live-pulse" aria-hidden="true"></span>
-              <span className="live-status-text">Live from the HPRA national register</span>
-            </div>
-            <div className="live-timestamp">Collected {stats.as_of_label}</div>
-          </div>
-
-          <p className="live-lead reveal">
-            To build shortage intelligence, we need to use data from the HPRA's national register, 
-            we also analyse it every morning.
-          </p>
-
-          <div className="live-readout">
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="live-figure">
-                {stats.current}
-                <Info dark label="medicines notified as in shortage">
-                  HPRA national medicine shortage register, collected {stats.as_of_label}.
-                  This is the count of medicines currently listed as in shortage, and should
-                  match the total shown on the HPRA website.
-                </Info>
-              </div>
-              <div className="live-label">medicines notified as in shortage</div>
-            </div>
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0.06s' }}>
-              <div className="live-figure">
-                {stats.no_interchangeable_pct}%
-                <Info dark label="share with no substitutable alternative listed">
-                  Insova analysis. The share of shortages with no matching group on the HPRA
-                  List of Interchangeable Medicines, meaning no statutory route to substitute
-                  without contacting the prescriber.
-                </Info>
-              </div>
-              <div className="live-label">have no substitutable alternative listed</div>
-            </div>
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0.12s' }}>
-              <div className="live-figure">
-                {stats.groups_last_product}
-                <Info dark label="interchangeable groups down to one product">
-                  Insova analysis. Groups on the HPRA List of Interchangeable Medicines where
-                  every product except one is currently in shortage.
-                </Info>
-              </div>
-              <div className="live-label">interchangeable groups are down to one product</div>
-            </div>
-            <div className="live-cell reveal" style={{ '--reveal-delay': '0.18s' }}>
-              <div className="live-figure">
-                {stats.past_return_date}
-                <Info dark label="shortages past their expected return date">
-                  Insova analysis. Register entries whose HPRA expected return date has already
-                  passed while the shortage remains listed.
-                </Info>
-              </div>
-              <div className="live-label">are past their expected return date</div>
-            </div>
-          </div>
-
-          <p className="live-note">
-            Figures are drawn from the HPRA medicine shortage register and the HPRA List of
-            Interchangeable Medicines ({stats.ic_groups} groups), both published by the Health
-            Products Regulatory Authority. The analysis is our own.
-          </p>
-          
-        </div>
-      </section>
-
-      {/* PROGRESS */}
-      <section className="section section-progress" id="progress">
-        <div className="container">
-          <div className="section-label">Progress</div>
-          <h2 className="section-title">Where we are.</h2>
-          <p className="section-intro">
-            We are in the early stages of development. This is what has been built so far, in the
-            order it happened.
-          </p>
-          <ol className="log-list">
-            {PROGRESS.map((entry, i) => (
-              <li className="log-item reveal" key={i} style={{ '--reveal-delay': `${i * 0.07}s` }}>
-                <div className="log-rail" aria-hidden="true"><span className="log-dot"></span></div>
-                <div className="log-body">
-                  <div className="log-date">{entry.date}</div>
-                  <h3 className="log-title">{entry.title}</h3>
-                  <p className="log-text">{entry.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Policy Alignment */}
-      <section className="section section-policy" id="policy">
-        <div className="container">
-          <div className="section-label">Policy Alignment</div>
-          <h2 className="section-title">Built for where Ireland is going.</h2>
-          <p className="section-intro">
-            Insova is aligned with Ireland's national healthcare AI strategy and the legislative
-            changes transforming how pharmacies manage medication supply.
-          </p>
-          <div className="policy-grid">
-            <div className="policy-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="policy-tag">HSE AI for Care 2026-2030</div>
-              <h3>Supply Chain AI Optimisation</h3>
-              <p>
-                The HSE's AI Strategic Roadmap (ID 2.6) targets AI-powered supply chain and
-                logistic optimisation for Horizon 2 (2028). Insova is building it now, so it is
-                proven and ready when the HSE is.
-              </p>
-              <a href="https://about.hse.ie/publications/ai-for-care-2026-2030/" target="_blank" rel="noopener noreferrer" className="policy-link">
-                Read the AI for Care Strategy &rarr;
-              </a>
-            </div>
-            <div className="policy-card reveal" style={{ '--reveal-delay': '0.12s' }}>
-              <div className="policy-tag">Community Pharmacy Agreement 2025</div>
-              <h3>Digital Health Priority</h3>
-              <p>
-                &euro;75 million invested in community pharmacy, explicitly naming it a critical
-                enabler for Ireland's digital health priorities, with AI highlighted for
-                predictive analytics.
-              </p>
-            </div>
-            <div className="policy-card reveal" style={{ '--reveal-delay': '0.24s' }}>
-              <div className="policy-tag">Health (Miscellaneous Provisions) Act 2024</div>
-              <h3>Serious Shortage Protocol</h3>
-              <p>
-                New legislation enabling pharmacists to substitute without reverting to the
-                prescriber, creating a direct use case for Insova's alternatives engine.
-              </p>
-              <a href="https://www.oireachtas.ie/en/bills/bill/2024/5/" target="_blank" rel="noopener noreferrer" className="policy-link">
-                View the Health Act &rarr;
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* UCC Banner */}
-      <div className="ucc-banner">
-        <div className="ucc-banner-overlay"></div>
-        <div className="ucc-banner-content">
-          <p className="ucc-banner-text">Founded at University College Cork</p>
+      {/* ---------------- ticker ---------------- */}
+      <div className="mk-ticker" aria-hidden="true">
+        <div className="mk-ticker-track">
+          {tickRows.map(([k, p], i) => (
+            <span key={i}><i className={k}>{FEED_LABEL[k]}</i><b>{p}</b></span>
+          ))}
         </div>
       </div>
 
-      {/* Team */}
-      <section className="section section-team" id="team">
-        <div className="container">
-          <div className="section-label">Our Team</div>
-          <h2 className="section-title">Pharmacy meets technology.</h2>
-          <p className="section-intro">Insova is founded at University College Cork.</p>
-          <div className="team-grid-two">
-            <div className="team-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <div className="team-photo">
-                <img src={process.env.PUBLIC_URL + '/isobel.jpeg'} alt="Isobel Hynes" />
-              </div>
-              <h3>Isobel Hynes</h3>
-              <div className="team-role">Co-Founder &middot; Pharmacy</div>
-              <p>Pharmacy student at University College Cork. Leads the clinical side of Insova.</p>
+      {/* ---------------- the application ---------------- */}
+      <section className="mk-section" id="demo">
+        <div className="mk-wrap">
+          <div className="mk-reveal">
+            <p className="mk-kicker">The application</p>
+            <h2 className="mk-h2">What our application looks like.</h2>
+            <p className="mk-lead">
+              A pharmacist's view of Insova, shown with real entries from the HPRA register.
+            </p>
+          </div>
+
+          <Demo />
+
+          <div className="mk-platform mk-reveal">
+            <div>
+              <Icon name="browser" size={22} />
+              <span>
+                <b>Runs in the browser</b>
+                Open it on the dispensary computer. Nothing to install, no IT project, no new hardware.
+              </span>
             </div>
-            <div className="team-card reveal" style={{ '--reveal-delay': '0.12s' }}>
-              <div className="team-photo">
-                <img src={process.env.PUBLIC_URL + '/jack.png'} alt="Jack Kennedy" />
-              </div>
-              <h3>Jack Kennedy</h3>
-              <div className="team-role">Co-Founder &middot; Technology</div>
-              <p>Business Information Systems graduate of University College Cork. Leads the technical side of Insova.</p>
+            <div>
+              <Icon name="install" size={22} />
+              <span>
+                <b>Install it if you want it</b>
+                Insova can be installed as a Windows app. Same tool, its own window, on the taskbar.
+              </span>
+            </div>
+            <div>
+              <Icon name="mail" size={22} />
+              <span>
+                <b>Arrives each morning <em className="mk-soon inline">Coming soon</em></b>
+                A short brief by email, so nothing depends on remembering to open it.
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Contact */}
-      <section className="section section-contact" id="contact">
-        <div className="container">
-          <div className="section-label">Get in Touch</div>
-          <h2 className="section-title">Interested in Insova?</h2>
-          <p className="section-intro">
-            Whether you are a pharmacist interested in early access, a potential partner, or a
-            researcher working on medication shortages, we would like to hear from you.
+      {/* ---------------- what it does ---------------- */}
+      <section className="mk-section mk-soft" id="questions">
+        <div className="mk-wrap">
+          <div className="mk-reveal">
+            <p className="mk-kicker">What it does</p>
+            <h2 className="mk-h2">What's working now, and what we're building.</h2>
+            <p className="mk-lead">Some of this is in pharmacies today. Some of it is where we're heading. Each one is marked.</p>
+          </div>
+
+          <div className="mk-qs">
+            <div className="mk-q mk-reveal">
+              <div className="mk-qhead">
+                <span className="mk-qicon"><Icon name="q1" size={20} /></span>
+                <span className="mk-status now">Available now</span>
+              </div>
+              <h3>Is it short?</h3>
+              <p>The HPRA shortage register, collected every morning and made easy to search.</p>
+              <ul>
+                <li>What appeared, left, or had its return date moved overnight</li>
+                <li>Every change to a return date, and when it happened</li>
+                <li>Search every authorised and withdrawn medicine in Ireland</li>
+                <li>Star what you dispense, so it comes first if it goes short</li>
+              </ul>
+            </div>
+            <div className="mk-q mk-reveal">
+              <div className="mk-qhead">
+                <span className="mk-qicon"><Icon name="q2" size={20} /></span>
+                <span className="mk-status now">Available now</span>
+              </div>
+              <h3>What else can I give?</h3>
+              <p>Alternatives taken only from the HPRA List of Interchangeable Medicines.</p>
+              <ul>
+                <li>The interchangeable group, cited by IC code</li>
+                <li>Which products in it are short, and which aren't on the market</li>
+                <li>Groups down to one or two products</li>
+              </ul>
+            </div>
+            <div className="mk-q dev mk-reveal">
+              <div className="mk-qhead">
+                <span className="mk-qicon"><Icon name="q3" size={20} /></span>
+                <span className="mk-status dev">In development</span>
+              </div>
+              <h3>Can I get it?</h3>
+              <p>
+                The register says a shortage has been notified. It doesn't say whether your
+                wholesaler has stock today. That's the question we most want to answer, and it
+                depends on working with wholesalers.
+              </p>
+            </div>
+            <div className="mk-q dev mk-reveal">
+              <div className="mk-qhead">
+                <span className="mk-qicon"><Icon name="q4" size={20} /></span>
+                <span className="mk-status dev">In development</span>
+              </div>
+              <h3>Will it go short?</h3>
+              <p>
+                Earlier warning, before a shortage reaches the counter. We're not there yet. It
+                needs a long, unbroken record of how shortages behave, which is why we collect the
+                register every single morning.
+              </p>
+            </div>
+          </div>
+
+          <p className="mk-principle mk-reveal">
+            Insova is information only. It never substitutes, orders or dispenses, and it doesn't
+            hold patient records. The pharmacist makes the decision.
           </p>
-          <div className="contact-cards">
-            <a href="mailto:contact@insova.ie" className="contact-card reveal" style={{ '--reveal-delay': '0s' }}>
-              <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
-              <div className="contact-type">Email Us</div>
-              <div className="contact-value">contact@insova.ie</div>
-            </a>
-            <a href="https://www.linkedin.com/company/insovaie/" target="_blank" rel="noopener noreferrer" className="contact-card reveal" style={{ '--reveal-delay': '0.12s' }}>
-              <svg className="contact-svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-              <div className="contact-type">LinkedIn</div>
-              <div className="contact-value">Connect with us</div>
+        </div>
+      </section>
+
+      {/* ---------------- the archive ---------------- */}
+      <section className="mk-section">
+        <div className="mk-wrap mk-idea">
+          <div className="mk-reveal">
+            <p className="mk-kicker">Why we keep every day</p>
+            <h2 className="mk-h2">The register shows today. We keep the history.</h2>
+            <p>
+              The HPRA register gives each shortage one expected return date. If that date has
+              already been pushed back twice, there's nothing on the register to say so.
+            </p>
+            <p>
+              Insova has kept a dated copy every morning since 3 August 2026. That's what lets it
+              show how a return date has moved, and it's the foundation for earlier warning later
+              on. A missed morning can't be recovered, so we don't miss any.
+            </p>
+          </div>
+          <div className="mk-reveal">
+            <DaysGrid archived={stats.days_archived} asOf={stats.as_of} />
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- this morning's figures ---------------- */}
+      <section className="mk-section mk-live">
+        <div className="mk-wrap">
+          <p className="mk-kicker">From this morning's register</p>
+          <h2 className="mk-h2">Updated <span>every day.</span></h2>
+          <div className="mk-figs mk-reveal">
+            <div className="mk-fig">
+              <b>
+                <CountUp target={stats.current} />
+                <Info label="products on the shortage register">
+                  HPRA national medicine shortage register, collected {stats.as_of_label}. Should
+                  match the total shown on the HPRA website.
+                </Info>
+              </b>
+              <span>products on the HPRA shortage register</span>
+            </div>
+            <div className="mk-fig">
+              <b>
+                <CountUp target={stats.past_return_date} />
+                <Info label="shortages past their expected return date">
+                  Insova analysis. Register entries whose expected return date has already passed
+                  while the shortage is still listed.
+                </Info>
+              </b>
+              <span>past the return date the register gave them</span>
+            </div>
+            <div className="mk-fig">
+              <b>
+                <CountUp target={stats.groups_last_product} />
+                <Info label="interchangeable groups down to one product">
+                  Insova analysis. Groups on the HPRA List of Interchangeable Medicines where only
+                  one product is not currently in shortage.
+                </Info>
+              </b>
+              <span>interchangeable groups down to one product</span>
+            </div>
+            <div className="mk-fig">
+              <b>
+                <CountUp target={stats.not_yet_impacting} />
+                <Info label="announced shortages still to start">
+                  Insova analysis. Register entries whose shortage date is still in the future,
+                  notified before supply is affected.
+                </Info>
+              </b>
+              <span>announced, with the shortage still to start</span>
+            </div>
+          </div>
+          <p className="mk-live-note">
+            From the HPRA medicine shortage register and the HPRA List of Interchangeable Medicines
+            ({stats.ic_groups} groups), as collected on {stats.as_of_label}. The analysis is our own.
+          </p>
+        </div>
+      </section>
+
+      {/* ---------------- policy ---------------- */}
+      <section className="mk-section" id="policy">
+        <div className="mk-wrap">
+          <div className="mk-reveal">
+            <p className="mk-kicker">Policy</p>
+            <h2 className="mk-h2">Built for where Ireland is going.</h2>
+            <p className="mk-lead">Three developments in Irish health policy that shape what we're building.</p>
+          </div>
+          <div className="mk-policy">
+            <div className="mk-pcard mk-reveal">
+              <span className="mk-ptag">HSE AI for Care 2026–2030</span>
+              <h3>A national plan for AI in health</h3>
+              <p>
+                Ireland's first national strategy for AI in health and social care sets out how AI
+                will be used across the health service over five years. Earlier warning of
+                shortages depends on a long daily record like the one Insova is keeping now.
+              </p>
+              <a href="https://about.hse.ie/publications/ai-for-care-2026-2030/" target="_blank" rel="noopener noreferrer">
+                Read the AI for Care strategy {'\u2192'}
+              </a>
+            </div>
+            <div className="mk-pcard mk-reveal">
+              <span className="mk-ptag">Community Pharmacy Agreement 2025</span>
+              <h3>Investment in community pharmacy</h3>
+              <p>
+                {'\u20ac'}75 million for community pharmacy, with digital systems and structured,
+                shared information among its priorities.
+              </p>
+            </div>
+            <div className="mk-pcard mk-reveal">
+              <span className="mk-ptag">Health (Miscellaneous Provisions) Act 2024</span>
+              <h3>Serious shortage protocols</h3>
+              <p>
+                The Act makes way for serious shortage protocols, which would let pharmacists
+                substitute during a serious shortage without going back to the prescriber. When
+                they're introduced, pharmacists will need to see which shortages have one. We want
+                Insova to show that.
+              </p>
+              <a href="https://www.oireachtas.ie/en/bills/bill/2024/5/" target="_blank" rel="noopener noreferrer">
+                View the Act {'\u2192'}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- founding ---------------- */}
+      <section className="mk-section mk-soft" id="founding">
+        <div className="mk-wrap mk-founding">
+          <div className="mk-reveal">
+            <p className="mk-kicker">Early access</p>
+            <h2 className="mk-h2">We're looking for founding pharmacies.</h2>
+            <p className="mk-lead" style={{ marginBottom: 26 }}>
+              Insova is being built with the pharmacists who use it. Founding pharmacies get it
+              first and decide what we build next, including things we haven't thought of yet.
+            </p>
+            <ul className="mk-perks">
+              <li><b>Shape what gets built</b><span>A short call each month. What would save you time goes on the list.</span></li>
+              <li><b>A direct line to us</b><span>If something's wrong or missing, you talk to the people building it.</span></li>
+              <li><b>Nothing to set up</b><span>Runs on the dispensary computer, in the browser or as a Windows app.</span></li>
+            </ul>
+          </div>
+          <div className="mk-ask mk-reveal">
+            <h3>Interested?</h3>
+            <p>Tell us which pharmacy you're in and we'll get you set up. It takes a few minutes.</p>
+            <a className="mk-btn mk-btn-solid" href="mailto:contact@insova.ie?subject=Founding%20pharmacy">
+              Email contact@insova.ie
             </a>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-container">
-          <div className="footer-brand">
-            <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" className="logo-icon" width="80" height="80" />
+      {/* ---------------- progress ---------------- */}
+      <section className="mk-section" id="progress">
+        <div className="mk-wrap">
+          <div className="mk-reveal">
+            <p className="mk-kicker">Progress</p>
+            <h2 className="mk-h2">Where we are.</h2>
+            <p className="mk-lead">We're early. This is what's been done so far, most recent first.</p>
           </div>
-          <div className="footer-text">
-            Medication shortage intelligence for Irish pharmacies.
+          <Progress />
+        </div>
+      </section>
+
+      <div className="mk-ucc"><p>Founded at University College Cork</p></div>
+
+      {/* ---------------- team ---------------- */}
+      <section className="mk-section mk-soft" id="team">
+        <div className="mk-wrap">
+          <div className="mk-reveal">
+            <p className="mk-kicker">Who we are</p>
+            <h2 className="mk-h2">Pharmacy meets technology.</h2>
+            <p className="mk-lead">Two co-founders from University College Cork.</p>
           </div>
-          <div className="footer-links">
-            <a href="/privacy.html">Privacy</a>
-            <a href="/data.html">The data</a>
-            <a href="mailto:contact@insova.ie">contact@insova.ie</a>
+          <div className="mk-team">
+            <div className="mk-person mk-reveal">
+              <img className="mk-face" src={process.env.PUBLIC_URL + '/isobel.jpeg'} alt="Isobel Hynes" />
+              <h3>Isobel Hynes</h3>
+              <p className="mk-role">Co-founder, pharmacy</p>
+              <p>Pharmacy student at University College Cork.</p>
+            </div>
+            <div className="mk-person mk-reveal">
+              <img className="mk-face" src={process.env.PUBLIC_URL + '/jack.png'} alt="Jack Kennedy" />
+              <h3>Jack Kennedy</h3>
+              <p className="mk-role">Co-founder, technology</p>
+              <p>Business Information Systems graduate of University College Cork.</p>
+            </div>
           </div>
-                    {/* Required by the CC BY 4.0 licence granted by the HPRA on
-              9 September 2026. Their wording, verbatim. The second line
-              is the licence's No Endorsement condition. */}
-          <div className="footer-attribution">
+        </div>
+      </section>
+
+      {/* ---------------- contact ---------------- */}
+      <section className="mk-section" id="contact">
+        <div className="mk-wrap">
+          <div className="mk-reveal">
+            <p className="mk-kicker">Contact</p>
+            <h2 className="mk-h2">Get in touch.</h2>
+            <p className="mk-lead">
+              Pharmacists, wholesalers, researchers, or anyone working on medicine shortages in
+              Ireland, we'd like to hear from you.
+            </p>
+          </div>
+          <div className="mk-contact mk-reveal">
+            <a href="mailto:contact@insova.ie">
+              <Icon name="mail" size={26} />
+              <span><b>Email</b><span>contact@insova.ie</span></span>
+            </a>
+            <a href="https://www.linkedin.com/company/insovaie/" target="_blank" rel="noopener noreferrer">
+              <LinkedInIcon />
+              <span><b>LinkedIn</b><span>Connect with us</span></span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- footer ---------------- */}
+      <footer className="mk-footer">
+        <div className="mk-wrap">
+          <div className="mk-foot-top">
+            <img className="mk-foot-logo" src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
+            <div className="mk-foot-links">
+              <a href="/privacy.html">Privacy</a>
+              <a href="mailto:contact@insova.ie">contact@insova.ie</a>
+            </div>
+          </div>
+          {/* Required by the CC BY 4.0 licence granted by the HPRA on
+              9 September 2026. Their wording, verbatim. The last line is
+              the licence's No Endorsement condition. */}
+          <div className="mk-legal">
+            <p>Information only. Insova never substitutes, orders or dispenses, and is not a patient record system.</p>
             <p>
-              Information provided courtesy of the Health Products Regulatory
-              Authority (HPRA) under a Creative Commons Attribution 4.0
-              International{' '}
-              <a href="http://creativecommons.org/licenses/by/4.0/"
-                 target="_blank" rel="license noreferrer">CC BY 4.0</a> licence.
+              Information provided courtesy of the Health Products Regulatory Authority (HPRA)
+              under a Creative Commons Attribution 4.0 International{' '}
+              <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener noreferrer">CC BY 4.0</a> licence.
             </p>
             <p>Insova is not connected with, sponsored by, or endorsed by the HPRA.</p>
           </div>
-          <div className="footer-bottom">
-            <span>&copy; 2026 Insova. All rights reserved.</span>
+          <div className="mk-foot-bottom">
+            <span>{'\u00a9'} 2026 Insova. All rights reserved.</span>
             <span>Cork, Ireland</span>
           </div>
         </div>
