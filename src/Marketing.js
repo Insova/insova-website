@@ -926,7 +926,7 @@ function Marketing({ onLogin }) {
               already been pushed back twice, there's nothing on the register to say so.
             </p>
             <p>
-              Insova has kept a dated copy every morning since september 2026. That's what lets it
+              Insova is building a collection of the register. That's what lets it
               show how a return date has moved, and it's the foundation for earlier warning later
               on. A missed morning can't be recovered, so we don't miss any.
             </p>
