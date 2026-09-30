@@ -88,7 +88,7 @@ export default function Login({ onDone, onHome }) {
     <div className="auth-page">
       <div className="auth-grid">
         <div className="auth-brand">
-          <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
+          
           <h2>Shortage intelligence, and more, to save you time</h2>
 
           <p className="auth-fine">
