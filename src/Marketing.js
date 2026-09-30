@@ -744,7 +744,7 @@ function Marketing({ onLogin }) {
             </ol>
             <p className="mk-hero-sub">
               The same questions come up at the counter every time a medicine is short. Insova
-              answers them in one place, so Irish community pharmacists spend less time chasing
+              answers them in one place, so community pharmacists spend less time chasing
               shortages and more time with patients.
             </p>
             <div className="mk-hero-cta">
