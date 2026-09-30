@@ -29,6 +29,25 @@ import './Marketing.css';
 */
 
 /* ------------------------------------------------------------------
+   COMPANY PARTICULARS
+   Section 151 of the Companies Act 2014: a company's website must show,
+   somewhere prominent or easily accessible, its name and legal form,
+   where it is registered and its number, and its registered office.
+   Taken from the CRO certificate of incorporation, 28 September 2026.
+
+   FILL IN THE REGISTERED OFFICE. It is the address on the CRO record
+   (form A1), which is not printed on the certificate. Until it is
+   filled in, the footer shows the name and number only, which does NOT
+   yet meet the requirement.
+   ------------------------------------------------------------------ */
+const COMPANY = {
+  name: 'Insova Limited',
+  form: 'a private company limited by shares',
+  number: '826812',
+  office: '', // e.g. '29 Blackhorse Avenue, Dublin 7, Ireland'
+};
+
+/* ------------------------------------------------------------------
    LIVE DATA
    ------------------------------------------------------------------ */
 const FALLBACK_STATS = {
@@ -38,7 +57,7 @@ const FALLBACK_STATS = {
   current: 372,
   past_return_date: 35,
   not_yet_impacting: 27,
-  groups_last_product: 16,
+  groups_last_product: 21,
   ic_groups: 518,
   days_archived: 58,
 };
@@ -644,7 +663,7 @@ function DaysGrid({ archived, asOf }) {
 
 /* ---------------------------- PROGRESS ---------------------------- */
 const PROGRESS = [
-  ['September 2026', 'Early access', 'First community pharmacists given access. feedback shaping what gets built next.'],
+  ['September 2026', 'Early access', 'First community pharmacists given access, with their feedback shaping what gets built next.'],
   ['August 2026', 'Daily collection', 'Started keeping a copy of the shortage register every morning, on 3 August.'],
   ['July 2026', 'Prototype reviewed', 'A working prototype of the pharmacist dashboard, reviewed with pharmacists.'],
   ['April to June 2026', 'Research and validation', 'We spoke with pharmacists and experts about how shortages are handled today, and confirmed the problem is daily, manual, and largely invisible until it arrives.'],
@@ -949,7 +968,8 @@ function Marketing({ onLogin }) {
                 <CountUp target={stats.groups_last_product} />
                 <Info label="interchangeable groups down to one product">
                   Insova analysis. Groups on the HPRA List of Interchangeable Medicines where only
-                  one product is not currently in shortage.
+                  one product is both off the shortage register and recorded by the HPRA as
+                  marketed.
                 </Info>
               </b>
               <span>interchangeable groups down to one product</span>
@@ -1121,6 +1141,10 @@ function Marketing({ onLogin }) {
               9 September 2026. Their wording, verbatim. The last line is
               the licence's No Endorsement condition. */}
           <div className="mk-legal">
+            <p className="mk-company">
+              {COMPANY.name}, {COMPANY.form}. Registered in Ireland, company number {COMPANY.number}.
+              {COMPANY.office && ` Registered office: ${COMPANY.office}.`}
+            </p>
             <p>Information only. Insova never substitutes, orders or dispenses, and is not a patient record system.</p>
             <p>
               Information provided courtesy of the Health Products Regulatory Authority (HPRA)
@@ -1130,7 +1154,7 @@ function Marketing({ onLogin }) {
             <p>Insova is not connected with, sponsored by, or endorsed by the HPRA.</p>
           </div>
           <div className="mk-foot-bottom">
-            <span>{'\u00a9'} 2026 Insova. All rights reserved.</span>
+            <span>{'\u00a9'} 2026 {COMPANY.name}. All rights reserved.</span>
             <span>Cork, Ireland</span>
           </div>
         </div>

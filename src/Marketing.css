@@ -536,3 +536,8 @@
   .mk-days i { background: var(--green); }
   .mk-tlfill { height: calc(100% - 16px); }
 }
+
+/* Company particulars in the footer. Section 151 asks for them to be
+   prominent or easily accessible, so they sit first and slightly
+   darker than the licence text around them. */
+.mk-legal .mk-company { color: var(--ink-2); font-weight: 500; }
