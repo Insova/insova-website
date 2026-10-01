@@ -2003,3 +2003,35 @@ button.ia-hl-small:hover {
 @media (max-width: 640px) {
   .ia-alt-list li { flex-direction: column; align-items: flex-start; gap: 6px; }
 }
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+
+   Buttons on the "not linked" and "couldn't load your account" screens.
+   The installed app has no browser refresh, so these screens carry
+   their own way to try again.
+   ===================================================================== */
+.ia-noaccess-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.ia-noaccess-actions .ia-btn { min-width: 180px; justify-content: center; }
+.ia-noaccess-actions .ia-linkbtn {
+  display: inline-block;
+  margin: 0;
+  color: var(--slate, #4A6080);
+  text-decoration: none;
+  font-size: 13.5px;
+}
+.ia-noaccess-actions .ia-linkbtn:hover { color: #00a854; }
+.ia-noaccess-detail {
+  margin: -8px 0 20px !important;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fdfaf3;
+  border: 1px solid #e6dfd0;
+  font-size: 12.5px !important;
+  color: #7a6a4a !important;
+}

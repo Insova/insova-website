@@ -69,7 +69,10 @@ const NAV_MORE = [
 ];
 
 export default function AppShell({ onHome }) {
-  const { profile, pharmacy, isAdmin, hasPharmacy, signOut } = useAuth();
+  const {
+    profile, pharmacy, isAdmin, hasPharmacy, signOut,
+    profileStatus, refreshProfile, authError,
+  } = useAuth();
   const app = useAppData();
   const watch = useWatchlist();
   const [view, setView] = useState('dashboard');
@@ -93,6 +96,51 @@ export default function AppShell({ onHome }) {
     window.scrollTo(0, 0);
   };
 
+  /*
+    Nothing below decides "no pharmacy" until the profile has actually
+    loaded. Signing in used to show the not-linked screen in the moment
+    between the session arriving and the profile arriving; a refresh
+    cleared it, and the installed app has no refresh.
+
+      idle / loading  still fetching: say so, and wait
+      error           could not load: offer to try again
+      ready           now, and only now, is "no pharmacy" true
+  */
+  if (profileStatus === 'idle' || profileStatus === 'loading') {
+    return (
+      <div className="ia-boot">
+        <div className="ia-boot-inner">
+          <img className="ia-boot-logo" src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
+          <div className="ia-boot-bar" role="progressbar" aria-label="Loading your account"><span /></div>
+          <p className="ia-boot-text">Loading your account</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (profileStatus === 'error') {
+    return (
+      <div className="ia-noaccess">
+        <div className="ia-noaccess-card">
+          <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
+          <h1>We couldn't load your account</h1>
+          <p>
+            You are signed in, but your account details didn't load. This is usually a brief
+            connection problem rather than anything wrong with your account.
+          </p>
+          {authError && <p className="ia-noaccess-detail">{authError}</p>}
+          <div className="ia-noaccess-actions">
+            <button type="button" className="ia-btn" onClick={refreshProfile}>Try again</button>
+            <button type="button" className="ia-linkbtn" onClick={() => window.location.reload()}>
+              Reload Insova
+            </button>
+            <button type="button" className="ia-linkbtn" onClick={signOut}>Sign out</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!hasPharmacy && !isAdmin) {
     return (
       <div className="ia-noaccess">
@@ -102,10 +150,15 @@ export default function AppShell({ onHome }) {
           <p>
             You are signed in as {profile?.email}, but no pharmacy has been assigned to this
             account, so there is nothing to show you. If you were expecting access, let us
-            know and we will sort it. If you were previously granted access, please try refreshing the page
+            know and we will sort it.
           </p>
-          <a className="ia-btn" href="mailto:contact@insova.ie">Email contact@insova.ie</a>
-          <button className="ia-linkbtn" onClick={signOut}>Sign out</button>
+          {/* The installed app has no refresh, so offer one here. If the
+              account has just been linked, this picks it up. */}
+          <div className="ia-noaccess-actions">
+            <button type="button" className="ia-btn" onClick={refreshProfile}>Check again</button>
+            <a className="ia-linkbtn" href="mailto:contact@insova.ie">Email contact@insova.ie</a>
+            <button type="button" className="ia-linkbtn" onClick={signOut}>Sign out</button>
+          </div>
         </div>
       </div>
     );
