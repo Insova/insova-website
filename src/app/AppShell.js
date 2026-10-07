@@ -66,7 +66,7 @@ const NAV_MAIN = [
   { id: 'medicines', label: 'All medicines',        icon: '◎' },
   { id: 'groups',    label: 'Running low',          icon: '◧' },
   { id: 'notices',   label: 'Notices',              icon: '✉' },
-  { id: 'ulm',       label: 'Unlicensed medicines', icon: '⊕' },
+  
 ];
 
 const NAV_MORE = [
