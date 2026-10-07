@@ -2035,3 +2035,182 @@ button.ia-hl-small:hover {
   font-size: 12.5px !important;
   color: #7a6a4a !important;
 }
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+
+   The guided tour: the Tour button in the top bar, the first-run prompt,
+   and the tour itself.
+   ===================================================================== */
+
+/* ---------- Tour button in the top bar ---------- */
+.ia-tour-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px 6px 7px;
+  border: 1px solid rgba(3, 191, 100, 0.35);
+  border-radius: 100px;
+  background: rgba(3, 191, 100, 0.07);
+  color: #00874a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.16s, border-color 0.16s;
+}
+.ia-tour-btn:hover { background: rgba(3, 191, 100, 0.14); border-color: #03bf64; }
+.ia-tour-btn:focus-visible { outline: 2px solid #03bf64; outline-offset: 2px; }
+.ia-tour-btn-q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #03bf64;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* ---------- the tour ---------- */
+.ia-tour { position: fixed; inset: 0; z-index: 1200; }
+
+/* Catches clicks so the app underneath can't be used mid-tour. Clear
+   when a highlight is showing (the highlight does the dimming), dim
+   when the card sits on its own. */
+.ia-tour-veil { position: absolute; inset: 0; background: transparent; }
+.ia-tour-veil.full { background: rgba(15, 32, 64, 0.55); }
+
+/* The highlight: a clear box with everything around it dimmed. */
+.ia-tour-hole {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(15, 32, 64, 0.45), 0 0 0 3px #46df62;
+  pointer-events: none;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+
+.ia-tour-card {
+  position: fixed;
+  z-index: 2;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: 20px 22px 18px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 32, 64, 0.32);
+  outline: none;
+  animation: iaTourIn 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes iaTourIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.ia-tour-card.centred { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; animation: none; }
+.ia-tour-card.corner { right: 28px; bottom: 28px; }
+.ia-tour-card.docked { left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: auto; max-width: none; }
+
+.ia-tour-progress { display: flex; gap: 4px; margin-bottom: 12px; }
+.ia-tour-progress span { flex: 1; height: 4px; border-radius: 4px; background: #e4eaf2; }
+.ia-tour-progress span.on { background: linear-gradient(90deg, #46df62, #03bf64); }
+
+.ia-tour-count {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #00a854;
+}
+.ia-tour-card h2 {
+  margin: 0 0 8px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--dark, #0F2040);
+}
+.ia-tour-body { margin: 0 0 18px; font-size: 14.5px; line-height: 1.6; color: var(--slate, #4A6080); }
+
+.ia-tour-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ia-tour-nav { display: flex; gap: 8px; }
+
+.ia-tour-next, .ia-tour-back, .ia-tour-skip {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.ia-tour-next {
+  padding: 9px 20px;
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #0bb562 0%, #008a47 100%);
+  box-shadow: 0 4px 14px rgba(3, 168, 90, 0.28);
+}
+.ia-tour-next:hover { box-shadow: 0 6px 20px rgba(3, 168, 90, 0.38); }
+.ia-tour-back {
+  padding: 9px 16px;
+  border: 1px solid var(--border, #D8E4F0);
+  background: #fff;
+  color: var(--dark, #0F2040);
+}
+.ia-tour-back:hover { border-color: #7A94AA; }
+.ia-tour-skip {
+  padding: 9px 4px;
+  border: 0;
+  background: none;
+  color: var(--slate-light, #7A94AA);
+  font-weight: 600;
+}
+.ia-tour-skip:hover { color: var(--dark, #0F2040); }
+.ia-tour-next:focus-visible, .ia-tour-back:focus-visible, .ia-tour-skip:focus-visible {
+  outline: 2px solid #03bf64;
+  outline-offset: 2px;
+}
+
+/* The menu item for the screen being shown, so it is clear where in the
+   navigation each screen lives. */
+.ia-nav-item.ia-tour-pulse {
+  position: relative;
+  z-index: 1300;
+  color: #fff;
+  background: rgba(70, 223, 98, 0.22);
+  box-shadow: 0 0 0 2px #46df62;
+  animation: iaTourPulse 1.6s ease-in-out infinite;
+}
+@keyframes iaTourPulse {
+  0%, 100% { box-shadow: 0 0 0 2px #46df62; }
+  50% { box-shadow: 0 0 0 6px rgba(70, 223, 98, 0.35); }
+}
+
+/* ---------- first-run prompt ---------- */
+.ia-tour-prompt {
+  position: fixed;
+  right: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: 1100;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  padding: 18px 20px 16px;
+  background: #fff;
+  border: 1px solid var(--border, #D8E4F0);
+  border-top: 3px solid #03bf64;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(15, 32, 64, 0.2);
+  animation: iaTourIn 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.ia-tour-prompt strong { display: block; font-size: 15px; color: var(--dark, #0F2040); margin-bottom: 4px; }
+.ia-tour-prompt p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.55; color: var(--slate, #4A6080); }
+.ia-tour-prompt-actions { display: flex; align-items: center; gap: 12px; }
+
+@media (max-width: 900px) {
+  .ia-tour-btn { padding: 5px 10px 5px 6px; }
+  .ia-tour-prompt { left: 16px; right: 16px; width: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ia-tour-card, .ia-tour-prompt, .ia-tour-hole, .ia-nav-item.ia-tour-pulse { animation: none; transition: none; }
+}

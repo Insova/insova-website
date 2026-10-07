@@ -13,6 +13,7 @@ import Digest from './Digest';
 import Roadmap from './Roadmap';
 import Feedback from './Feedback';
 import Admin from './Admin';
+import Tour from './Tour';
 import './app.css';
 
 /*
@@ -36,6 +37,12 @@ import './app.css';
   medicines. Both are reference lookups about a named product rather
   than views of what is currently short, so they belong together and
   below the register screens someone opens every morning.
+
+  THE TOUR. Feedback was that the app is confusing. The Tour button in
+  the top bar walks through every screen (see Tour.js). First-time users
+  are offered it once. The elements it points at carry data-tour
+  attributes: the menu items, the freshness label and the main area. If
+  you rename or move one of those, keep its data-tour attribute.
 
   ASK AI IS WITHDRAWN, NOT DELETED.
   src/app/AskAI.js and the nl-search Edge Function are both still in
@@ -68,6 +75,17 @@ const NAV_MORE = [
   { id: 'feedback', label: 'Give feedback', icon: '✎' },
 ];
 
+// Remembers, in this browser only, that the tour has been offered, so
+// the prompt appears once and not every visit. Wrapped in try/catch
+// because storage can be blocked, in which case the prompt just shows.
+const TOUR_KEY = 'insova.tour.seen';
+function tourSeen() {
+  try { return window.localStorage.getItem(TOUR_KEY) === '1'; } catch (e) { return false; }
+}
+function markTourSeen() {
+  try { window.localStorage.setItem(TOUR_KEY, '1'); } catch (e) { /* nothing to do */ }
+}
+
 export default function AppShell({ onHome }) {
   const {
     profile, pharmacy, isAdmin, hasPharmacy, signOut,
@@ -79,6 +97,8 @@ export default function AppShell({ onHome }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [focusId, setFocusId] = useState(null);
   const [preset, setPreset] = useState(null);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourPrompt, setTourPrompt] = useState(() => !tourSeen());
 
   const navMore = isAdmin
     ? [...NAV_MORE, { id: 'admin', label: 'Admin', icon: '⚙' }]
@@ -94,6 +114,18 @@ export default function AppShell({ onHome }) {
     setPreset(filterPreset || null);
     setMenuOpen(false);
     window.scrollTo(0, 0);
+  };
+
+  const startTour = () => {
+    setTourPrompt(false);
+    markTourSeen();
+    setTourOpen(true);
+  };
+
+  const endTour = () => {
+    setTourOpen(false);
+    markTourSeen();
+    go('dashboard');
   };
 
   /*
@@ -175,6 +207,7 @@ export default function AppShell({ onHome }) {
   const NavItem = (n) => (
     <button
       key={n.id}
+      data-tour={'nav-' + n.id}
       className={'ia-nav-item' + (view === n.id ? ' on' : '')}
       onClick={() => go(n.id)}
     >
@@ -239,16 +272,25 @@ export default function AppShell({ onHome }) {
           <div className="ia-top-title">{allNav.find((n) => n.id === view)?.label}</div>
           <div className="ia-top-right">
             {app.data && (
-              <span className={'ia-freshness' + (stale > 1 ? ' warn' : '')}>
+              <span data-tour="freshness" className={'ia-freshness' + (stale > 1 ? ' warn' : '')}>
                 <span className="ia-dot" />
                 Register collected {app.data.meta.as_of_label}
               </span>
             )}
+            <button
+              type="button"
+              className="ia-tour-btn"
+              onClick={startTour}
+              title="A two-minute walk through every screen"
+            >
+              <span className="ia-tour-btn-q" aria-hidden="true">?</span>
+              Tutorial
+            </button>
             <span className="ia-who">{profile?.full_name || profile?.email}</span>
           </div>
         </header>
 
-        <main className="ia-body">
+        <main className="ia-body" data-tour="body">
           {app.error && (
             <div className="ia-alert error">
               <strong>Today's register could not be loaded.</strong>
@@ -315,6 +357,26 @@ export default function AppShell({ onHome }) {
       </div>
 
       {menuOpen && <div className="ia-scrim" onClick={() => setMenuOpen(false)} />}
+
+      {/* Offered once, the first time someone opens the app in this browser. */}
+      {tourPrompt && !tourOpen && app.ready && (
+        <div className="ia-tour-prompt" role="dialog" aria-label="Take the tour">
+          <strong>New to Insova?</strong>
+          <p>A two-minute tour shows what each screen is for.</p>
+          <div className="ia-tour-prompt-actions">
+            <button type="button" className="ia-tour-next" onClick={startTour}>Show me around</button>
+            <button
+              type="button"
+              className="ia-tour-skip"
+              onClick={() => { setTourPrompt(false); markTourSeen(); }}
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Tour open={tourOpen} onClose={endTour} go={go} />
     </div>
   );
 }
