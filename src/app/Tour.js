@@ -36,7 +36,7 @@ export const STEPS = [
   {
     target: null,
     title: 'Welcome to Insova',
-    body: 'This takes about two minutes and opens each screen in turn. You can leave at any time, and start it again from the Tour button at the top.',
+    body: 'This takes about two minutes and opens each screen in turn. You can leave at any time, and start it again from the Tutorial button at the top.',
   },
   {
     target: 'freshness',
@@ -108,7 +108,7 @@ export const STEPS = [
     target: null,
     view: 'dashboard',
     title: 'That is everything',
-    body: 'Start this again any time from the Tour button at the top of the screen. Insova is information only and never substitutes, orders or dispenses. The decision is always yours.',
+    body: 'Start this again any time from the tutorial button at the top of the screen. Insova is information only and never substitutes, orders or dispenses. The decision is always yours.',
   },
 ];
 
@@ -250,7 +250,7 @@ export default function Tour({ open, onClose, go }) {
         <p className="ia-tour-body">{step.body}</p>
         <div className="ia-tour-actions">
           <button type="button" className="ia-tour-skip" onClick={onClose}>
-            {last ? 'Close' : 'Leave tour'}
+            {last ? 'Close' : 'Leave tutorial'}
           </button>
           <span className="ia-tour-nav">
             {i > 0 && (
