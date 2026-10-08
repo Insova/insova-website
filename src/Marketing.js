@@ -363,7 +363,7 @@ function Demo() {
     <div className="mk-demo mk-reveal">
       <div className="mk-demo-side" role="tablist" aria-label="Insova screens">
         <div className="mk-demo-brand">
-          <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="" />
+          <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
         </div>
         {TABS.map(([id, label]) => (
           <button
@@ -737,11 +737,14 @@ function Marketing({ onLogin }) {
         <div className="mk-wrap mk-hero-grid">
           <div>
             <span className="mk-pill"><span className="mk-pulse" />The HPRA shortage register, collected every morning</span>
-            <ol className="mk-hero-q">
-              <li>Is it short?</li>
-              <li>Can I get it?</li>
-              <li>What else can I give?</li>
-            </ol>
+            {/* The page's one H1. Bing flagged "H1 tag missing" while this
+                was a list. Three spans, each on its own line, so it looks
+                exactly as before. */}
+            <h1 className="mk-hero-q">
+              <span>Is it short?</span>{' '}
+              <span>Can I get it?</span>{' '}
+              <span>What else can I give?</span>
+            </h1>
             <p className="mk-hero-sub">
               The same questions come up at the counter every time a medicine is short. Insova
               answers them in one place, so community pharmacists spend less time chasing
