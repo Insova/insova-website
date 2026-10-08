@@ -118,14 +118,15 @@
 }
 @keyframes mk-ping { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(3); opacity: 0; } }
 
-.mk-hero-q { list-style: none; margin: 0 0 24px; padding: 0; }
-.mk-hero-q li {
+.mk-hero-q { margin: 0 0 24px; padding: 0; font-size: inherit; font-weight: inherit; line-height: inherit; }
+.mk-hero-q > span { display: block; }
+.mk-hero-q > span {
   font-family: var(--serif); font-weight: 700; font-size: 3.1rem; line-height: 1.1; letter-spacing: -.01em;
   opacity: 0; transform: translateY(14px); animation: mk-rise .7s cubic-bezier(.2, .7, .2, 1) forwards;
 }
-.mk-hero-q li:nth-child(1) { animation-delay: .05s; }
-.mk-hero-q li:nth-child(2) { animation-delay: .25s; color: #2a4a78; }
-.mk-hero-q li:nth-child(3) {
+.mk-hero-q > span:nth-child(1) { animation-delay: .05s; }
+.mk-hero-q > span:nth-child(2) { animation-delay: .25s; color: #2a4a78; }
+.mk-hero-q > span:nth-child(3) {
   animation-delay: .45s;
   background: linear-gradient(135deg, #46df62 0%, #03a85a 100%);
   -webkit-background-clip: text; background-clip: text;
@@ -134,7 +135,7 @@
 @keyframes mk-rise { to { opacity: 1; transform: none; } }
 .mk-hero-sub { font-size: 1.1rem; color: var(--ink-2); max-width: 54ch; margin: 0 0 30px; opacity: 0; animation: mk-rise .7s .6s forwards; }
 .mk-hero-cta { display: flex; flex-wrap: wrap; gap: 12px; opacity: 0; animation: mk-rise .7s .75s forwards; }
-@media (max-width: 640px) { .mk-hero { padding: 44px 0 56px; } .mk-hero-q li { font-size: 2.1rem; } }
+@media (max-width: 640px) { .mk-hero { padding: 44px 0 56px; } .mk-hero-q > span { font-size: 2.1rem; } }
 
 /* floating cards */
 .mk-stage { position: relative; height: 500px; }
@@ -532,7 +533,7 @@
 /* ---------------- reduced motion ---------------- */
 @media (prefers-reduced-motion: reduce) {
   .mk *, .mk *::before, .mk *::after { animation: none !important; transition: none !important; }
-  .mk-hero-q li, .mk-hero-sub, .mk-hero-cta, .mk-mini-row, .mk-reveal, .mk-tl li { opacity: 1; transform: none; }
+  .mk-hero-q > span, .mk-hero-sub, .mk-hero-cta, .mk-mini-row, .mk-reveal, .mk-tl li { opacity: 1; transform: none; }
   .mk-days i { background: var(--green); }
   .mk-tlfill { height: calc(100% - 16px); }
 }
