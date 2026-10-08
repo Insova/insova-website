@@ -33,68 +33,13 @@
     <noscript>You need to enable JavaScript to run the Insova application.</noscript>
 
     <!--
-      SEARCH ENGINES READ THIS; VISITORS NEVER SEE IT.
-
-      The homepage is a React app, so without this the HTML a crawler
-      downloads is an empty div. Bing does not reliably run JavaScript,
-      saw an empty page, and refused to crawl it ("Discovered but not
-      crawled", "H1 tag missing").
-
-      React replaces everything inside #root the moment it loads, so
-      this text is only ever seen by crawlers and by browsers with
-      JavaScript turned off.
-
-      KEEP IT HONEST AND IN STEP WITH Marketing.js. Showing search
-      engines different claims from visitors is treated as cloaking and
-      penalised. Nothing here may say more than the real homepage says.
+      Left empty on purpose. A plain-text copy of the homepage used to sit
+      here for search engines, but it flashed on screen for a moment
+      before React loaded. Bing renders the JavaScript anyway (its Live
+      URL test proved it), and the real homepage now has its own H1 in
+      Marketing.js, so the copy is no longer needed.
     -->
-    <div id="root">
-      <main style="max-width:760px;margin:0 auto;padding:40px 20px;font-family:sans-serif;color:#0f2040;line-height:1.6">
-        <h1>Insova: medicine shortage information for Irish community pharmacies</h1>
-        <p>
-          Is it short? Can I get it? What else can I give? The same questions come up at the
-          counter every time a medicine is short. Insova answers them in one place, so Irish
-          community pharmacists spend less time chasing shortages.
-        </p>
-
-        <h2>What Insova does today</h2>
-        <ul>
-          <li>Collects the HPRA medicine shortage register every morning and shows what appeared, what left the register, and which expected return dates moved.</li>
-          <li>Keeps a dated copy of the register every day since 3 August 2026, so it can show how often a return date has been pushed back.</li>
-          <li>Shows alternatives taken only from the HPRA List of Interchangeable Medicines, and which products in each group are short or not marketed.</li>
-          <li>Searches every authorised and withdrawn medicine in Ireland.</li>
-          <li>Lets pharmacists star the products they dispense, so changes to them come first.</li>
-        </ul>
-
-        <h2>In development</h2>
-        <p>
-          Wholesaler availability, and earlier warning before a shortage reaches the counter.
-          Neither is available yet.
-        </p>
-
-        <p>
-          Insova is information only. It never substitutes, orders or dispenses, and it is not
-          a patient record system.
-        </p>
-
-        <h2>Contact</h2>
-        <p>
-          Pharmacists interested in early access, wholesalers and researchers:
-          <a href="mailto:contact@insova.ie">contact@insova.ie</a>.
-          <a href="/privacy.html">Privacy notice</a>.
-        </p>
-
-        <p style="font-size:13px;color:#4a6080">
-          Insova Limited, a private company limited by shares. Registered in Ireland, company
-          number 826812. Founded at University College Cork.
-        </p>
-        <p style="font-size:13px;color:#4a6080">
-          Information provided courtesy of the Health Products Regulatory Authority (HPRA)
-          under a Creative Commons Attribution 4.0 International (CC BY 4.0) licence. Insova is
-          not connected with, sponsored by, or endorsed by the HPRA.
-        </p>
-      </main>
-    </div>
+    <div id="root"></div>
 
     <!-- Registered here rather than in src/index.js so installability
          does not depend on the React bundle, and so it can be removed
