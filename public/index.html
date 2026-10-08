@@ -33,13 +33,61 @@
     <noscript>You need to enable JavaScript to run the Insova application.</noscript>
 
     <!--
-      Left empty on purpose. A plain-text copy of the homepage used to sit
-      here for search engines, but it flashed on screen for a moment
-      before React loaded. Bing renders the JavaScript anyway (its Live
-      URL test proved it), and the real homepage now has its own H1 in
-      Marketing.js, so the copy is no longer needed.
+      SEARCH ENGINES READ THIS. Bing's Live URL test does not reliably wait
+      for React, and without this it reports "H1 tag missing". Removing it
+      on 8 October 2026 brought the error straight back.
+
+      It is styled to look like the real hero (same background, same
+      three questions, same fonts), so in the split second before React
+      replaces it, people see the homepage starting, not plain text.
+
+      KEEP IT HONEST AND IN STEP WITH Marketing.js. Showing search engines
+      different claims from visitors is treated as cloaking and penalised.
     -->
-    <div id="root"></div>
+    <style>
+      .fb { min-height: 100vh; margin: 0; padding: 120px 28px 60px; background: #eef4ff; color: #0f2040;
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+      .fb-in { max-width: 1160px; margin: 0 auto; }
+      .fb h1 { margin: 0 0 24px; font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 3.1rem; line-height: 1.1; }
+      .fb h1 span { display: block; }
+      .fb h1 span:nth-child(2) { color: #2a4a78; }
+      .fb h1 span:nth-child(3) { color: #03a85a; }
+      .fb p { max-width: 54ch; font-size: 1.1rem; color: #4a6080; }
+      .fb-more { margin-top: 100vh; font-size: .9rem; color: #4a6080; }
+      .fb-more h2 { font-size: 1rem; color: #0f2040; }
+      @media (max-width: 640px) { .fb { padding-top: 90px; } .fb h1 { font-size: 2.1rem; } }
+    </style>
+    <div id="root">
+      <main class="fb"><div class="fb-in">
+        <h1>
+          <span>Is it short?</span>
+          <span>Can I get it?</span>
+          <span>What else can I give?</span>
+        </h1>
+        <p>
+          The same questions come up at the counter every time a medicine is short. Insova
+          answers them in one place, so community pharmacists spend less time chasing
+          shortages and more time with patients.
+        </p>
+
+        <!-- Below the first screen, so it never shows during the flash. -->
+        <div class="fb-more">
+          <h2>What Insova does today</h2>
+          <ul>
+            <li>Collects the HPRA medicine shortage register every morning and shows what appeared, what left the register, and which expected return dates moved.</li>
+            <li>Keeps a dated copy of the register every day, so it can show how often a return date has been pushed back.</li>
+            <li>Shows alternatives taken only from the HPRA List of Interchangeable Medicines, and which products in each group are short or not marketed.</li>
+            <li>Searches every authorised and withdrawn medicine in Ireland.</li>
+          </ul>
+          <h2>In development</h2>
+          <p>Wholesaler availability, and earlier warning before a shortage reaches the counter.</p>
+          <p>Insova is information only. It never substitutes, orders or dispenses, and it is not a patient record system.</p>
+          <p>Contact: <a href="mailto:contact@insova.ie">contact@insova.ie</a>. <a href="/privacy.html">Privacy notice</a>.</p>
+          <p>Insova Limited, a private company limited by shares. Registered in Ireland, company number 826812.</p>
+          <p>Information provided courtesy of the Health Products Regulatory Authority (HPRA) under a Creative Commons Attribution 4.0 International (CC BY 4.0) licence. Insova is not connected with, sponsored by, or endorsed by the HPRA.</p>
+        </div>
+      </div></main>
+    </div>
 
     <!-- Registered here rather than in src/index.js so installability
          does not depend on the React bundle, and so it can be removed
