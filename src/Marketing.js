@@ -736,7 +736,7 @@ function Marketing({ onLogin }) {
       <header className="mk-hero" id="top">
         <div className="mk-wrap mk-hero-grid">
           <div>
-            <span className="mk-pill"><span className="mk-pulse" />The HPRA shortage register, collected every morning</span>
+            <span className="mk-pill"><span className="mk-pulse" />Collected every morning</span>
             {/* The page's one H1. Bing flagged "H1 tag missing" while this
                 was a list. Three spans, each on its own line, so it looks
                 exactly as before. */}
