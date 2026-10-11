@@ -1,13 +1,13 @@
 {
-  "as_of": "2026-10-10",
-  "as_of_label": "10 October 2026",
+  "as_of": "2026-10-11",
+  "as_of_label": "11 October 2026",
   "notified": 378,
   "current": 378,
   "hpra_total": 378,
   "resolved_still_listed": 0,
   "over_one_year": 79,
   "new_30d": 78,
-  "not_yet_impacting": 21,
+  "not_yet_impacting": 20,
   "past_return_date": 33,
   "no_return_date_pct": 34,
   "ic_groups": 518,
@@ -17,5 +17,5 @@
   "groups_last_product": 21,
   "market_status_applied": true,
   "letters_tracked": 16,
-  "days_archived": 69
+  "days_archived": 70
 }
