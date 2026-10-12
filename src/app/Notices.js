@@ -100,7 +100,7 @@ export default function Notices({ app }) {
           </span>
         </div>
         <p className="ia-ns-label">
-          Written by AI from each notice, checked by a pharmacist. A summary can leave things
+          Written by AI from each notice and reviewed by the Insova Team. A summary can leave things
           out: always read the full notice before acting on it.
         </p>
 
