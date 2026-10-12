@@ -11,6 +11,12 @@ import { fmtDate, daysSince } from './useAppData';
   an invite row is created, the person signs up with that email, and a
   database trigger attaches them to the right pharmacy.
 
+  Third, notice summaries. summarise_notices.py writes each new one as
+  pending. A pharmacist reads it beside the original and approves or
+  rejects it. Only approved summaries reach the Notices screen. The words
+  cannot be edited here (a database trigger refuses): to fix a bad one,
+  reject it.
+
   Second, pipeline health. If the collector breaks, the app keeps serving
   yesterday's file and looks completely normal. The only way to notice is
   to check, so this screen checks: how old the data is, whether the counts
@@ -25,15 +31,18 @@ export default function Admin({ app }) {
   // that only appears after you open the tab tells you nothing. This is
   // the whole reason the badge exists: to say "someone wrote to you"
   // before you go looking.
+  const [pendingNotices, setPendingNotices] = useState(0);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       if (!supabase) return;
-      const { data, error } = await supabase
-        .from('feedback')
-        .select('id')
-        .eq('status', 'new');
-      if (!cancelled && !error && data) setNewCount(data.length);
+      const [fb, ns] = await Promise.all([
+        supabase.from('feedback').select('id').eq('status', 'new'),
+        supabase.from('notice_summaries').select('id').eq('status', 'pending'),
+      ]);
+      if (cancelled) return;
+      if (!fb.error && fb.data) setNewCount(fb.data.length);
+      if (!ns.error && ns.data) setPendingNotices(ns.data.length);
     })();
     return () => { cancelled = true; };
   }, [tab]);
@@ -115,6 +124,9 @@ export default function Admin({ app }) {
         <button className={tab === 'feedback' ? 'on' : ''} onClick={() => setTab('feedback')}>
           Feedback{newCount > 0 && <span className="ia-tab-badge">{newCount}</span>}
         </button>
+        <button className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>
+          Notice summaries{pendingNotices > 0 && <span className="ia-tab-badge">{pendingNotices}</span>}
+        </button>
         <button className={tab === 'pharmacies' ? 'on' : ''} onClick={() => setTab('pharmacies')}>
           Pharmacies <span>{pharmacies.length}</span>
         </button>
@@ -126,6 +138,8 @@ export default function Admin({ app }) {
       {tab === 'health' && <Health app={app} />}
 
       {tab === 'feedback' && <FeedbackAdmin onCount={setNewCount} />}
+
+      {tab === 'notices' && <NoticeReview onCount={setPendingNotices} />}
 
       {/* ---------------- people ---------------- */}
       {tab === 'people' && (
@@ -537,6 +551,149 @@ function FeedbackAdmin({ onCount }) {
               </article>
             );
           })}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------------
+   Notice summary review.
+
+   Read every point against the original before approving. Ask of each:
+   is it in the notice, is it worded as the company's advice and not
+   ours, and has anything important been left out? If any answer is
+   wrong, reject. A rejected summary is never shown; the notice still
+   appears in the full list with its link.
+   --------------------------------------------------------------------- */
+const NS_SECTIONS = [
+  ['affected', "What's affected"],
+  ['changed', "What's changed"],
+  ['actions', 'What to do'],
+];
+
+function NoticeReview({ onCount }) {
+  const { user } = useAuth();
+  const [rows, setRows] = useState([]);
+  const [filter, setFilter] = useState('pending');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { data, error: e } = await supabase
+      .from('notice_summaries')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(300);
+    if (e) setError(e.message);
+    else {
+      setRows(data || []);
+      onCount((data || []).filter((r) => r.status === 'pending').length);
+    }
+    setLoading(false);
+  }, [onCount]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const review = async (id, status) => {
+    setError('');
+    const { error: e } = await supabase.from('notice_summaries').update({
+      status,
+      reviewed_by: user?.id || null,
+      reviewed_at: new Date().toISOString(),
+    }).eq('id', id);
+    if (e) setError(e.message);
+    load();
+  };
+
+  const counts = ['pending', 'approved', 'rejected', 'failed']
+    .reduce((o, k) => ({ ...o, [k]: rows.filter((r) => r.status === k).length }), {});
+  const shown = rows.filter((r) => filter === 'all' || r.status === filter);
+
+  return (
+    <>
+      <p className="ia-lead">
+        New summaries wait here until a pharmacist approves them. Open the original, check
+        every point, and approve only if each one is in the notice and worded as the
+        company's advice, not ours. If anything is wrong or missing, reject it.
+      </p>
+
+      {error && <div className="ia-alert error"><span>{error}</span></div>}
+
+      <div className="ia-filters">
+        {[['pending', `To review (${counts.pending})`], ['approved', `Approved (${counts.approved})`],
+          ['rejected', `Rejected (${counts.rejected})`], ['failed', `Failed (${counts.failed})`],
+          ['all', `All (${rows.length})`]].map(([v, l]) => (
+          <button key={v} className={'ia-chip' + (filter === v ? ' on' : '')}
+            onClick={() => setFilter(v)}>{l}</button>
+        ))}
+      </div>
+
+      {loading ? (
+        <p className="ia-empty">Loading…</p>
+      ) : shown.length === 0 ? (
+        <p className="ia-empty">
+          {filter === 'pending' ? 'Nothing waiting for review.' : 'Nothing here.'}
+        </p>
+      ) : (
+        <div className="ia-ns-list">
+          {shown.map((r) => (
+            <article key={r.id} className="ia-ns-card review">
+              <header className="ia-ns-head">
+                <div>
+                  <strong>{r.product}</strong>
+                  <span>
+                    {r.title} · shortage {r.shortage_id} · {fmtDate((r.created_at || '').slice(0, 10))}
+                    {r.dropped_points > 0 && ` · ${r.dropped_points} point${r.dropped_points === 1 ? '' : 's'} dropped by the quote check`}
+                  </span>
+                </div>
+                <a className="ia-ns-link" href={r.document_url} target="_blank" rel="noreferrer">
+                  Open the original ↗
+                </a>
+              </header>
+
+              {r.status === 'failed' ? (
+                <p className="ia-ns-none">Could not summarise: {r.error}</p>
+              ) : (
+                <div className="ia-ns-cols">
+                  {NS_SECTIONS.map(([k, label]) => (
+                    <div key={k} className={'ia-ns-sec ' + k}>
+                      <h4>{label}</h4>
+                      {((r.summary || {})[k] || []).length === 0 ? (
+                        <p className="ia-ns-none">Nothing.</p>
+                      ) : (
+                        <ul>
+                          {r.summary[k].map((p, i) => (
+                            <li key={i}>
+                              {p.text}
+                              <q className="ia-ns-quote">{p.quote}</q>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="ia-fb-admin-actions">
+                <span className={'ia-tag ' + (r.status === 'approved' ? 'green'
+                  : r.status === 'pending' ? 'amber' : 'red')}>{r.status}</span>
+                {r.status !== 'failed' && r.status !== 'approved' && (
+                  <button className="ia-btn small" onClick={() => review(r.id, 'approved')}>
+                    Approve
+                  </button>
+                )}
+                {r.status !== 'failed' && r.status !== 'rejected' && (
+                  <button className="ia-linkbtn danger" onClick={() => review(r.id, 'rejected')}>
+                    Reject
+                  </button>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
       )}
     </>

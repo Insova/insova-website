@@ -2214,3 +2214,31 @@ button.ia-hl-small:hover {
 @media (prefers-reduced-motion: reduce) {
   .ia-tour-card, .ia-tour-prompt, .ia-tour-hole, .ia-nav-item.ia-tour-pulse { animation: none; transition: none; }
 }
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+   Notice summaries: the Notices screen and Admin > Notice summaries.
+   ===================================================================== */
+.ia-ns-label { margin: -4px 0 14px; font-size: 12.5px; color: var(--slate, #4a6080); }
+.ia-ns-list { display: flex; flex-direction: column; gap: 14px; }
+.ia-ns-card { border: 1px solid #dde6ef; border-radius: 14px; padding: 16px 18px; background: #fff; }
+.ia-ns-card.review { background: #fbfcfe; }
+.ia-ns-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+.ia-ns-head strong { display: block; font-size: 15px; }
+.ia-ns-head span { font-size: 12.5px; color: var(--slate, #4a6080); }
+.ia-ns-link { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: #00874a; text-decoration: none; white-space: nowrap; }
+.ia-ns-link:hover { text-decoration: underline; }
+.ia-ns-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.ia-ns-sec h4 { margin: 0 0 6px; padding-bottom: 5px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-bottom: 2px solid #dde6ef; }
+.ia-ns-sec.affected h4 { color: #0f2040; border-color: #0f2040; }
+.ia-ns-sec.changed h4 { color: #8a5300; border-color: #e0a030; }
+.ia-ns-sec.actions h4 { color: #00874a; border-color: #03bf64; }
+.ia-ns-sec ul { margin: 0; padding-left: 18px; }
+.ia-ns-sec li { margin: 0 0 6px; font-size: 13.5px; line-height: 1.45; }
+.ia-ns-none { margin: 0; font-size: 12.5px; color: #7a94aa; font-style: italic; }
+.ia-ns-quote { display: block; margin-top: 4px; padding: 6px 9px; border-left: 3px solid #d8ffc7; background: #f4f7fb; font-size: 12px; color: #4a6080; quotes: '\201C' '\201D'; }
+.ia-ns-toggle { margin-top: 10px; font-size: 12.5px; }
+@media (max-width: 760px) {
+  .ia-ns-cols { grid-template-columns: 1fr; }
+  .ia-ns-head { flex-direction: column; }
+}
