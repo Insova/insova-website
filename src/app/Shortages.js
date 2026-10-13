@@ -7,7 +7,13 @@ const PAGE = 40;
 
 export default function Shortages({ app, watch, focusId, preset }) {
   const { data } = app;
-  const [q, setQ] = useState('');
+  // Arriving from Today (or Your list, Notices…) with a product: put its
+  // name in the search box so the list narrows to it, open it, and scroll
+  // to it. Before, it opened a card somewhere in a 40-row page, often
+  // below the fold or not on the first page at all, so it looked like
+  // the click had done nothing.
+  const focusItem = focusId ? data.items.find((x) => x.id === focusId) : null;
+  const [q, setQ] = useState(focusItem ? focusItem.product : '');
   const [reason, setReason] = useState('all');
   const [altType, setAltType] = useState('all');
   const [risk, setRisk] = useState('all');
@@ -17,7 +23,21 @@ export default function Shortages({ app, watch, focusId, preset }) {
   const [shown, setShown] = useState(PAGE);
   const [open, setOpen] = useState(focusId || null);
 
-  useEffect(() => { if (focusId) setOpen(focusId); }, [focusId]);
+  useEffect(() => {
+    if (!focusId) return;
+    const it = data.items.find((x) => x.id === focusId);
+    if (!it) return;
+    setReason('all'); setAltType('all'); setRisk('all');
+    setGroup('all'); setTiming('all'); setMine(false);
+    setQ(it.product);
+    setOpen(focusId);
+    // after the list has re-rendered with just this product
+    const t = setTimeout(() => {
+      const el = document.getElementById('shortage-' + focusId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [focusId, data]);
 
   // A preset arrives when the user followed a "see all 20" link from the
   // Today screen. Landing on the unfiltered list would make that link a
@@ -172,7 +192,7 @@ function Row({ item, watch, meta, members, open, onToggle }) {
   const h = i.history;
 
   return (
-    <article className={'ia-card' + (open ? ' open' : '')}>
+    <article id={'shortage-' + i.id} className={'ia-card' + (open ? ' open' : '')}>
       <div className="ia-card-head as-row">
         <WatchStar item={i} watch={watch} />
         <button className="ia-card-hit" onClick={onToggle} aria-expanded={open}>

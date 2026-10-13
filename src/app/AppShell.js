@@ -14,6 +14,7 @@ import Roadmap from './Roadmap';
 import Feedback from './Feedback';
 import Admin from './Admin';
 import Tour from './Tour';
+import UpdateBanner from './UpdateBanner';
 import './app.css';
 
 /*
@@ -38,26 +39,21 @@ import './app.css';
   than views of what is currently short, so they belong together and
   below the register screens someone opens every morning.
 
-  THE TOUR. Feedback was that the app is confusing. The Tour button in
-  the top bar walks through every screen (see Tour.js). First-time users
+  THE TUTORIAL. Feedback was that the app is confusing. The Tutorial
+  button in the top bar walks through every screen (see Tour.js; the
+  code still says "tour", the screen says "Tutorial"). First-time users
   are offered it once. The elements it points at carry data-tour
   attributes: the menu items, the freshness label and the main area. If
   you rename or move one of those, keep its data-tour attribute.
 
-  ASK AI IS WITHDRAWN, NOT DELETED.
-  src/app/AskAI.js and the nl-search Edge Function are both still in
-  place and still deployed. What was removed is the nav entry, the
-  import and the render line, so there is no route to the screen and no
-  way for anyone to reach it.
+  THE CURRENT SCREEN SURVIVES A REFRESH. It is kept in sessionStorage,
+  which lasts for this window only: refreshing on Running low stays on
+  Running low, but opening the app fresh starts on Today, which is the
+  screen a pharmacist should see first each morning.
 
-  To put it back: re-add the import, the { id: 'askai', label: 'Ask AI',
-  icon: '✧' } entry to NAV_MAIN after 'shortages', and the render line
-  in the main block. Nothing else changed.
-
-  Note the function is still live and still billable, so if it is going
-  to be off for a while, either revoke the Anthropic key or set the
-  workspace spend cap to zero. Nothing in the app calls it now, but
-  the endpoint is public and takes a signed-in JWT.
+  UPDATES. UpdateBanner checks whether a newer build has been deployed
+  and offers "Update now". An installed app can stay open for days and
+  would otherwise keep running old code until someone force quits it.
 */
 const NAV_MAIN = [
   { id: 'dashboard', label: 'Today',                icon: '▦' },
@@ -86,6 +82,15 @@ function markTourSeen() {
   try { window.localStorage.setItem(TOUR_KEY, '1'); } catch (e) { /* nothing to do */ }
 }
 
+// The screen you were on, for this window only (see the note at the top).
+const VIEW_KEY = 'insova.view';
+function savedView() {
+  try { return window.sessionStorage.getItem(VIEW_KEY) || 'dashboard'; } catch (e) { return 'dashboard'; }
+}
+function saveView(id) {
+  try { window.sessionStorage.setItem(VIEW_KEY, id); } catch (e) { /* nothing to do */ }
+}
+
 export default function AppShell({ onHome }) {
   const {
     profile, pharmacy, isAdmin, hasPharmacy, signOut,
@@ -93,7 +98,7 @@ export default function AppShell({ onHome }) {
   } = useAuth();
   const app = useAppData();
   const watch = useWatchlist();
-  const [view, setView] = useState('dashboard');
+  const [view, setView] = useState(savedView);
   const [menuOpen, setMenuOpen] = useState(false);
   const [focusId, setFocusId] = useState(null);
   const [preset, setPreset] = useState(null);
@@ -110,6 +115,7 @@ export default function AppShell({ onHome }) {
   // so a "see all 20" link lands on the 20 rather than on everything.
   const go = (id, id2, filterPreset) => {
     setView(id);
+    saveView(id);
     setFocusId(id2 || null);
     setPreset(filterPreset || null);
     setMenuOpen(false);
@@ -195,6 +201,11 @@ export default function AppShell({ onHome }) {
       </div>
     );
   }
+
+  // A saved screen that no longer exists (renamed, or Admin for someone
+  // who is no longer an admin) falls back to Today rather than a blank page.
+  const known = allNav.some((n) => n.id === view) || view === 'ulm';
+  if (!known) { setView('dashboard'); saveView('dashboard'); }
 
   const stale = app.data ? daysSince(app.data.meta.as_of) : null;
 
@@ -360,9 +371,9 @@ export default function AppShell({ onHome }) {
 
       {/* Offered once, the first time someone opens the app in this browser. */}
       {tourPrompt && !tourOpen && app.ready && (
-        <div className="ia-tour-prompt" role="dialog" aria-label="Take the tour">
+        <div className="ia-tour-prompt" role="dialog" aria-label="Take the tutorial">
           <strong>New to Insova?</strong>
-          <p>A two-minute tour shows what each screen is for.</p>
+          <p>A two-minute tutorial shows what each screen is for.</p>
           <div className="ia-tour-prompt-actions">
             <button type="button" className="ia-tour-next" onClick={startTour}>Show me around</button>
             <button
@@ -377,6 +388,8 @@ export default function AppShell({ onHome }) {
       )}
 
       <Tour open={tourOpen} onClose={endTour} go={go} />
+
+      <UpdateBanner />
     </div>
   );
 }

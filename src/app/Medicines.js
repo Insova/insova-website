@@ -110,7 +110,12 @@ export default function Medicines({ app, watch, go }) {
       if (status === 'withdrawn' && !it.withdrawn) return false;
       if (!searching) return true;
       return it.hay.includes(term);
-    });
+    })
+      // Authorised first, withdrawn after. A pharmacist searching a name
+      // almost always wants the product they can actually get; the
+      // withdrawn licences are history. Array.sort is stable, so the
+      // existing order is kept within each half.
+      .sort((a, b) => (a.withdrawn ? 1 : 0) - (b.withdrawn ? 1 : 0));
   }, [db, term, status, ready, searching, mineOnly, watch]);
 
   const watchedCount = watch?.licenceRows?.length || 0;
