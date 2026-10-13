@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { fmtDate, durationText } from './useAppData';
 import { NextStrip } from './Roadmap';
+import { useDismissed } from './useDismissed';
 
 const CHANGE_SHOW = 8;
 
@@ -8,6 +9,7 @@ export default function Dashboard({ app, watch, go }) {
   const { data, pressure } = app;
   const c = data.counts;
   const m = data.meta;
+  const dz = useDismissed();
 
   const changes = data.changes || [];
   const appeared = changes.filter((x) => x.kind === 'appeared');
@@ -34,7 +36,8 @@ export default function Dashboard({ app, watch, go }) {
 
   // ---- the pharmacy's own products come first ----
   const byId = new Map(data.items.map((i) => [i.id, i]));
-  const myChanges = changes.filter((ch) => watch.ids.has(ch.id));
+  // Dismissed on Your list (or here) means dismissed everywhere.
+  const myChanges = changes.filter((ch) => watch.ids.has(ch.id) && !dz.isDismissed(ch));
   const myGone = (data.recently_left || []).filter((r) => watch.ids.has(r.id));
   const myWatched = watch.rows.map((r) => byId.get(r.shortage_id)).filter(Boolean);
   const myPushed = myWatched.filter((i) => i.history && i.history.pushed_out >= 2);
@@ -129,15 +132,24 @@ export default function Dashboard({ app, watch, go }) {
                 </button>
               ))}
               {myChanges.map((ch) => (
-                <button key={ch.id} className="ia-mine-row" onClick={() => go('shortages', ch.id)}>
-                  <span className={'ia-tag ' + (ch.kind === 'appeared' ? 'red' : ch.kind === 'left' ? 'green' : 'amber')}>
-                    {ch.kind === 'date_moved' ? 'date moved' : ch.kind === 'appeared' ? 'newly short' : ch.kind}
-                  </span>
-                  <span className="ia-mine-main">
-                    <strong>{ch.product}</strong>
-                    {ch.detail && <span>{ch.detail}</span>}
-                  </span>
-                </button>
+                <div key={ch.id} className="ia-mine-item">
+                  <button className="ia-mine-row" onClick={() => go('shortages', ch.id)}>
+                    <span className={'ia-tag ' + (ch.kind === 'appeared' ? 'red' : ch.kind === 'left' ? 'green' : 'amber')}>
+                      {ch.kind === 'date_moved' ? 'date moved' : ch.kind === 'appeared' ? 'newly short' : ch.kind}
+                    </span>
+                    <span className="ia-mine-main">
+                      <strong>{ch.product}</strong>
+                      {ch.detail && <span>{ch.detail}</span>}
+                    </span>
+                  </button>
+                  <button
+                    className="ia-linkbtn ia-dismiss"
+                    onClick={() => dz.dismiss(ch)}
+                    title="Clear this alert. The product stays on your list."
+                  >
+                    Dismiss
+                  </button>
+                </div>
               ))}
             </div>
           )}

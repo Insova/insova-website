@@ -2286,3 +2286,14 @@ button.ia-hl-small:hover {
   .ia-update { flex-wrap: wrap; }
   .ia-update-text span { display: none; }
 }
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+   Dismiss buttons on Your list alerts (useDismissed.js).
+   ===================================================================== */
+.ia-watch-change { align-items: center; }
+.ia-watch-change .ia-dismiss { margin-left: auto; }
+.ia-dismiss { flex: 0 0 auto; font-size: 12.5px; color: #4a6080; }
+.ia-dismiss:hover { color: #0f2040; text-decoration: underline; }
+.ia-mine-item { display: flex; align-items: center; gap: 10px; }
+.ia-mine-item .ia-mine-row { flex: 1; min-width: 0; }

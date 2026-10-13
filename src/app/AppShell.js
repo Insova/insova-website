@@ -15,6 +15,7 @@ import Feedback from './Feedback';
 import Admin from './Admin';
 import Tour from './Tour';
 import UpdateBanner from './UpdateBanner';
+import { useDismissed } from './useDismissed';
 import './app.css';
 
 /*
@@ -98,6 +99,7 @@ export default function AppShell({ onHome }) {
   } = useAuth();
   const app = useAppData();
   const watch = useWatchlist();
+  const dz = useDismissed();
   const [view, setView] = useState(savedView);
   const [menuOpen, setMenuOpen] = useState(false);
   const [focusId, setFocusId] = useState(null);
@@ -209,9 +211,11 @@ export default function AppShell({ onHome }) {
 
   const stale = app.data ? daysSince(app.data.meta.as_of) : null;
 
-  // how many watched products have something new on them today
+  // how many watched products have something new on them today.
+  // Dismissed changes no longer count (see useDismissed.js); products
+  // that left the register count until removed from the list.
   const watchAlerts = app.ready
-    ? (app.data.changes || []).filter((c) => watch.ids.has(c.id)).length
+    ? (app.data.changes || []).filter((c) => watch.ids.has(c.id) && !dz.isDismissed(c)).length
       + (app.data.recently_left || []).filter((r) => watch.ids.has(r.id)).length
     : 0;
 
