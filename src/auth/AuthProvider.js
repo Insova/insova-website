@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { supabase, configured } from '../supabaseClient';
 
 const AuthContext = createContext(null);
@@ -384,31 +384,41 @@ export function AuthProvider({ children }) {
   isAdmin is always false, so Admin never appears.
 */
 export function SandboxAuthProvider({ label, onLeave, children }) {
-  const user = { id: 'sandbox', email: 'sandbox@insova.ie' };
-  const noop = async () => ({ message: 'Not available in the sandbox' });
-  const value = {
-    configured: true,
-    sandbox: true,
-    sandboxLabel: label,
-    session: { user },
-    user,
-    profile: { id: 'sandbox', email: user.email, full_name: label, role: 'pharmacist', pharmacy_id: 'sandbox' },
-    pharmacy: { id: 'sandbox', name: label, town: 'Sandbox', county: '', wholesalers: null },
-    role: 'pharmacist',
-    isAdmin: false,
-    hasPharmacy: true,
-    profileStatus: 'ready',
-    loading: false,
-    authError: null,
-    recovering: false,
-    signIn: noop,
-    signUp: noop,
-    resendConfirmation: noop,
-    requestPasswordReset: noop,
-    updatePassword: noop,
-    endRecovery: () => {},
-    signOut: async () => { if (onLeave) onLeave(); },
-    refreshProfile: () => {},
-  };
+  // The value MUST be stable between renders. Screens such as Your list
+  // reload whenever `user` or `pharmacy` changes identity; a fresh object
+  // on every render made them reload on every render, forever, and the
+  // page went blank. So it is built once per label and kept.
+  const leave = useRef(onLeave);
+  leave.current = onLeave;
+
+  const value = useMemo(() => {
+    const user = { id: 'sandbox', email: 'sandbox@insova.ie' };
+    const noop = async () => ({ message: 'Not available in the sandbox' });
+    return {
+      configured: true,
+      sandbox: true,
+      sandboxLabel: label,
+      session: { user },
+      user,
+      profile: { id: 'sandbox', email: user.email, full_name: label, role: 'pharmacist', pharmacy_id: 'sandbox' },
+      pharmacy: { id: 'sandbox', name: label, town: 'Sandbox', county: '', wholesalers: null },
+      role: 'pharmacist',
+      isAdmin: false,
+      hasPharmacy: true,
+      profileStatus: 'ready',
+      loading: false,
+      authError: null,
+      recovering: false,
+      signIn: noop,
+      signUp: noop,
+      resendConfirmation: noop,
+      requestPasswordReset: noop,
+      updatePassword: noop,
+      endRecovery: () => {},
+      signOut: async () => { if (leave.current) leave.current(); },
+      refreshProfile: () => {},
+    };
+  }, [label]);
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
