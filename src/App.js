@@ -5,7 +5,6 @@ import Login from './auth/Login';
 import SetPassword from './auth/SetPassword';
 import AppShell from './app/AppShell';
 import { AuthProvider, SandboxAuthProvider, useAuth } from './auth/AuthProvider';
-import { checkSandboxKey, sandboxKeyFromHash } from './sandbox';
 
 /*
   Routing.
@@ -21,7 +20,7 @@ import { checkSandboxKey, sandboxKeyFromHash } from './sandbox';
     #/app       pharmacy application
     #/verify    after an email confirmation link
     #/password  set a new password, from a reset link or while signed in
-    #/sandbox?key=…  the app with no sign-in, for evaluators (src/sandbox.js).
+    #/sandbox?key=…  the app with no sign-in, for evaluators (SANDBOX_KEYS below).
                 Not linked from anywhere. Writes nothing to the database.
 
   EMAIL LINKS
@@ -43,6 +42,42 @@ import { checkSandboxKey, sandboxKeyFromHash } from './sandbox';
   `recovering`; that is checked first, so a reset never shows the
   "your email is confirmed" screen.
 */
+
+/*
+  Sandbox links: the real app, live data, no sign-in, nothing saved.
+
+  Reached only at   https://www.insova.ie/#/sandbox?key=<key>
+  Nothing on the site links there.
+
+  ONE ENTRY PER PROSPECT. To give someone access, add a line. To end it,
+  delete the line or let it expire. Each key shows its own label in the
+  app ("Uniphar evaluation") so a forwarded link is obvious.
+
+  HOW STRONG IS THIS?
+  It stops casual sharing and keeps a link from working forever. It is
+  NOT a password: the keys ship inside the website's JavaScript, so a
+  determined person reading the code could find one. That is acceptable
+  here because everything the sandbox shows is built from public HPRA
+  data and the sandbox can write nothing to our database. Do not put
+  anything in the sandbox that a key should genuinely protect.
+*/
+const SANDBOX_KEYS = {
+  'uniphar-7k2q9w': { label: 'Uniphar evaluation', expires: '2026-11-30' },
+};
+
+function sandboxKeyFromHash() {
+  const h = window.location.hash || '';
+  const q = h.includes('?') ? h.slice(h.indexOf('?') + 1) : '';
+  return new URLSearchParams(q).get('key') || '';
+}
+
+/* null if the key is unknown, { expired: true, ... } if it has run out. */
+function checkSandboxKey(key) {
+  const entry = SANDBOX_KEYS[key];
+  if (!entry) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  return { key, ...entry, expired: today > entry.expires };
+}
 
 function hasAuthPayload() {
   const h = window.location.hash || '';
