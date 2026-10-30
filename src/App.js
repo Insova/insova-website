@@ -4,7 +4,8 @@ import Marketing from './Marketing';
 import Login from './auth/Login';
 import SetPassword from './auth/SetPassword';
 import AppShell from './app/AppShell';
-import { AuthProvider, useAuth } from './auth/AuthProvider';
+import { AuthProvider, SandboxAuthProvider, useAuth } from './auth/AuthProvider';
+import { checkSandboxKey, sandboxKeyFromHash } from './sandbox';
 
 /*
   Routing.
@@ -20,6 +21,8 @@ import { AuthProvider, useAuth } from './auth/AuthProvider';
     #/app       pharmacy application
     #/verify    after an email confirmation link
     #/password  set a new password, from a reset link or while signed in
+    #/sandbox?key=…  the app with no sign-in, for evaluators (src/sandbox.js).
+                Not linked from anywhere. Writes nothing to the database.
 
   EMAIL LINKS
   -----------
@@ -63,6 +66,7 @@ function route() {
   if (h.startsWith('password')) return 'password';
   if (h.startsWith('app')) return 'app';
   if (h.startsWith('login')) return 'login';
+  if (h.startsWith('sandbox')) return 'sandbox';
   return 'home';
 }
 
@@ -229,6 +233,53 @@ function Verified({ go }) {
   );
 }
 
+/*
+  The sandbox: the real AppShell, wrapped in a stand-in for the signed-in
+  account (SandboxAuthProvider), with a bar across the top so it is never
+  mistaken for a real pharmacy's screen.
+*/
+function Sandbox({ go }) {
+  const key = sandboxKeyFromHash();
+  const access = checkSandboxKey(key);
+
+  // Keep evaluation links out of search engines.
+  useEffect(() => {
+    const m = document.createElement('meta');
+    m.name = 'robots';
+    m.content = 'noindex, nofollow';
+    document.head.appendChild(m);
+    return () => { document.head.removeChild(m); };
+  }, []);
+
+  if (!access || access.expired) {
+    return (
+      <div className="ia-boot">
+        <div className="ia-boot-inner wide">
+          <img className="ia-boot-logo" src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
+          <h1 className="ia-verify-h">
+            {access ? 'This evaluation link has expired' : 'This link is not valid'}
+          </h1>
+          <p className="ia-verify-p">
+            To keep trying Insova, email{' '}
+            <a href="mailto:jack@insova.ie">jack@insova.ie</a> and we will send you a new one.
+          </p>
+          <button className="ia-verify-btn" onClick={() => go('home')}>Go to insova.ie</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SandboxAuthProvider label={access.label} onLeave={() => go('home')}>
+      <div className="ia-sandbox-bar" role="note">
+        <strong>Sandbox</strong>
+        <span>{access.label} · live data, nothing you do here is saved to Insova</span>
+      </div>
+      <AppShell onHome={() => go('home')} />
+    </SandboxAuthProvider>
+  );
+}
+
 function Router() {
   const { session, loading, recovering, endRecovery } = useAuth();
   const [where, setWhere] = useState(route());
@@ -276,6 +327,11 @@ function Router() {
 
   if (where === 'verify') {
     return <Verified go={go} />;
+  }
+
+  // Needs no session, so it is answered before the loading screen.
+  if (where === 'sandbox') {
+    return <Sandbox go={go} />;
   }
 
   // Only the routes that actually need a session wait for one. The

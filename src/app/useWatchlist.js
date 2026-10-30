@@ -43,14 +43,41 @@ import { useAuth } from '../auth/AuthProvider';
 
 const norm = (l) => String(l || '').trim().toUpperCase();
 
+/*
+  SANDBOX. When useAuth() says sandbox, the list lives in this browser's
+  localStorage instead of public.watchlist, so an evaluator can star,
+  note and remove products and nothing reaches our database. Same shape
+  of rows, so every screen behaves identically.
+*/
+const SANDBOX_KEY = 'insova.sandbox.watchlist';
+function sandboxRead() {
+  try { return JSON.parse(window.localStorage.getItem(SANDBOX_KEY) || '[]'); } catch (e) { return []; }
+}
+function sandboxWrite(rows) {
+  try { window.localStorage.setItem(SANDBOX_KEY, JSON.stringify(rows)); } catch (e) { /* blocked */ }
+}
+
 export function useWatchlist() {
-  const { pharmacy, user } = useAuth();
+  const { pharmacy, user, sandbox } = useAuth();
   const [all, setAll] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [busyIds, setBusyIds] = useState(() => new Set());
 
+  // In the sandbox every change goes through here instead of Supabase.
+  const sandboxSet = useCallback((fn) => {
+    const next = fn(sandboxRead());
+    sandboxWrite(next);
+    setAll(next);
+  }, []);
+
   const load = useCallback(async () => {
+    if (sandbox) {
+      setAll(sandboxRead());
+      setError(null);
+      setLoading(false);
+      return;
+    }
     if (!supabase || !pharmacy?.id || !user?.id) {
       setAll([]);
       setLoading(false);
@@ -68,7 +95,7 @@ export function useWatchlist() {
       setError(null);
     }
     setLoading(false);
-  }, [pharmacy, user]);
+  }, [pharmacy, user, sandbox]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -99,6 +126,13 @@ export function useWatchlist() {
   const add = useCallback(async (item, note) => {
     if (!pharmacy?.id) return 'Your account is not linked to a pharmacy.';
     if (!user?.id) return 'Not signed in.';
+    if (sandbox) {
+      sandboxSet((r) => [{ id: 'sb-' + item.id, kind: 'shortage', shortage_id: item.id,
+        licence: null, product: item.product, note: note || null,
+        created_at: new Date().toISOString() },
+        ...r.filter((x) => x.shortage_id !== item.id)]);
+      return null;
+    }
     mark(item.id, true);
     // optimistic, so the star responds immediately
     setAll((r) => [{ id: 'tmp-' + item.id, kind: 'shortage', shortage_id: item.id,
@@ -119,10 +153,14 @@ export function useWatchlist() {
     }
     load();
     return null;
-  }, [pharmacy, user, load]);
+  }, [pharmacy, user, load, sandbox, sandboxSet]);
 
   const remove = useCallback(async (shortageId) => {
     if (!user?.id) return;
+    if (sandbox) {
+      sandboxSet((r) => r.filter((x) => x.shortage_id !== shortageId));
+      return;
+    }
     mark(shortageId, true);
     const before = all;
     setAll((r) => r.filter((x) => x.shortage_id !== shortageId));
@@ -133,7 +171,7 @@ export function useWatchlist() {
       .eq('shortage_id', shortageId);
     mark(shortageId, false);
     if (e) setAll(before);
-  }, [user, all]);
+  }, [user, all, sandbox, sandboxSet]);
 
   const toggle = useCallback((item) =>
     (ids.has(item.id) ? remove(item.id) : add(item)), [ids, add, remove]);
@@ -145,6 +183,13 @@ export function useWatchlist() {
     if (!lic) return 'This product has no licence number to watch.';
     if (!pharmacy?.id) return 'Your account is not linked to a pharmacy.';
     if (!user?.id) return 'Not signed in.';
+    if (sandbox) {
+      sandboxSet((r) => [{ id: 'sb-' + lic, kind: 'licence', shortage_id: null,
+        licence: med.licence, product: med.product || med.licence,
+        created_at: new Date().toISOString() },
+        ...r.filter((x) => norm(x.licence) !== lic)]);
+      return null;
+    }
     mark(lic, true);
     setAll((r) => [{ id: 'tmp-' + lic, kind: 'licence', shortage_id: null,
                      licence: med.licence, product: med.product,
@@ -163,11 +208,15 @@ export function useWatchlist() {
     }
     load();
     return null;
-  }, [pharmacy, user, load]);
+  }, [pharmacy, user, load, sandbox, sandboxSet]);
 
   const removeLicence = useCallback(async (licence) => {
     const lic = norm(licence);
     if (!user?.id || !lic) return;
+    if (sandbox) {
+      sandboxSet((r) => r.filter((x) => norm(x.licence) !== lic));
+      return;
+    }
     mark(lic, true);
     const before = all;
     setAll((r) => r.filter((x) => norm(x.licence) !== lic));
@@ -182,7 +231,7 @@ export function useWatchlist() {
       .eq('licence', row ? row.licence : licence);
     mark(lic, false);
     if (e) setAll(before);
-  }, [user, all]);
+  }, [user, all, sandbox, sandboxSet]);
 
   const toggleLicence = useCallback((med) =>
     (licences.has(norm(med.licence))
@@ -191,10 +240,14 @@ export function useWatchlist() {
 
   const setNote = useCallback(async (shortageId, note) => {
     if (!user?.id) return;
+    if (sandbox) {
+      sandboxSet((r) => r.map((x) => (x.shortage_id === shortageId ? { ...x, note: note || null } : x)));
+      return;
+    }
     await supabase.from('watchlist').update({ note: note || null })
       .eq('created_by', user.id).eq('shortage_id', shortageId);
     load();
-  }, [user, load]);
+  }, [user, load, sandbox, sandboxSet]);
 
   return {
     // unchanged for every screen that already uses these

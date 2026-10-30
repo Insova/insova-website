@@ -55,7 +55,7 @@ const SCREENS = [
 const MAX = 4000;
 
 export default function Feedback({ app }) {
-  const { user, pharmacy, profile } = useAuth();
+  const { user, pharmacy, profile, sandbox } = useAuth();
   const [category, setCategory] = useState('wrong');
   const [message, setMessage] = useState('');
   const [screen, setScreen] = useState('Today');
@@ -67,7 +67,7 @@ export default function Feedback({ app }) {
   const dataDate = app?.ready ? app.data.meta.as_of : null;
 
   const loadMine = useCallback(async () => {
-    if (!supabase || !user?.id) return;
+    if (sandbox || !supabase || !user?.id) return;
     const { data, error: e } = await supabase
       .from('feedback')
       .select('id, created_at, category, message, screen, status, admin_note')
@@ -75,7 +75,7 @@ export default function Feedback({ app }) {
       .order('created_at', { ascending: false })
       .limit(20);
     if (!e && data) setMine(data);
-  }, [user]);
+  }, [user, sandbox]);
 
   useEffect(() => { loadMine(); }, [loadMine]);
 
@@ -106,6 +106,26 @@ export default function Feedback({ app }) {
   };
 
   const chosen = CATEGORIES.find((c) => c.id === category);
+
+  // The sandbox has no account behind it, so there is nobody to reply to
+  // and nothing can be written to the feedback table.
+  if (sandbox) {
+    return (
+      <>
+        <p className="ia-lead">
+          In the full version, pharmacists send feedback from here and see our reply on this
+          screen, alongside which register they were reading when they wrote it.
+        </p>
+        <div className="ia-callout">
+          <strong>Feedback is switched off in this sandbox.</strong>
+          <p>
+            Anything you would like to tell us, email{' '}
+            <a href="mailto:jack@insova.ie">jack@insova.ie</a>. We would genuinely like to hear it.
+          </p>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

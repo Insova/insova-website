@@ -2297,3 +2297,40 @@ button.ia-hl-small:hover {
 .ia-dismiss:hover { color: #0f2040; text-decoration: underline; }
 .ia-mine-item { display: flex; align-items: center; gap: 10px; }
 .ia-mine-item .ia-mine-row { flex: 1; min-width: 0; }
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+   The bar across the top of the sandbox (#/sandbox, App.js).
+   ===================================================================== */
+.ia-sandbox-bar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1150;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 6px 14px 6px 6px;
+  border-radius: 100px;
+  background: #090040;
+  color: #fff;
+  font-size: 12.5px;
+  box-shadow: 0 8px 24px rgba(9, 0, 64, 0.3);
+  pointer-events: none;
+}
+.ia-sandbox-bar strong {
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: #9fff74;
+  color: #090040;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ia-sandbox-bar span { color: rgba(255, 255, 255, 0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) {
+  .ia-sandbox-bar { top: auto; bottom: 12px; }
+  .ia-sandbox-bar span { display: none; }
+}

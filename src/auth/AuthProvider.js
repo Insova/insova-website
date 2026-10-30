@@ -368,3 +368,47 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+/*
+  THE SANDBOX (#/sandbox?key=…, see src/sandbox.js).
+
+  Stands in for a signed-in pharmacist so the real app can run without an
+  account. It sits INSIDE the real AuthProvider and overrides it for the
+  sandbox screen only. Nothing here talks to Supabase.
+
+  `sandbox: true` is what the few screens that would write to the
+  database check: Your list keeps its stars in this browser instead, and
+  Give feedback points to email. Every other screen reads public files
+  and works exactly as it does for a paying pharmacy.
+
+  isAdmin is always false, so Admin never appears.
+*/
+export function SandboxAuthProvider({ label, onLeave, children }) {
+  const user = { id: 'sandbox', email: 'sandbox@insova.ie' };
+  const noop = async () => ({ message: 'Not available in the sandbox' });
+  const value = {
+    configured: true,
+    sandbox: true,
+    sandboxLabel: label,
+    session: { user },
+    user,
+    profile: { id: 'sandbox', email: user.email, full_name: label, role: 'pharmacist', pharmacy_id: 'sandbox' },
+    pharmacy: { id: 'sandbox', name: label, town: 'Sandbox', county: '', wholesalers: null },
+    role: 'pharmacist',
+    isAdmin: false,
+    hasPharmacy: true,
+    profileStatus: 'ready',
+    loading: false,
+    authError: null,
+    recovering: false,
+    signIn: noop,
+    signUp: noop,
+    resendConfirmation: noop,
+    requestPasswordReset: noop,
+    updatePassword: noop,
+    endRecovery: () => {},
+    signOut: async () => { if (onLeave) onLeave(); },
+    refreshProfile: () => {},
+  };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
