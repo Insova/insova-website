@@ -62,7 +62,7 @@ import { AuthProvider, SandboxAuthProvider, useAuth } from './auth/AuthProvider'
   anything in the sandbox that a key should genuinely protect.
 */
 const SANDBOX_KEYS = {
-  'uniphar-7k2q9w': { label: 'Uniphar evaluation', expires: '2026-11-30' },
+  'uniphar-7k2q9w': { label: 'Uniphar evaluation', expires: '2026-11-03' },
 };
 
 function sandboxKeyFromHash() {
