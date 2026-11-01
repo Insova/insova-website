@@ -49,7 +49,9 @@ const norm = (l) => String(l || '').trim().toUpperCase();
   note and remove products and nothing reaches our database. Same shape
   of rows, so every screen behaves identically.
 */
-const SANDBOX_KEY = 'insova.sandbox.watchlist';
+// The sandbox and Demo mode each pass their own key (sandboxStoreKey),
+// so a demo list never leaks into an evaluator's sandbox or vice versa.
+let SANDBOX_KEY = 'insova.sandbox.watchlist';
 function sandboxRead() {
   try { return JSON.parse(window.localStorage.getItem(SANDBOX_KEY) || '[]'); } catch (e) { return []; }
 }
@@ -58,7 +60,8 @@ function sandboxWrite(rows) {
 }
 
 export function useWatchlist() {
-  const { pharmacy, user, sandbox } = useAuth();
+  const { pharmacy, user, sandbox, sandboxStoreKey } = useAuth();
+  if (sandbox && sandboxStoreKey) SANDBOX_KEY = sandboxStoreKey;
   const [all, setAll] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

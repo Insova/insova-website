@@ -2334,3 +2334,48 @@ button.ia-hl-small:hover {
   .ia-sandbox-bar { top: auto; bottom: 12px; }
   .ia-sandbox-bar span { display: none; }
 }
+
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+   Demo mode presenter panel (DemoPresenter.js, #/demo).
+   ===================================================================== */
+.ia-demo {
+  position: fixed; right: 20px; bottom: 20px; z-index: 1150;
+  width: 300px; max-height: calc(100vh - 40px); overflow: auto;
+  padding: 14px; border-radius: 16px;
+  background: #090040; color: #fff;
+  box-shadow: 0 20px 50px rgba(9, 0, 64, 0.4);
+  font-size: 13px;
+}
+.ia-demo-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ia-demo-top strong { padding: 3px 9px; border-radius: 100px; background: #9fff74; color: #090040; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.ia-demo-top span { color: rgba(255,255,255,.65); font-size: 12px; }
+.ia-demo-x { margin-left: auto; background: none; border: 0; color: rgba(255,255,255,.7); font: inherit; cursor: pointer; }
+.ia-demo-x:hover { color: #fff; }
+.ia-demo-steps { list-style: none; margin: 0 0 10px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.ia-demo-steps button {
+  width: 100%; display: flex; align-items: center; gap: 7px; padding: 6px 8px;
+  border: 1px solid rgba(255,255,255,.12); border-radius: 9px;
+  background: rgba(255,255,255,.04); color: rgba(255,255,255,.85);
+  font: inherit; font-size: 12px; text-align: left; cursor: pointer;
+}
+.ia-demo-steps button:hover { background: rgba(255,255,255,.1); }
+.ia-demo-steps button.on { border-color: #46df62; background: rgba(70,223,98,.18); color: #fff; font-weight: 700; }
+.ia-demo-steps .n { flex: 0 0 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; background: rgba(255,255,255,.12); font-size: 10.5px; }
+.ia-demo-steps button.on .n { background: #46df62; color: #090040; }
+.ia-demo-say { margin: 0 0 10px; padding: 10px 11px; border-radius: 10px; background: rgba(255,255,255,.07); line-height: 1.45; color: rgba(255,255,255,.92); }
+.ia-demo-nav { display: flex; gap: 6px; margin-bottom: 8px; }
+.ia-demo-nav button { flex: 1; padding: 8px; border: 0; border-radius: 9px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.ia-demo-nav button.next { background: #46df62; color: #090040; }
+.ia-demo-nav button:disabled { opacity: .35; cursor: default; }
+.ia-demo-foot { display: flex; justify-content: space-between; }
+.ia-demo-foot button { background: none; border: 0; padding: 4px 0; color: rgba(255,255,255,.6); font: inherit; font-size: 12px; cursor: pointer; }
+.ia-demo-foot button:hover { color: #fff; text-decoration: underline; }
+.ia-demo-tab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 1150;
+  padding: 8px 14px; border: 0; border-radius: 100px;
+  background: #090040; color: #9fff74; font: inherit; font-weight: 700; font-size: 12.5px;
+  box-shadow: 0 10px 28px rgba(9,0,64,.35); cursor: pointer; opacity: .55;
+}
+.ia-demo-tab:hover { opacity: 1; }

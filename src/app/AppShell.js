@@ -92,7 +92,7 @@ function saveView(id) {
   try { window.sessionStorage.setItem(VIEW_KEY, id); } catch (e) { /* nothing to do */ }
 }
 
-export default function AppShell({ onHome }) {
+export default function AppShell({ onHome, onDemo, renderExtra }) {
   const {
     profile, pharmacy, isAdmin, hasPharmacy, signOut,
     profileStatus, refreshProfile, authError,
@@ -107,8 +107,12 @@ export default function AppShell({ onHome }) {
   const [tourOpen, setTourOpen] = useState(false);
   const [tourPrompt, setTourPrompt] = useState(() => !tourSeen());
 
+  // Admins also get Demo mode: the app as a pharmacy sees it, on live
+  // data, with a presenter panel for screen-shared demos (App.js, #/demo).
   const navMore = isAdmin
-    ? [...NAV_MORE, { id: 'admin', label: 'Admin', icon: '⚙' }]
+    ? [...NAV_MORE,
+       { id: 'admin', label: 'Admin', icon: '⚙' },
+       ...(onDemo ? [{ id: 'demo', label: 'Demo mode', icon: '▶' }] : [])]
     : NAV_MORE;
   const allNav = [...NAV_MAIN, ...navMore];
 
@@ -116,6 +120,7 @@ export default function AppShell({ onHome }) {
   // go('shortages', null, 'not_started') opens the list already filtered,
   // so a "see all 20" link lands on the 20 rather than on everything.
   const go = (id, id2, filterPreset) => {
+    if (id === 'demo') { if (onDemo) onDemo(); return; }
     setView(id);
     saveView(id);
     setFocusId(id2 || null);
@@ -394,6 +399,9 @@ export default function AppShell({ onHome }) {
       <Tour open={tourOpen} onClose={endTour} go={go} />
 
       <UpdateBanner />
+
+      {/* Demo mode's presenter panel. Absent everywhere else. */}
+      {renderExtra && app.ready && renderExtra({ app, watch, go, view })}
     </div>
   );
 }

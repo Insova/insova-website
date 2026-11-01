@@ -4,6 +4,7 @@ import Marketing from './Marketing';
 import Login from './auth/Login';
 import SetPassword from './auth/SetPassword';
 import AppShell from './app/AppShell';
+import DemoPresenter from './app/DemoPresenter';
 import { AuthProvider, SandboxAuthProvider, useAuth } from './auth/AuthProvider';
 
 /*
@@ -22,6 +23,9 @@ import { AuthProvider, SandboxAuthProvider, useAuth } from './auth/AuthProvider'
     #/password  set a new password, from a reset link or while signed in
     #/sandbox?key=…  the app with no sign-in, for evaluators (SANDBOX_KEYS below).
                 Not linked from anywhere. Writes nothing to the database.
+    #/demo      Demo mode, for admins sharing their screen. The real app on
+                live data as "Demo Pharmacy", with a ready-made Your list
+                and a presenter panel. Also writes nothing to the database.
 
   EMAIL LINKS
   -----------
@@ -62,7 +66,7 @@ import { AuthProvider, SandboxAuthProvider, useAuth } from './auth/AuthProvider'
   anything in the sandbox that a key should genuinely protect.
 */
 const SANDBOX_KEYS = {
-  'uniphar-7k2q9w': { label: 'Uniphar evaluation', expires: '2026-11-03' },
+  'uniphar-7k2q9w': { label: 'Uniphar evaluation', expires: '2026-11-30' },
 };
 
 function sandboxKeyFromHash() {
@@ -102,6 +106,7 @@ function route() {
   if (h.startsWith('app')) return 'app';
   if (h.startsWith('login')) return 'login';
   if (h.startsWith('sandbox')) return 'sandbox';
+  if (h.startsWith('demo')) return 'demo';
   return 'home';
 }
 
@@ -316,7 +321,7 @@ function Sandbox({ go }) {
 }
 
 function Router() {
-  const { session, loading, recovering, endRecovery } = useAuth();
+  const { session, loading, recovering, endRecovery, isAdmin, profileStatus } = useAuth();
   const [where, setWhere] = useState(route());
 
   useEffect(() => {
@@ -344,8 +349,10 @@ function Router() {
   useEffect(() => {
     if (loading || recovering || where === 'verify') return;
     if (session && where === 'login') go('app');
-    if (!session && (where === 'app' || where === 'password')) go('login');
-  }, [session, where, loading, recovering, go]);
+    if (!session && (where === 'app' || where === 'password' || where === 'demo')) go('login');
+    // Demo mode is for admins only. Anyone else asking for it gets the app.
+    if (session && where === 'demo' && profileStatus === 'ready' && !isAdmin) go('app');
+  }, [session, where, loading, recovering, go, isAdmin, profileStatus]);
 
   // A reset link, checked before anything else so it is never mistaken
   // for a confirmation. Wait for the session the link creates, because
@@ -390,8 +397,26 @@ function Router() {
     );
   }
 
+  if (where === 'demo' && session) {
+    if (profileStatus !== 'ready') return <Booting />;
+    if (!isAdmin) return <Booting />;
+    return (
+      <SandboxAuthProvider
+        label="Demo Pharmacy"
+        town="Cork"
+        storeKey="insova.demo.watchlist"
+        onLeave={() => go('app')}
+      >
+        <AppShell
+          onHome={() => go('app')}
+          renderExtra={(p) => <DemoPresenter {...p} onExit={() => go('app')} />}
+        />
+      </SandboxAuthProvider>
+    );
+  }
+
   if (where === 'app' && session) {
-    return <AppShell onHome={() => go('home')} />;
+    return <AppShell onHome={() => go('home')} onDemo={() => go('demo')} />;
   }
 
   return <Marketing onLogin={() => go(session ? 'app' : 'login')} />;

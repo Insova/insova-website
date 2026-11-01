@@ -383,7 +383,7 @@ export function AuthProvider({ children }) {
 
   isAdmin is always false, so Admin never appears.
 */
-export function SandboxAuthProvider({ label, onLeave, children }) {
+export function SandboxAuthProvider({ label, town = 'Sandbox', storeKey = 'insova.sandbox.watchlist', onLeave, children }) {
   // The value MUST be stable between renders. Screens such as Your list
   // reload whenever `user` or `pharmacy` changes identity; a fresh object
   // on every render made them reload on every render, forever, and the
@@ -398,10 +398,11 @@ export function SandboxAuthProvider({ label, onLeave, children }) {
       configured: true,
       sandbox: true,
       sandboxLabel: label,
+      sandboxStoreKey: storeKey,
       session: { user },
       user,
       profile: { id: 'sandbox', email: user.email, full_name: label, role: 'pharmacist', pharmacy_id: 'sandbox' },
-      pharmacy: { id: 'sandbox', name: label, town: 'Sandbox', county: '', wholesalers: null },
+      pharmacy: { id: 'sandbox', name: label, town, county: '', wholesalers: null },
       role: 'pharmacist',
       isAdmin: false,
       hasPharmacy: true,
@@ -418,7 +419,7 @@ export function SandboxAuthProvider({ label, onLeave, children }) {
       signOut: async () => { if (leave.current) leave.current(); },
       refreshProfile: () => {},
     };
-  }, [label]);
+  }, [label, town, storeKey]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
