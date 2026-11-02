@@ -1,5 +1,31 @@
 import React, { useState } from 'react';
 
+/*
+  Running low.
+
+  "Left" is the number of products in the interchangeable group that are
+  neither on the shortage register NOR recorded by the HPRA as not
+  marketed (export_app_data.py). A licence for a product nobody can buy
+  is not an alternative.
+
+  Each product's status here must agree with that count, so there are
+  three, the same three as the Alternatives section on Shortages:
+
+    short          on the HPRA shortage register
+    not marketed   authorised, but the HPRA lists it as not marketed,
+                   or its licence is withdrawn
+    available      neither. Includes "market status unknown", because
+                   not knowing must not be turned into "gone".
+
+  Before this, every product that was not short said "available", so a
+  group could read "1 left" above four products marked available.
+*/
+
+const state = (m) => (m.short ? 'short' : m.marketed === false ? 'off' : 'ok');
+const ORDER = { ok: 0, off: 1, short: 2 };
+const LABEL = { ok: 'available', off: 'not marketed', short: 'short' };
+const TONE = { ok: 'green', off: 'grey', short: 'red' };
+
 export default function Groups({ app }) {
   const { data } = app;
   const groups = data.groups || [];
@@ -19,7 +45,7 @@ export default function Groups({ app }) {
 
       {exhausted.length > 0 && (
         <Section title="Nothing left" tone="bad" groups={exhausted} open={open} setOpen={setOpen}
-          note="Every product in these groups is currently short. There is no substitution available within the group." />
+          note="Every product in these groups is either short or not marketed. There is no substitution available within the group." />
       )}
       {one.length > 0 && (
         <Section title="One product left" tone="warn" groups={one} open={open} setOpen={setOpen}
@@ -63,7 +89,9 @@ function Section({ title, tone, groups, note, open, setOpen }) {
               <span className="ia-card-title">
                 <strong>{g.desc}</strong>
                 <span className="ia-card-sub">
-                  {g.short} of {g.total} short · IC code {g.code}
+                  {g.short} of {g.total} short
+                  {g.not_marketed > 0 && ` · ${g.not_marketed} not marketed`}
+                  {` · ${g.left} left`} · IC code {g.code}
                 </span>
               </span>
               <span className="ia-chev">{open === g.code ? '−' : '+'}</span>
@@ -71,8 +99,8 @@ function Section({ title, tone, groups, note, open, setOpen }) {
             {open === g.code && (
               <div className="ia-card-body">
                 <div className="ia-groupbar big" aria-hidden="true">
-                  {Array.from({ length: g.total }).map((_, n) => (
-                    <span key={n} className={n < g.short ? 'seg short' : 'seg ok'} />
+                  {sorted(g.members).map((m, n) => (
+                    <span key={n} className={'seg ' + state(m)} />
                   ))}
                 </div>
                 <table className="ia-table">
@@ -80,22 +108,22 @@ function Section({ title, tone, groups, note, open, setOpen }) {
                     <tr><th>Product</th><th>Marketing authorisation holder</th><th>Status</th></tr>
                   </thead>
                   <tbody>
-                    {g.members.map((m, x) => (
-                      <tr key={x} className={m.short ? 'is-short' : ''}>
+                    {sorted(g.members).map((m, x) => (
+                      <tr key={x} className={m.short ? 'is-short' : state(m) === 'off' ? 'is-off' : ''}>
                         <td className="name">{m.product}</td>
                         <td>{m.mah}</td>
                         <td>
-                          <span className={'ia-tag ' + (m.short ? 'red' : 'green')}>
-                            {m.short ? 'short' : 'available'}
-                          </span>
+                          <span className={'ia-tag ' + TONE[state(m)]}>{LABEL[state(m)]}</span>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 <p className="ia-cite block">
-                  "Available" means this product is not currently on the HPRA shortage
-                  register. It does not mean your wholesaler has it.
+                  "Available" means the product is not on the HPRA shortage register and the
+                  HPRA does not list it as not marketed. It does not mean your wholesaler has it.
+                  "Not marketed" products are licensed but not on the market, so they are not
+                  counted as left.
                 </p>
               </div>
             )}
@@ -104,6 +132,11 @@ function Section({ title, tone, groups, note, open, setOpen }) {
       </div>
     </section>
   );
+}
+
+/* Available first, then not marketed, then short: what you can reach for, first. */
+function sorted(members) {
+  return [...(members || [])].sort((a, b) => ORDER[state(a)] - ORDER[state(b)]);
 }
 
 function Stat({ n, l, tone }) {
