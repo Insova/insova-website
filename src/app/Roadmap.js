@@ -44,15 +44,14 @@ const ROADMAP = [
       'than later.',
   },
   {
-    status: 'live',
+    status: 'built',
     title: 'Unlicensed medicines and what the PCRS paid',
     body:
       'A shared record of what was supplied when nothing on the interchangeable list covered a ' +
       'shortage, and whether the claim was reimbursed.',
     detail:
-      'Live, and empty until pharmacies use it. There is no published source for this anywhere: ' +
-      'every pharmacy currently works it out alone and then forgets. The first few entries are ' +
-      'worth more than they look.',
+      'Built, and switched off for now while we work out how pharmacies would share it safely. ' +
+      'There is no published source for this anywhere: every pharmacy currently works it out alone.',
   },
   {
     status: 'later',
@@ -68,14 +67,14 @@ const ROADMAP = [
     waiting: 'A longer archive, and dispensing data from partner pharmacies',
   },
   {
-    status: 'later',
-    title: 'Seeing stock at nearby pharmacies',
+    status: 'blocked',
+    title: 'Wholesaler stock',
     body:
-      'Who nearby is holding what, instead of ringing round one by one.',
+      'Whether your wholesaler actually has a product, shown beside the shortage.',
     detail:
-      'Deliberately not built. It does nothing until several pharmacies in one area are using ' +
-      'Insova, and moving medicines between pharmacies touches wholesale distribution rules that ' +
-      'we want a written view on before building anything.',
+      'The register says what is short, not what you can get. Stock data has to come from the ' +
+      'wholesalers, and we are talking to them about access.',
+    waiting: 'Access to wholesaler stock data',
   },
 ];
 
