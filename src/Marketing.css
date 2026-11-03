@@ -149,13 +149,17 @@
   background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
   padding: 16px 18px; opacity: 0; transform: translateY(16px); animation: mk-up .7s cubic-bezier(.2, .7, .2, 1) forwards;
 }
-.mk-card-main { animation-delay: .25s; min-height: 300px; }
-@media (max-width: 560px) { .mk-card-main { min-height: 0; } }
-.mk-card-feed { animation-delay: .45s; margin-left: 48px; }
-.mk-card-hist { animation-delay: .65s; margin-right: 36px; }
+.mk-card-main { animation-delay: .25s; position: relative; z-index: 1; padding-bottom: 48px; }
+.mk-stage { gap: 0; }
+/* Overlapping, like the original: each card tucks under the one above. */
+.mk-card-feed { animation-delay: .45s; position: relative; z-index: 2; margin: -34px -14px 0 64px; }
+.mk-card-feed { padding-bottom: 40px; }
+.mk-card-feed .mk-feed { height: 104px; }
+.mk-card-hist { animation-delay: .65s; position: relative; z-index: 3; margin: -30px 52px 0 -18px; }
 @media (max-width: 560px) {
   .mk-card-feed { display: none; }
-  .mk-card-hist { margin: 0; }
+  .mk-card-main { padding-bottom: 36px; }
+  .mk-card-hist { margin: -24px 18px 0 18px; }
   .mk-mini-row:nth-child(n+3) { display: none; }
 }
 .mk-c-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 12px; }

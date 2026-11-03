@@ -428,25 +428,14 @@ const TABS = [
 
 function Tour({ sc }) {
   const [tab, setTab] = useState('today');
-  const [auto, setAuto] = useState(true);
-  const [ref, seen] = useInView(0.35);
 
-  // Steps through the screens on its own until someone clicks a tab.
-  // Not on phones: there it waits for a tap.
-  useEffect(() => {
-    if (!auto || !seen) return undefined;
-    if (window.matchMedia && window.matchMedia('(max-width: 820px)').matches) { setAuto(false); return undefined; }
-    const t = setInterval(() => {
-      setTab((cur) => TABS[(TABS.findIndex((x) => x[0] === cur) + 1) % TABS.length][0]);
-    }, 6500);
-    return () => clearInterval(t);
-  }, [auto, seen]);
-
-  const pick = (id) => { setAuto(false); setTab(id); };
+  // No autoplay. It changed screens under people as they scrolled and
+  // made the page jump. The preview changes only when a tab is clicked.
+  const pick = (id) => setTab(id);
   const title = TABS.find((t) => t[0] === tab)[1];
 
   return (
-    <div className="mk-tour mk-reveal" ref={ref}>
+    <div className="mk-tour mk-reveal">
       <div className="mk-tour-side" role="tablist" aria-label="Insova screens">
         <div className="mk-tour-brand">
           <img src={process.env.PUBLIC_URL + '/insova-logo.png'} alt="Insova" />
@@ -455,7 +444,6 @@ function Tour({ sc }) {
           <button key={id} type="button" role="tab" aria-selected={tab === id}
             className={'mk-tour-tab' + (tab === id ? ' on' : '')} onClick={() => pick(id)}>
             <Icon name={id} size={16} />{label}
-            {auto && tab === id && <i className="mk-tour-timer" />}
           </button>
         ))}
       </div>
