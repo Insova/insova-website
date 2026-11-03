@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';
 import { useAuth } from '../auth/AuthProvider';
 import { useAppData, daysSince } from './useAppData';
 import { useWatchlist } from './useWatchlist';
@@ -14,6 +15,7 @@ import Roadmap from './Roadmap';
 import Feedback from './Feedback';
 import Admin from './Admin';
 import Tour from './Tour';
+import Demos from './Demos';
 import UpdateBanner from './UpdateBanner';
 import { useDismissed } from './useDismissed';
 import './app.css';
@@ -112,9 +114,26 @@ export default function AppShell({ onHome, onDemo, renderExtra }) {
   const navMore = isAdmin
     ? [...NAV_MORE,
        { id: 'admin', label: 'Admin', icon: '⚙' },
+       { id: 'demos', label: 'Demos', icon: '◔' },
        ...(onDemo ? [{ id: 'demo', label: 'Demo mode', icon: '▶' }] : [])]
     : NAV_MORE;
   const allNav = [...NAV_MAIN, ...navMore];
+
+  // New demo bookings from the website, for the badge beside Demos.
+  // Admins only; checked on open and every two minutes.
+  const [newDemos, setNewDemos] = useState(0);
+  useEffect(() => {
+    if (!isAdmin || !supabase) return undefined;
+    let stop = false;
+    const check = async () => {
+      const { count } = await supabase.from('demo_bookings')
+        .select('id', { count: 'exact', head: true }).eq('status', 'new');
+      if (!stop && typeof count === 'number') setNewDemos(count);
+    };
+    check();
+    const t = setInterval(check, 120000);
+    return () => { stop = true; clearInterval(t); };
+  }, [isAdmin]);
 
   // go('shortages', someId) opens that product.
   // go('shortages', null, 'not_started') opens the list already filtered,
@@ -233,6 +252,9 @@ export default function AppShell({ onHome, onDemo, renderExtra }) {
     >
       <span className="ia-nav-icon" aria-hidden="true">{n.icon}</span>
       <span className="ia-nav-label">{n.label}</span>
+      {n.id === 'demos' && newDemos > 0 && (
+        <span className="ia-nav-badge alert">{newDemos}</span>
+      )}
       {n.id === 'watchlist' && watch.rows.length > 0 && (
         <span className={'ia-nav-badge' + (watchAlerts ? ' alert' : '')}>
           {watchAlerts || watch.rows.length}
@@ -356,6 +378,7 @@ export default function AppShell({ onHome, onDemo, renderExtra }) {
           {view === 'roadmap' && <Roadmap app={app} />}
           {view === 'feedback' && <Feedback app={app} />}
           {view === 'admin' && isAdmin && <Admin app={app} />}
+          {view === 'demos' && isAdmin && <Demos onCount={setNewDemos} />}
         </main>
 
         {/* Moved out of the sidebar. Still on every screen, still

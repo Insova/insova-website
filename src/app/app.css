@@ -2383,3 +2383,42 @@ button.ia-hl-small:hover {
 /* APPEND to the end of src/app/app.css: "not marketed" on Running low. */
 .ia-groupbar .seg.off { background: #c9d3de; }
 .ia-table tr.is-off td.name { color: #7a94aa; }
+
+/* =====================================================================
+   APPEND to the end of src/app/app.css
+   Demos screen (Demos.js): bookings and availability.
+   ===================================================================== */
+.ia-demo-list { display: flex; flex-direction: column; gap: 12px; }
+.ia-demo-card { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 16px; border: 1px solid #dde6ef; border-radius: 14px; background: #fff; }
+.ia-demo-card.new { border-color: #e2a33a; box-shadow: inset 4px 0 0 #e2a33a; }
+.ia-demo-card.confirmed { box-shadow: inset 4px 0 0 #03bf64; }
+.ia-demo-card.cancelled, .ia-demo-card.done { opacity: .7; }
+.ia-demo-when { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 6px; border-radius: 12px; background: #f4f7fb; text-align: center; }
+.ia-demo-when b { font-size: 14px; }
+.ia-demo-when span { font-size: 20px; font-weight: 700; color: #0f2040; }
+.ia-demo-who { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ia-demo-top { display: flex; align-items: center; gap: 10px; }
+.ia-demo-top strong { font-size: 15px; }
+.ia-demo-ph { font-size: 14px; color: #0f2040; font-weight: 600; }
+.ia-demo-contact { font-size: 13px; color: #4a6080; }
+.ia-demo-contact a { color: #00874a; }
+.ia-demo-notes { margin: 6px 0 0; padding: 8px 10px; border-radius: 8px; background: #f4f7fb; font-size: 13px; color: #4a6080; white-space: pre-wrap; }
+.ia-demo-meta { font-size: 12px; color: #7a94aa; margin-top: 4px; }
+.ia-demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 10px; }
+@media (max-width: 600px) { .ia-demo-card { grid-template-columns: 1fr; } .ia-demo-when { flex-direction: row; gap: 10px; } }
+
+.ia-hours { display: flex; flex-direction: column; }
+.ia-hours-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef2f7; }
+.ia-hours-row .ia-toggle { min-width: 140px; font-weight: 600; }
+.ia-hours-row.off .ia-toggle { color: #7a94aa; }
+.ia-hours-times { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+.ia-hours-times select { padding: 6px 8px; border: 1px solid #dde6ef; border-radius: 8px; font: inherit; background: #fff; }
+.ia-hours-times.muted, .ia-block-row .muted { color: #7a94aa; }
+.ia-block-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 14px; }
+.ia-block-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
+.ia-block-form label.ia-toggle { flex-direction: row; align-items: center; padding-bottom: 8px; }
+.ia-block-form label.grow { flex: 1; min-width: 180px; }
+.ia-block-form input[type="date"], .ia-block-form input:not([type]) { padding: 7px 9px; border: 1px solid #dde6ef; border-radius: 8px; font: inherit; font-weight: 400; }
+.ia-block-list { display: flex; flex-direction: column; }
+.ia-block-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 9px 0; border-bottom: 1px solid #eef2f7; font-size: 14px; }
+.ia-block-row .ia-linkbtn { margin-left: auto; }
