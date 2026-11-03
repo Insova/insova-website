@@ -432,8 +432,10 @@ function Tour({ sc }) {
   const [ref, seen] = useInView(0.35);
 
   // Steps through the screens on its own until someone clicks a tab.
+  // Not on phones: there it waits for a tap.
   useEffect(() => {
     if (!auto || !seen) return undefined;
+    if (window.matchMedia && window.matchMedia('(max-width: 820px)').matches) { setAuto(false); return undefined; }
     const t = setInterval(() => {
       setTab((cur) => TABS[(TABS.findIndex((x) => x[0] === cur) + 1) % TABS.length][0]);
     }, 6500);
@@ -786,10 +788,8 @@ function Marketing({ onLogin }) {
               <span>Know what else to give.</span>
             </h1>
             <p className="mk-hero-sub">
-              Insova reads Ireland's medicine shortage register every morning and turns it into one
-              clear screen for your pharmacy: what went short overnight, which return dates keep
-              slipping, what is left in each group, and the alternatives the HPRA lists as
-              interchangeable. Wholesaler stock is next.
+              Every morning, Insova turns Ireland's medicine shortage register into one clear
+              screen for your pharmacy.
             </p>
             <div className="mk-hero-cta">
               <button type="button" className="mk-btn mk-btn-solid mk-btn-lg" onClick={book}>Book a demo</button>
