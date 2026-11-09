@@ -1,21 +1,21 @@
 {
-  "as_of": "2026-11-08",
-  "as_of_label": "8 November 2026",
+  "as_of": "2026-11-09",
+  "as_of_label": "9 November 2026",
   "notified": 386,
   "current": 386,
   "hpra_total": 386,
   "resolved_still_listed": 0,
   "over_one_year": 72,
   "new_30d": 94,
-  "not_yet_impacting": 13,
+  "not_yet_impacting": 9,
   "past_return_date": 38,
   "no_return_date_pct": 32,
   "ic_groups": 520,
-  "ic_products": 2906,
+  "ic_products": 2905,
   "no_interchangeable": 208,
   "no_interchangeable_pct": 54,
   "groups_last_product": 17,
   "market_status_applied": true,
   "letters_tracked": 16,
-  "days_archived": 98
+  "days_archived": 99
 }
